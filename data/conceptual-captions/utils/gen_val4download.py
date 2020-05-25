@@ -3,7 +3,7 @@ import os
 captions = []
 urls = []
 
-with open('Validation_GCC-1.1.0-Validation.tsv') as fp:
+with open('Validation-GCC-1.1.0-Validation.tsv') as fp:
     for cnt, line in enumerate(fp):
         s = line.split('\t')
         captions.append(s[0].split(' '))

@@ -1,0 +1,49 @@
+python vcr/val.py \
+  --a-cfg /experiments/faidon/VL-BERT/cfgs/vcr/base_q2a_4x16G_fp32.yaml \
+  --r-cfg /experiments/faidon/VL-BERT/cfgs/vcr/base_qa2r_4x16G_fp32.yaml \
+  --a-ckpt <checkpoint_of_q2a> 
+  --r-ckpt <checkpoint_of_qa2r> \
+  --gpus 0 \
+  --result-path /experiments/faidon/results \
+  --result-name vl-bert
+
+
+  python vcr/val.py \
+  --a-cfg /experiments/faidon/VL-BERT/cfgs/vcr/base_q2a_4x11G_fp32.yaml \
+  --r-cfg /experiments/faidon/VL-BERT/cfgs/vcr/base_qa2r_4x11G_fp32.yaml \
+  --gpus 0 \
+  --result-path /experiments/faidon/results \
+  --result-name vl-bert
+
+
+--------------------------------------
+train vcr
+
+./scripts/nondist_run.sh vcr/train_end2end.py /experiments/faidon/VL-BERT/cfgs/vcr/base_q2a_4x16G_fp32.yaml /experiments/faidon/VL-BERT/checkpoints
+./scripts/dist_run_single.sh 1 vcr/train_end2end.py /experiments/faidon/VL-BERT/cfgs/vcr/base_q2a_4x11G_fp32.yaml /experiments/faidon/VL-BERT/checkpoints
+./scripts/dist_run_single.sh 1 vcr/train_end2end.py /experiments/faidon/VL-BERT/cfgs/vcr/base_qa2r_4x11G_fp32.yaml /experiments/faidon/VL-BERT/checkpoints
+
+--------------------------------------
+train vqa
+./scripts/dist_run_single.sh 1 vqa/train_end2end.py /experiments/faidon/VL-BERT/cfgs/vqa/base_4x11G_fp32.yaml /experiments/faidon/VL-BERT/checkpoints
+
+test vqa
+
+python vqa/test.py \
+  --cfg /experiments/faidon/VL-BERT/cfgs/vqa/base_4x11G_fp32.yaml \
+  --ckpt /experiments/faidon/VL-BERT/checkpoints/output/vl-bert/vqa/base_4x11G_fp32/train2014+val2014_train/vl-bert_base_res101_vqa-best.model \
+  --gpus 1 \
+  --result-path /experiments/faidon/VL-BERT/results
+
+--------------------------------------
+
+
+
+--------------------------------------
+Tensorboard
+
+ssh -L 16006:127.0.0.1:6006 fmitzalis@durga.doc.ic.ac.uk
+
+tensorboard --logdir=/experiments/faidon/VL-BERT/checkpoints/output/vl-bert/vcr/base_q2a_4x11G_fp32/vcr1images_train/tensorboard_logs/rank0
+
+tensorboard --logdir=/experiments/faidon/VL-BERT/checkpoints/output/vl-bert/vqa/base_4x11G_fp32/train2014+val2014_train/tensorboard_logs/rank0
