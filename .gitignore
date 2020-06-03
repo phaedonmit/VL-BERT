@@ -141,3 +141,4 @@ pretrained_models
 model
 output
 cache
+!pretrain/data
