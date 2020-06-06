@@ -133,7 +133,7 @@ examples/runs
 .idea/
 
 # local folders
-data
+data/*
 results
 checkpoints
 datasets
@@ -141,4 +141,8 @@ pretrained_models
 model
 output
 cache
-!pretrain/data
+
+!data/generate_tsv_v2.py
+!data/zip_helper.py
+!data/README.md
+!data/gdrive_download.sh

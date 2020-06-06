@@ -47,3 +47,31 @@ ssh -L 16006:127.0.0.1:6006 fmitzalis@durga.doc.ic.ac.uk
 tensorboard --logdir=/experiments/faidon/VL-BERT/checkpoints/output/vl-bert/vcr/base_q2a_4x11G_fp32/vcr1images_train/tensorboard_logs/rank0
 
 tensorboard --logdir=/experiments/faidon/VL-BERT/checkpoints/output/vl-bert/vqa/base_4x11G_fp32/train2014+val2014_train/tensorboard_logs/rank0
+
+
+
+
+-----------------------------------
+Bottom up attention
+
+docker run --gpus all -v /experiments/faidon/VL-BERT/data/flickr30:/workspace/images:ro -v /experiments/faidon/VL-BERT/data/flickr30/features:/workspace/features --rm -it airsplay/bottom-up-attention bash
+docker run --gpus all -v /experiments/faidon/VL-BERT/data/conceptual-captions/val_image:/workspace/images:ro -v /experiments/faidon/VL-BERT/data/conceptual-captions/val_frcnn:/workspace/features --rm -it airsplay/bottom-up-attention bash
+
+docker run --gpus all -v /experiments/faidon/VL-BERT/data/conceptual-captions/:/workspace/conceptual_captions --rm -it airsplay/bottom-up-attention bash
+
+docker run --gpus all -v /experiments/faidon/VL-BERT/data/:/workspace/data --rm -it airsplay/bottom-up-attention bash
+
+CUDA_VISIBLE_DEVICES=0 python extract_nlvr2_image.py --split train
+
+
+python generate_tsv_v2.py --gpu 3 --cfg /opt/butd/experiments/cfgs/faster_rcnn_end2end_resnet.yml --def /opt/butd/models/vg/ResNet-101/faster_rcnn_end2end_final/test.prototxt --net /workspace/conceptual_captions/faster_rcnn_models/resnet101_faster_rcnn_final.caffemodel --split conceptual_captions_val --data_root /workspace/conceptual_captions  --out /workspace/conceptual_captions/val_frcnn/
+
+
+python generate_tsv_v2.py --gpu 3 --cfg /opt/butd/experiments/cfgs/faster_rcnn_end2end_resnet.yml --def /opt/butd/models/vg/ResNet-101/faster_rcnn_end2end_final/test.prototxt --net /workspace/data/faster_rcnn_models/resnet101_faster_rcnn_final.caffemodel --split flickr30k_val --data_root /workspace/data  --out /workspace/data/flickr30k/val_frcnn/
+python generate_tsv_v2.py --gpu 3 --cfg /opt/butd/experiments/cfgs/faster_rcnn_end2end_resnet.yml --def /opt/butd/models/vg/ResNet-101/faster_rcnn_end2end_final/test.prototxt --net /workspace/data/faster_rcnn_models/resnet101_faster_rcnn_final.caffemodel --split flickr30k_train --data_root /workspace/data  --out /workspace/data/flickr30k/train_frcnn/
+
+
+------------------------------
+Download gdrive 
+source gdrive_download
+gdrive_download [ID] [out_filename]
