@@ -11,11 +11,13 @@ from common.utils.misc import soft_cross_entropy
 BERT_WEIGHTS_NAME = 'pytorch_model.bin'
 
 
+
 class ResNetVLBERTForPretrainingMultitask(Module):
     def __init__(self, config):
 
         super(ResNetVLBERTForPretrainingMultitask, self).__init__(config)
 
+        # Constructs/initialises model elements
         self.image_feature_extractor = FastRCNN(config,
                                                 average_pool=True,
                                                 final_dim=config.NETWORK.IMAGE_FINAL_DIM,
@@ -28,7 +30,9 @@ class ResNetVLBERTForPretrainingMultitask(Module):
         self.aux_text_visual_embedding = nn.Embedding(1, config.NETWORK.VLBERT.hidden_size)
         self.image_feature_bn_eval = config.NETWORK.IMAGE_FROZEN_BN
         self.tokenizer = BertTokenizer.from_pretrained(config.NETWORK.BERT_MODEL_NAME)
-        language_pretrained_model_path = None
+        
+        # Can specify pre-trained model or use the downloaded pretrained model specific in .yaml file
+        language_pretrained_model_path = None        
         if config.NETWORK.BERT_PRETRAINED != '':
             language_pretrained_model_path = '{}-{:04d}.model'.format(config.NETWORK.BERT_PRETRAINED,
                                                                       config.NETWORK.BERT_PRETRAINED_EPOCH)
@@ -152,6 +156,7 @@ class ResNetVLBERTForPretrainingMultitask(Module):
 
         # prepare text
         text_input_ids = text
+        # creates a text_tags tensor of the same shape as text tensor
         text_tags = text.new_zeros(text.shape)
         text_visual_embeddings = self._collect_obj_reps(text_tags, obj_reps['obj_reps'])
 

@@ -36,6 +36,9 @@ python vqa/test.py \
   --result-path /experiments/faidon/VL-BERT/results
 
 --------------------------------------
+pretrain multi30k
+./scripts/dist_run_single.sh 1 pretrain/train_end2end.py /experiments/faidon/VL-BERT/cfgs/flickr30k/base_e2e_16x16G_fp16.yaml /experiments/faidon/VL-BERT/checkpoints
+CUDA_VISIBLE_DEVICES=3 ./scripts/dist_run_single.sh 1 pretrain/train_end2end.py /experiments/faidon/VL-BERT/cfgs/flickr30k/base_e2e_16x16G_fp16.yaml /experiments/faidon/VL-BERT/checkpoints
 
 
 
@@ -47,6 +50,8 @@ ssh -L 16006:127.0.0.1:6006 fmitzalis@durga.doc.ic.ac.uk
 tensorboard --logdir=/experiments/faidon/VL-BERT/checkpoints/output/vl-bert/vcr/base_q2a_4x11G_fp32/vcr1images_train/tensorboard_logs/rank0
 
 tensorboard --logdir=/experiments/faidon/VL-BERT/checkpoints/output/vl-bert/vqa/base_4x11G_fp32/train2014+val2014_train/tensorboard_logs/rank0
+
+tensorboard --logdir=/experiments/faidon/VL-BERT/checkpoints/output/pretrain/vl-bert/base_e2e_16x16G_fp16/train_train/tensorboard_logs/rank0
 
 
 
@@ -69,6 +74,9 @@ python generate_tsv_v2.py --gpu 3 --cfg /opt/butd/experiments/cfgs/faster_rcnn_e
 
 python generate_tsv_v2.py --gpu 3 --cfg /opt/butd/experiments/cfgs/faster_rcnn_end2end_resnet.yml --def /opt/butd/models/vg/ResNet-101/faster_rcnn_end2end_final/test.prototxt --net /workspace/data/faster_rcnn_models/resnet101_faster_rcnn_final.caffemodel --split flickr30k_val --data_root /workspace/data  --out /workspace/data/flickr30k/val_frcnn/
 python generate_tsv_v2.py --gpu 3 --cfg /opt/butd/experiments/cfgs/faster_rcnn_end2end_resnet.yml --def /opt/butd/models/vg/ResNet-101/faster_rcnn_end2end_final/test.prototxt --net /workspace/data/faster_rcnn_models/resnet101_faster_rcnn_final.caffemodel --split flickr30k_train --data_root /workspace/data  --out /workspace/data/flickr30k/train_frcnn/
+
+python generate_tsv_v2.py --gpu 0 --cfg /opt/butd/experiments/cfgs/faster_rcnn_end2end_resnet.yml --def /opt/butd/models/vg/ResNet-101/faster_rcnn_end2end_final/test.prototxt --net /workspace/data/faster_rcnn_models/resnet101_faster_rcnn_final.caffemodel --split conceptual_captions_train --data_root /workspace/data/conceptual-captions  --out /workspace/data/conceptual-captions/train_frcnn/
+python generate_tsv_v2.py --gpu 3 --cfg /opt/butd/experiments/cfgs/faster_rcnn_end2end_resnet.yml --def /opt/butd/models/vg/ResNet-101/faster_rcnn_end2end_final/test.prototxt --net /workspace/data/faster_rcnn_models/resnet101_faster_rcnn_final.caffemodel --split conceptual_captions_val --data_root /workspace/data/conceptual-captions  --out /workspace/data/conceptual-captions/val_frcnn/
 
 
 ------------------------------

@@ -2,7 +2,7 @@
 RNG_SEED: 12345
 OUTPUT_PATH: './output/pretrain/vl-bert'
 MODULE: ResNetVLBERTForPretrainingMultitask
-GPUS: '0,1,2,3'
+GPUS: '3'
 LOG_FREQUENT: 100
 VAL_FREQUENT: 1
 CHECKPOINT_FREQUENT: 1
@@ -31,8 +31,8 @@ DATASET:
   TRAIN_ANNOTATION_FILE: './data/en_corpus/bc1g.doc+./data/en_corpus/wiki.doc'
   VAL_ANNOTATION_FILE: './data/en_corpus/bc1g.doc'
   TEST_ANNOTATION_FILE: './data/en_corpus/bc1g.doc'
-  SEQ_LEN: 64
-  MIN_SEQ_LEN: 64
+  SEQ_LEN: 96
+  MIN_SEQ_LEN: 96
 
 NETWORK:
   PARTIAL_PRETRAIN: ""
@@ -93,8 +93,8 @@ TRAIN:
   SHUFFLE: true
   FLIP_PROB: 0.5
   BATCH_IMAGES:
-  - 8
-  - 8
+  - 4
+  - 4
   ASPECT_GROUPING: false
   RESUME: false
   AUTO_RESUME: true
@@ -120,13 +120,13 @@ VAL:
   SHUFFLE: false
   FLIP_PROB: 0
   BATCH_IMAGES:
-  - 8
-  - 8
+  - 4
+  - 4
 
 TEST:
   SHUFFLE: false
   FLIP_PROB: 0
   TEST_EPOCH: 0
   BATCH_IMAGES:
-  - 8
-  - 8
+  - 4
+  - 4

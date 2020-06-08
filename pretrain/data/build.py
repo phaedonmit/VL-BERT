@@ -7,9 +7,12 @@ from .collate_batch import BatchCollator
 import pprint
 from copy import deepcopy
 
+# FM: Added mutli30k to available datasets
 DATASET_CATALOGS = {'conceptual_captions': ConceptualCaptionsDataset,
                     'coco_captions': COCOCaptionsDataset,
-                    'general_corpus': GeneralCorpus}
+                    'general_corpus': GeneralCorpus, 
+                    'flickr30k': Multi30kDataset
+                    }
 
 
 def build_dataset(dataset_name, *args, **kwargs):
