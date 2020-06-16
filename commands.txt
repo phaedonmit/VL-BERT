@@ -37,11 +37,15 @@ python vqa/test.py \
 
 --------------------------------------
 pretrain multi30k
-./scripts/dist_run_single.sh 1 pretrain/train_end2end.py /experiments/faidon/VL-BERT/cfgs/flickr30k/base_e2e_16x16G_fp16.yaml /experiments/faidon/VL-BERT/checkpoints
 CUDA_VISIBLE_DEVICES=3 ./scripts/dist_run_single.sh 1 pretrain/train_end2end.py /experiments/faidon/VL-BERT/cfgs/flickr30k/base_e2e_16x16G_fp16.yaml /experiments/faidon/VL-BERT/checkpoints
+pretrain multi30k_pretrained
+CUDA_VISIBLE_DEVICES=3 ./scripts/dist_run_single.sh 1 pretrain/train_end2end.py /experiments/faidon/VL-BERT/cfgs/flickr30k/base_e2e_16x16G_fp16_pretrained.yaml /experiments/faidon/VL-BERT/checkpoints
+CUDA_VISIBLE_DEVICES=0 ./scripts/dist_run_single.sh 1 pretrain/train_end2end.py /experiments/faidon/VL-BERT/cfgs/flickr30k/base_e2e_16x16G_fp16_pretrained_german_corpus.yaml /experiments/faidon/VL-BERT/checkpoints
 
-
-
+pretrain CC
+CUDA_VISIBLE_DEVICES=3 ./scripts/dist_run_single.sh 1 pretrain/train_end2end.py /experiments/faidon/VL-BERT/cfgs/pretrain/base_e2e_11x11G_fp16.yaml /experiments/faidon/VL-BERT/checkpoints
+pretrain CC start from existing
+CUDA_VISIBLE_DEVICES=3 ./scripts/dist_run_single.sh 1 pretrain/train_end2end.py /experiments/faidon/VL-BERT/cfgs/pretrain/base_e2e_11x11G_fp16_pretrained.yaml /experiments/faidon/VL-BERT/checkpoints
 --------------------------------------
 Tensorboard
 
@@ -52,6 +56,11 @@ tensorboard --logdir=/experiments/faidon/VL-BERT/checkpoints/output/vl-bert/vcr/
 tensorboard --logdir=/experiments/faidon/VL-BERT/checkpoints/output/vl-bert/vqa/base_4x11G_fp32/train2014+val2014_train/tensorboard_logs/rank0
 
 tensorboard --logdir=/experiments/faidon/VL-BERT/checkpoints/output/pretrain/vl-bert/base_e2e_16x16G_fp16/train_train/tensorboard_logs/rank0
+tensorboard --logdir=/experiments/faidon/VL-BERT/checkpoints/output/pretrain/vl-bert/base_e2e_11x11G_fp16/train_train/tensorboard_logs/rank0
+
+
+tensorboard --logdir=/experiments/faidon/VL-BERT/checkpoints/output/pretrain/vl-bert/
+,multi30k:/experiments/faidon/VL-BERT/checkpoints/output/pretrain/vl-bert/taskA-multi30k-001-parallel/train_train/tensorboard_logs/rank0/events.out.tfevents.1591470332.durga
 
 
 
@@ -83,3 +92,15 @@ python generate_tsv_v2.py --gpu 3 --cfg /opt/butd/experiments/cfgs/faster_rcnn_e
 Download gdrive 
 source gdrive_download
 gdrive_download [ID] [out_filename]
+
+
+
+
+
+
+
+
+***********************
+List of experiments:
+
+multi30k 1st: events.out.tfevents.1591470332.durga

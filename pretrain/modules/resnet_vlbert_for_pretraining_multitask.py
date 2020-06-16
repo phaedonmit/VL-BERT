@@ -34,8 +34,10 @@ class ResNetVLBERTForPretrainingMultitask(Module):
         # Can specify pre-trained model or use the downloaded pretrained model specific in .yaml file
         language_pretrained_model_path = None        
         if config.NETWORK.BERT_PRETRAINED != '':
-            language_pretrained_model_path = '{}-{:04d}.model'.format(config.NETWORK.BERT_PRETRAINED,
-                                                                      config.NETWORK.BERT_PRETRAINED_EPOCH)
+            # language_pretrained_model_path = '{}-{:04d}.model'.format(config.NETWORK.BERT_PRETRAINED,
+            #                                                           config.NETWORK.BERT_PRETRAINED_EPOCH)
+            #FM edit: just use path of pretrained model
+            language_pretrained_model_path = config.NETWORK.BERT_PRETRAINED
         elif os.path.isdir(config.NETWORK.BERT_MODEL_NAME):
             weight_path = os.path.join(config.NETWORK.BERT_MODEL_NAME, BERT_WEIGHTS_NAME)
             if os.path.isfile(weight_path):
@@ -167,7 +169,8 @@ class ResNetVLBERTForPretrainingMultitask(Module):
             object_linguistic_embeddings[mvrc_ops == 1] = self.object_mask_word_embedding.weight[0]
         object_vl_embeddings = torch.cat((obj_reps['obj_reps'], object_linguistic_embeddings), -1)
 
-        # add auxiliary text
+        # add auxiliary text - Concatenates the batches from the two dataloaders
+        # The visual features for the text only corpus is just the embedding of the aux_visual_embedding (only one embedding)
         max_text_len = max(text_input_ids.shape[1], aux_text.shape[1])
         text_input_ids_multi = text_input_ids.new_zeros((text_input_ids.shape[0] + aux_text.shape[0], max_text_len))
         text_input_ids_multi[:text_input_ids.shape[0], :text_input_ids.shape[1]] = text_input_ids

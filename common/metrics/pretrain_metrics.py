@@ -81,6 +81,8 @@ class MVRCAccuracy(EvalMetric):
             label = outputs['mvrc_label']
             keep = (label.sum(2) - 1.0).abs() < 0.1
             if keep.sum() > 0:
+                #FM note: when [keep] is applied it collapsees logits(batch,#RoI,#classes)
+                #to logits(#relevant_RoI, #classes)
                 self.sum_metric += float((logits[keep].argmax(dim=1) == label[keep].argmax(dim=1)).sum().item())
                 self.num_inst += keep.sum().item()
 
