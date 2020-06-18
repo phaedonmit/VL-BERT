@@ -59,12 +59,6 @@ def smart_partial_load_model_state_dict(model, state_dict):
     non_match_keys = []
     pretrained_keys = []
     for k, v in state_dict.items():
-        print('**********')
-        print('Item k: ', k)
-        # TODO: FM temporary add: ignore non-matching parts
-        if k in ['module.vlbert.mlm_head.predictions.decoder.weight', 'module.vlbert.mlm_head.predictions.bias', 'module.vlbert.word_embeddings.weight' ]:
-            print('---------- skip :', k)
-            continue
         if k not in model.state_dict():
             if k.startswith('module.'):
                 k = k[len('module.'):]
@@ -87,10 +81,71 @@ def smart_partial_load_model_state_dict(model, state_dict):
     print("[Partial Load] non matched keys: {}".format(non_match_keys))
     print("[Partial Load] non pretrain keys: {}".format(non_pretrain_keys))
     new_state_dict = model.state_dict()
-    # print('BEFORE -------------------*******************************************')
-    # print(new_state_dict['vlbert.mlm_head.predictions.decoder.weight'][0])
     new_state_dict.update(parsed_state_dict)
-    # print('AFTER -------------------*******************************************')
-    # print(new_state_dict['vlbert.mlm_head.predictions.decoder.weight'][0])
+    model.load_state_dict(new_state_dict)
+
+
+#FM: initialise with VL-BERT. Skip word embeddings, where vocabulary is changed to multilingual 
+def smart_skip_partial_load_model_state_dict(model, state_dict):
+    parsed_state_dict = {}
+    non_match_keys = []
+    pretrained_keys = []
+    for k, v in state_dict.items():
+        # FM: for partica
+        if k in ['module.vlbert.mlm_head.predictions.decoder.weight', 'module.vlbert.mlm_head.predictions.bias', 'module.vlbert.word_embeddings.weight' ]:
+            print('---------- skip :', k)
+            continue
+        if k not in model.state_dict():
+            if k.startswith('module.'):
+                k = k[len('module.'):]
+            else:
+                k = 'module.' + k
+        if k in model.state_dict():
+            parsed_state_dict[k] = v
+            pretrained_keys.append(k)
+        else:
+            non_match_keys.append(k)
+            # raise ValueError('failed to match key of state dict smartly!')
+
+    non_pretrain_keys = [k for k in model.state_dict().keys() if k not in pretrained_keys]
+
+    print("[Partial Load] partial load state dict of keys: {}".format(parsed_state_dict.keys()))
+    print("[Partial Load] non matched keys: {}".format(non_match_keys))
+    print("[Partial Load] non pretrain keys: {}".format(non_pretrain_keys))
+    new_state_dict = model.state_dict()
+    new_state_dict.update(parsed_state_dict)
+    model.load_state_dict(new_state_dict)
+
+
+# FM: hybrid parameter initialisation that uses M-BERT for initialisation
+#     and VL-BERT only for specific parameters
+def smart_hybrid_partial_load_model_state_dict(model, state_dict):
+    parsed_state_dict = {}
+    non_match_keys = []
+    pretrained_keys = []
+    for k, v in state_dict.items():
+        if k not in model.state_dict():
+            if k.startswith('module.'):
+                k = k[len('module.'):]
+            else:
+                k = 'module.' + k
+        if k in model.state_dict() and (("vlbert.mvrc_head" in k) or ("image_feature_extractor" in k) 
+                                        or ("vlbert.visual_ln" in k) or ("end_embedding" in k)
+                                        or ("token_type_embeddings" in k) or ("position_embeddings" in k)
+                                        or ("aux_text_visual_embedding" in k) or ("object_mask_word_embedding" in k)
+                                        or ("object_linguistic_embeddings" in k)):
+            parsed_state_dict[k] = v
+            pretrained_keys.append(k)
+        else:
+            non_match_keys.append(k)
+            # raise ValueError('failed to match key of state dict smartly!')
+
+    non_pretrain_keys = [k for k in model.state_dict().keys() if k not in pretrained_keys]
+
+    print("[Partial Load] partial load state dict of keys: {}".format(parsed_state_dict.keys()))
+    print("[Partial Load] non matched keys: {}".format(non_match_keys))
+    print("[Partial Load] non pretrain keys: {}".format(non_pretrain_keys))
+    new_state_dict = model.state_dict()
+    new_state_dict.update(parsed_state_dict)
     model.load_state_dict(new_state_dict)
 

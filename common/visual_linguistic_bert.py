@@ -333,7 +333,6 @@ class VisualLinguisticBertForPretraining(VisualLinguisticBert):
 
         # load language pretrained model
         if language_pretrained_model_path is not None:
-            print("************* PRELOADS VLBERT *****************")
             self.load_language_pretrained_model(language_pretrained_model_path)
 
         if config.word_embedding_frozen:
@@ -389,8 +388,6 @@ class VisualLinguisticBertForPretraining(VisualLinguisticBert):
         mlm_head_pretrained_state_dict = {}
         unexpected_keys = []
         for _k, v in pretrained_state_dict.items():
-            print('**********')
-            print('Inside vlbert item k: ', _k)
             if _k.startswith('bert.') or _k.startswith('roberta.'):
                 k = _k[len('bert.'):] if _k.startswith('bert.') else _k[len('roberta.'):]
                 if 'gamma' in k:

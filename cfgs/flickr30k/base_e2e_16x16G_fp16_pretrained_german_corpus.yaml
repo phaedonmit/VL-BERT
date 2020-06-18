@@ -7,7 +7,7 @@ LOG_FREQUENT: 100
 VAL_FREQUENT: 1
 CHECKPOINT_FREQUENT: 1
 MODEL_PREFIX: 'vl-bert_base_res101_pretrain_multitask'
-NUM_WORKERS_PER_GPU: 4
+NUM_WORKERS_PER_GPU: 0
 SCALES:
 - 600
 - 1000
@@ -37,6 +37,7 @@ DATASET:
 NETWORK:
   PARTIAL_PRETRAIN: "/experiments/faidon/VL-BERT/model/pretrained_model/vl-bert-base-e2e.model"
   PARTIAL_PRETRAIN_PREFIX_CHANGES: []
+  INITIALISATION: 'hybrid'
   IMAGE_NUM_LAYERS: 101
   IMAGE_C5_DILATED: true
   IMAGE_STRIDE_IN_1x1: true

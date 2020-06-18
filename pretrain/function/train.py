@@ -14,7 +14,7 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 
 from common.utils.create_logger import create_logger
 from common.utils.misc import summary_parameters, bn_fp16_half_eval
-from common.utils.load import smart_resume, smart_partial_load_model_state_dict
+from common.utils.load import smart_resume, smart_partial_load_model_state_dict, smart_hybrid_partial_load_model_state_dict, smart_skip_partial_load_model_state_dict
 from common.trainer import train
 from common.metrics.composite_eval_metric import CompositeEvalMetric
 from common.metrics import pretrain_metrics
@@ -240,7 +240,13 @@ def train_net(args, config):
                 if no_match:
                     pretrain_state_dict_parsed[k] = v
             pretrain_state_dict = pretrain_state_dict_parsed
-        smart_partial_load_model_state_dict(model, pretrain_state_dict)
+        # FM edit: introduce alternative initialisations
+        if config.NETWORK.INITIALISATION=='hybrid':
+            smart_hybrid_partial_load_model_state_dict(model, pretrain_state_dict)
+        elif config.NETWORK.INITIALISATION=='skip':
+            smart_skip_partial_load_model_state_dict(model, pretrain_state_dict)
+        else:
+            smart_partial_load_model_state_dict(model, pretrain_state_dict)
 
     # metrics
     metric_kwargs = {'allreduce': args.dist,
