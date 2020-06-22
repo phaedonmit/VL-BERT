@@ -64,11 +64,7 @@ def smart_partial_load_model_state_dict(model, state_dict):
                 k = k[len('module.'):]
             else:
                 k = 'module.' + k
-        if k in model.state_dict() and (("vlbert.mvrc_head" in k) or ("image_feature_extractor" in k) 
-                                        or ("vlbert.visual_ln" in k) or ("end_embedding" in k)
-                                        or ("token_type_embeddings" in k) or ("position_embeddings" in k)
-                                        or ("aux_text_visual_embedding" in k) or ("object_mask_word_embedding" in k)
-                                        or ("object_linguistic_embeddings" in k)):
+        if k in model.state_dict():
             parsed_state_dict[k] = v
             pretrained_keys.append(k)
         else:

@@ -464,7 +464,8 @@ class VisualLinguisticBertForPretraining(VisualLinguisticBert):
         self.encoder.load_state_dict(encoder_pretrained_state_dict)
         if self.config.with_pooler and len(pooler_pretrained_state_dict) > 0:
             self.pooler.load_state_dict(pooler_pretrained_state_dict)
-        if self.with_rel_head and len(relationship_head_pretrained_state_dict) > 0:
+        if self.with_rel_head and len(relationship_head_pretrained_state_dict) > 0 and \
+            relationship_head_pretrained_state_dict['weight'].shape[0] == self.relationsip_head.caption_image_relationship.weight.shape[0]:
             self.relationsip_head.caption_image_relationship.load_state_dict(relationship_head_pretrained_state_dict)
         if self.with_mlm_head:
             self.mlm_head.predictions.load_state_dict(mlm_head_pretrained_state_dict)
@@ -505,8 +506,8 @@ class VisualLinguisticBertMVRCHead(BaseModel):
 class VisualLinguisticBertRelationshipPredictionHead(BaseModel):
     def __init__(self, config):
         super(VisualLinguisticBertRelationshipPredictionHead, self).__init__(config)
-
-        self.caption_image_relationship = nn.Linear(config.hidden_size, 2)
+        # FM edit - change to single output
+        self.caption_image_relationship = nn.Linear(config.hidden_size, 1)
         self.apply(self.init_weights)
 
     def forward(self, pooled_rep):

@@ -2,7 +2,7 @@
 RNG_SEED: 12345
 OUTPUT_PATH: './output/pretrain/vl-bert'
 MODULE: ResNetVLBERTForPretrainingMultitask
-GPUS: '3'
+GPUS: '0'
 LOG_FREQUENT: 100
 VAL_FREQUENT: 1
 CHECKPOINT_FREQUENT: 1
@@ -35,9 +35,9 @@ DATASET:
   MIN_SEQ_LEN: 96
 
 NETWORK:
-  PARTIAL_PRETRAIN: "/experiments/faidon/VL-BERT/model/pretrained_model/vl-bert-base-e2e.model"
+  PARTIAL_PRETRAIN: "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/vl-bert/taskA-multi30k-003-partial_pretrain_VLBERT_20epoch/train_train/vl-bert_base_res101_pretrain_multitask-best.model"
   PARTIAL_PRETRAIN_PREFIX_CHANGES: []
-  INITIALISATION: 'hybrid'
+  INITIALISATION: ''
   IMAGE_NUM_LAYERS: 101
   IMAGE_C5_DILATED: true
   IMAGE_STRIDE_IN_1x1: true
@@ -66,12 +66,12 @@ NETWORK:
   ENABLE_CNN_REG_LOSS: false
   MLM_LOSS_NORM_IN_BATCH_FIRST: false
   MVRC_LOSS_NORM_IN_BATCH_FIRST: false
-  WITH_REL_LOSS: false
+  WITH_REL_LOSS: true
   WITH_MLM_LOSS: true
   WITH_MVRC_LOSS: true
 
   VLBERT:
-    with_pooler: false
+    with_pooler: true
     input_transform_type: 1
     visual_size: 768
     hidden_size: 768
@@ -116,6 +116,7 @@ TRAIN:
   - "mlm_loss_wvc,MLMLossWVC"
   - "mlm_loss_aux,MLMLossAUX"
   - "mvrc_loss,MVRCLoss"
+  - "relationship_loss, RelLoss"
 
 VAL:
   SHUFFLE: false

@@ -165,7 +165,8 @@ class Multi30kDataset(Dataset):
             rand_index = random.randrange(0, len(self.database))
             while rand_index == index:
                 rand_index = random.randrange(0, len(self.database))
-            caption =self.database[rand_index]['caption']
+            caption_en =self.database[rand_index]['caption_en']
+            caption_de =self.database[rand_index]['caption_de']
 
         # Task #2: Masked Language Modeling - Adapted for two languages
 

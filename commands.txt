@@ -46,6 +46,30 @@ pretrain CC
 CUDA_VISIBLE_DEVICES=3 ./scripts/dist_run_single.sh 1 pretrain/train_end2end.py /experiments/faidon/VL-BERT/cfgs/pretrain/base_e2e_11x11G_fp16.yaml /experiments/faidon/VL-BERT/checkpoints
 pretrain CC start from existing
 CUDA_VISIBLE_DEVICES=3 ./scripts/dist_run_single.sh 1 pretrain/train_end2end.py /experiments/faidon/VL-BERT/cfgs/pretrain/base_e2e_11x11G_fp16_pretrained.yaml /experiments/faidon/VL-BERT/checkpoints
+
+downstream image retrieval
+CUDA_VISIBLE_DEVICES=3 ./scripts/dist_run_single.sh 1 retrieval/train_end2end.py /experiments/faidon/VL-BERT/cfgs/retrieval/base_e2e_16x16G_fp16_downstream_retrieval.yaml /experiments/faidon/VL-BERT/checkpoints
+
+# for all tasks together:
+CUDA_VISIBLE_DEVICES=0 ./scripts/dist_run_single.sh 1 pretrain/train_end2end.py /experiments/faidon/VL-BERT/cfgs/flickr30k/base_e2e_16x16G_fp16_fully_trained_itm.yaml /experiments/faidon/VL-BERT/checkpoints
+
+-----------------------------------
+
+evaluation:
+
+CUDA_VISIBLE_DEVICES=3 python retrieval/test.py \
+  --cfg /experiments/faidon/VL-BERT/cfgs/retrieval/base_e2e_16x16G_fp16_downstream_retrieval.yaml \
+  --ckpt  /experiments/faidon/VL-BERT/checkpoints/output/pretrain/vl-bert/base_e2e_16x16G_fp16_downstream_retrieval/train_train/vl-bert_base_res101_pretrain_multitask-0019.model \
+  --gpus 0 \
+  --result-path /experiments/faidon/VL-BERT/checkpoints --result-name itm_evaluation
+
+CUDA_VISIBLE_DEVICES=0 python retrieval/test.py \
+  --cfg /experiments/faidon/VL-BERT/cfgs/retrieval/base_e2e_16x16G_fp16_downstream_retrieval.yaml \
+  --ckpt  /experiments/faidon/VL-BERT/checkpoints/output/pretrain/vl-bert/base_e2e_16x16G_fp16_downstream_retrieval/train_train/vl-bert_base_res101_pretrain_multitask-0000.model \
+  --gpus 0 \
+  --result-path /experiments/faidon/VL-BERT/checkpoints --result-name itm_evaluation
+
+
 --------------------------------------
 Tensorboard
 

@@ -13,8 +13,7 @@ SCALES:
 - 1000
 
 DATASET:
-
-- DATASET: flickr30k
+  DATASET: flickr30k
   APPEND_INDEX: false
   DATASET_PATH: './data/flickr30k'
   ROOT_PATH: './'
@@ -27,17 +26,10 @@ DATASET:
   IGNORE_DB_CACHE: false
   MASK_SIZE: 14
 
-- DATASET: general_corpus
-  TRAIN_ANNOTATION_FILE: './data/en_corpus/bc1g.doc+./data/en_corpus/wiki.doc'
-  VAL_ANNOTATION_FILE: './data/en_corpus/bc1g.doc'
-  TEST_ANNOTATION_FILE: './data/en_corpus/bc1g.doc'
-  SEQ_LEN: 96
-  MIN_SEQ_LEN: 96
-
 NETWORK:
-  PARTIAL_PRETRAIN: "/experiments/faidon/VL-BERT/model/pretrained_model/vl-bert-base-e2e.model"
+  PARTIAL_PRETRAIN: "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/vl-bert/taskA-multi30k-003-partial_pretrain_VLBERT_20epoch/train_train/vl-bert_base_res101_pretrain_multitask-best.model"
   PARTIAL_PRETRAIN_PREFIX_CHANGES: []
-  INITIALISATION: 'hybrid'
+  INITIALISATION: ''
   IMAGE_NUM_LAYERS: 101
   IMAGE_C5_DILATED: true
   IMAGE_STRIDE_IN_1x1: true
@@ -66,12 +58,12 @@ NETWORK:
   ENABLE_CNN_REG_LOSS: false
   MLM_LOSS_NORM_IN_BATCH_FIRST: false
   MVRC_LOSS_NORM_IN_BATCH_FIRST: false
-  WITH_REL_LOSS: false
-  WITH_MLM_LOSS: true
-  WITH_MVRC_LOSS: true
+  WITH_REL_LOSS: true
+  WITH_MLM_LOSS: false
+  WITH_MVRC_LOSS: false
 
   VLBERT:
-    with_pooler: false
+    with_pooler: true
     input_transform_type: 1
     visual_size: 768
     hidden_size: 768
@@ -93,9 +85,7 @@ NETWORK:
 TRAIN:
   SHUFFLE: true
   FLIP_PROB: 0.5
-  BATCH_IMAGES:
-  - 4
-  - 4
+  BATCH_IMAGES: 4
   ASPECT_GROUPING: false
   RESUME: false
   AUTO_RESUME: true
@@ -113,21 +103,15 @@ TRAIN:
   FP16: true
   FP16_LOSS_SCALE: 'dynamic'
   LOSS_LOGGERS:
-  - "mlm_loss_wvc,MLMLossWVC"
-  - "mlm_loss_aux,MLMLossAUX"
-  - "mvrc_loss,MVRCLoss"
+  - "relationship_loss,RelLoss"
 
 VAL:
   SHUFFLE: false
   FLIP_PROB: 0
-  BATCH_IMAGES:
-  - 4
-  - 4
+  BATCH_IMAGES: 4
 
 TEST:
   SHUFFLE: false
   FLIP_PROB: 0
   TEST_EPOCH: 0
-  BATCH_IMAGES:
-  - 4
-  - 4
+  BATCH_IMAGES: 4
