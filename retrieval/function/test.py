@@ -79,7 +79,9 @@ def test_net(args, config, ckpt_path=None, save_path=None, save_name=None):
         # answer_ids.extend(output['label_logits'].argmax(dim=1).detach().cpu().tolist())
         logits.extend(output[0]['relationship_logits'].detach().cpu().tolist())
         cur_id += bs
-        if nbatch>300:
+        #TODO: remove this is just for checking
+        # if nbatch>1050:
+        if nbatch>3000:
             break
 
     result = [{'caption_id': c_id, 'image_ids': i_id, 'logit': l_id} for c_id, i_id, l_id in zip(caption_ids, image_ids, logits)]

@@ -162,6 +162,7 @@ class ResNetVLBERTForPretrainingMultitask(Module):
         text_tags = text.new_zeros(text.shape)
         text_visual_embeddings = self._collect_obj_reps(text_tags, obj_reps['obj_reps'])
 
+        # linguistic embedding for visual uses [IMG] embedding for all (apart from masked visual)
         object_linguistic_embeddings = self.object_linguistic_embeddings(
             boxes.new_zeros((boxes.shape[0], boxes.shape[1])).long()
         )

@@ -99,6 +99,7 @@ def make_dataloader(cfg, dataset=None, mode='train', distributed=False, num_repl
                                 ignore_db_cache=cfg.DATASET.IGNORE_DB_CACHE,
                                 add_image_as_a_box=cfg.DATASET.ADD_IMAGE_AS_A_BOX,
                                 aspect_grouping=aspect_grouping,
+                                languages_used=cfg.DATASET.LANGUAGES_USED,
                                 mask_size=(cfg.DATASET.MASK_SIZE, cfg.DATASET.MASK_SIZE),
                                 pretrained_model_name=cfg.NETWORK.BERT_MODEL_NAME)
     # FM edit: for inference do not shuffle

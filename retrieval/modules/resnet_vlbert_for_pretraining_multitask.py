@@ -162,7 +162,8 @@ class ResNetVLBERTForPretrainingMultitask(Module):
         max_text_len = text_input_ids.shape[1]
         text_token_type_ids = text_input_ids.new_zeros(text_input_ids.shape)
         text_mask = (text_input_ids > 0)
-        box_mask = box_mask.new_zeros((text_input_ids.shape[0], *box_mask.shape[1:]))
+        #FM: Edit: i have taken this out, not needed i think since defined above
+        # box_mask = box_mask.new_zeros((text_input_ids.shape[0], *box_mask.shape[1:]))
         
         ###########################################
 

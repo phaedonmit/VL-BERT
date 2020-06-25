@@ -25,6 +25,7 @@ DATASET:
   CACHE_MODE: false
   IGNORE_DB_CACHE: false
   MASK_SIZE: 14
+  LANGUAGES_USED: 'first'
 
 NETWORK:
   PARTIAL_PRETRAIN: "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/vl-bert/taskA-multi30k-003-partial_pretrain_VLBERT_20epoch/train_train/vl-bert_base_res101_pretrain_multitask-best.model"
