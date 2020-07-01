@@ -25,10 +25,10 @@ DATASET:
   CACHE_MODE: false
   IGNORE_DB_CACHE: false
   MASK_SIZE: 14
-  LANGUAGES_USED: 'both'
+  LANGUAGES_USED: 'first'
 
 NETWORK:
-  PARTIAL_PRETRAIN: "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/all_results/taskA-multi30k-003-partial_pretrain_VLBERT_20epoch/train_train/vl-bert_base_res101_pretrain_multitask-best.model"
+  PARTIAL_PRETRAIN: "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/all_results/taskA-multi30k-003-partial_pretrain_VLBERT_20epoch/train_train/vl-bert_base_res101_pretrain_multitask-0019.model"
   PARTIAL_PRETRAIN_PREFIX_CHANGES: []
   INITIALISATION: ''
   IMAGE_NUM_LAYERS: 101
@@ -94,7 +94,7 @@ TRAIN:
   END_EPOCH: 20
   OPTIMIZER: 'AdamW'
   CLIP_GRAD_NORM: 10
-  LR: 1.0e-7
+  LR: 5.0e-6
   LR_SCHEDULE: 'triangle'
   WD: 0.0001
   WARMUP: true
