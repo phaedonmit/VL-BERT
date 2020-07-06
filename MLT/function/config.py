@@ -45,8 +45,9 @@ _C.DATASET.IGNORE_DB_CACHE = True
 _C.DATASET.MASK_SIZE = 14
 _C.DATASET.QA2R_NOQ = False
 _C.DATASET.QA2R_AUG = False
-_C.DATASET.BOXES = "36"   # "36" or "10-100ada"
-_C.DATASET.USE_IMDB = True
+_C.DATASET.SEQ_LEN = 64
+_C.DATASET.MIN_SEQ_LEN = 0
+_C.DATASET.LANGUAGES_USED = ''
 
 # ------------------------------------------------------------------------------------- #
 # Common network options
@@ -55,6 +56,7 @@ _C.NETWORK = edict()
 _C.NETWORK.BLIND = False
 _C.NETWORK.NO_GROUNDING = False
 _C.NETWORK.PARTIAL_PRETRAIN = ""
+_C.NETWORK.INITIALISATION = ""
 _C.NETWORK.PARTIAL_PRETRAIN_PREFIX_CHANGES = []
 _C.NETWORK.FOR_MASK_VL_MODELING_PRETRAIN = False
 _C.NETWORK.NO_OBJ_ATTENTION = False
@@ -83,15 +85,15 @@ _C.NETWORK.BERT_WITH_MLM_LOSS = False
 _C.NETWORK.ENABLE_CNN_REG_LOSS = True
 _C.NETWORK.CNN_LOSS_WEIGHT = 1.0
 _C.NETWORK.ANS_LOSS_WEIGHT = 1.0
-_C.NETWORK.ANS_LOSS_TYPE = 'bce' # 'bce' or 'ce'
-_C.NETWORK.REPLACE_OBJECT_CHANGE_LABEL = True
 
 _C.NETWORK.VLBERT = edict()
+_C.NETWORK.VLBERT.from_scratch = False
 # _C.NETWORK.VLBERT.vocab_size = None
 _C.NETWORK.VLBERT.input_size = 1280
 # 1: LN + [1x1 conv] 2: LN + [1x1 conv] + dropout 3: LN + [1x1 conv] + dropout + BertLayer
 _C.NETWORK.VLBERT.input_transform_type = 1
 _C.NETWORK.VLBERT.word_embedding_frozen = False
+_C.NETWORK.VLBERT.pos_embedding_frozen = False
 _C.NETWORK.VLBERT.obj_pos_id_relative = True
 _C.NETWORK.VLBERT.hidden_size = 512
 _C.NETWORK.VLBERT.visual_size = 512
@@ -110,24 +112,29 @@ _C.NETWORK.VLBERT.visual_scale_object_init = 0.0
 _C.NETWORK.VLBERT.visual_ln = False
 # 1: class embedding 2: class agnostic embedding 3: average of word embedding of text
 _C.NETWORK.VLBERT.object_word_embed_mode = 2
-_C.NETWORK.VLBERT.with_pooler = False
+_C.NETWORK.VLBERT.with_pooler = True
+_C.NETWORK.VLBERT.visual_region_classes = 1601
 _C.NETWORK.VLBERT.position_padding_idx = -1
 
-_C.NETWORK.CLASSIFIER_TYPE = "2fc"    # 2fc or 1fc or mlm
-_C.NETWORK.CLASSIFIER_PRETRAINED = False
+_C.NETWORK.CLASSIFIER_TYPE = "2fc"    # 2fc or 1fc
 _C.NETWORK.CLASSIFIER_HIDDEN_SIZE = 1024
 _C.NETWORK.CLASSIFIER_DROPOUT = 0.1
 _C.NETWORK.CLASSIFIER_SIGMOID = False
 _C.NETWORK.CLASSIFIER_SIGMOID_LOSS_POSITIVE_WEIGHT = 1.0
+
+_C.NETWORK.WITH_REL_LOSS = True
+_C.NETWORK.WITH_MLM_LOSS = True
+_C.NETWORK.WITH_MVRC_LOSS = True
+_C.NETWORK.MLM_LOSS_NORM_IN_BATCH_FIRST = False
+_C.NETWORK.MVRC_LOSS_NORM_IN_BATCH_FIRST = False
+
+_C.NETWORK.MASK_RAW_PIXELS = True
 
 # ------------------------------------------------------------------------------------- #
 # Common training related options
 # ------------------------------------------------------------------------------------- #
 _C.TRAIN = edict()
 _C.TRAIN.LR_MULT = []
-_C.TRAIN.VISUAL_SCALE_TEXT_LR_MULT = 1.0
-_C.TRAIN.VISUAL_SCALE_OBJECT_LR_MULT = 1.0
-_C.TRAIN.VISUAL_SCALE_CLIP_GRAD_NORM = -1
 _C.TRAIN.SHUFFLE = True
 _C.TRAIN.FLIP_PROB = 0.5
 _C.TRAIN.BATCH_IMAGES = 1
@@ -151,7 +158,7 @@ _C.TRAIN.WD = 0.0001
 _C.TRAIN.MOMENTUM = 0.9
 _C.TRAIN.FP16 = False
 _C.TRAIN.FP16_LOSS_SCALE = 128.0
-_C.TRAIN.LOSS_LOGGERS = [('ans_loss', 'AnsLoss')]
+_C.TRAIN.LOSS_LOGGERS = [('relationship_loss', 'RelLoss'), ('mlm_loss', 'MLMLoss'), ('mvrc_loss', 'MVRCLoss')]
 
 # ------------------------------------------------------------------------------------- #
 # Common validation related options
@@ -174,6 +181,9 @@ _C.TEST.BATCH_IMAGES = 1
 def update_config(config_file):
     with open(config_file) as f:
         exp_config = edict(yaml.load(f))
+        if isinstance(exp_config.DATASET, list):
+            dataset_templ = config.DATASET
+            config.DATASET = []
         for k, v in exp_config.items():
             if k in config:
                 if isinstance(v, dict):
@@ -200,3 +210,9 @@ def update_config(config_file):
                         config[k] = v
             else:
                 raise ValueError("key {} not in config.py".format(k))
+
+            if isinstance(config.DATASET, list):
+                for i, dataset_cfg in enumerate(config.DATASET):
+                    for k, v in dataset_templ.items():
+                        if k not in dataset_cfg:
+                            config.DATASET[i][k] = v

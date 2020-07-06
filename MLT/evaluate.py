@@ -8,9 +8,8 @@ import json
 import torch
 import operator 
 
-# filepath = "/experiments/faidon/VL-BERT/checkpoints/itm_evaluation_retrieval_test2015.json"
-# filepath = "/experiments/faidon/VL-BERT/checkpoints/imt_model19_prec_5captions_LR1e6_all.json"
-filepath = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/itm_prec/007_prec_retrieval_both_LR1e6/007_prec_retrieval_both_LR1e6_retrieval_test2015.json"
+filepath = "/experiments/faidon/VL-BERT/checkpoints/itm_evaluation_retrieval_test2015.json"
+# filepath = "/experiments/faidon/VL-BERT/checkpoints/itm_model19_LR1e_6_all.json"
 
 with open(filepath) as json_file:
     data = json.load(json_file)

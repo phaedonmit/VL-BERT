@@ -4,34 +4,21 @@ import argparse
 import torch
 import subprocess
 
-from retrieval.function.config import config, update_config
-from retrieval.function.train import train_net
-from retrieval.function.test import test_net
+from MLT.function.config import config, update_config
+from MLT.function.vis import vis_net
 
 
 def parse_args():
-    parser = argparse.ArgumentParser('Train Cognition Network')
+    parser = argparse.ArgumentParser('Visualize Attention Maps')
     parser.add_argument('--cfg', type=str, help='path to config file')
-    parser.add_argument('--model-dir', type=str, help='root path to store checkpoint')
-    parser.add_argument('--log-dir', type=str, help='tensorboard log dir')
     parser.add_argument('--dist', help='whether to use distributed training', default=False, action='store_true')
     parser.add_argument('--slurm', help='whether this is a slurm job', default=False, action='store_true')
-    parser.add_argument('--do-test', help='whether to generate csv result on test set',
-                        default=False, action='store_true')
-    parser.add_argument('--cudnn-off', help='disable cudnn', default=False, action='store_true')
-
-    # easy test pretrain model
-    parser.add_argument('--partial-pretrain', type=str)
+    parser.add_argument('--save-dir', help='directory to save attention maps', type=str, default='./attention_maps')
 
     args = parser.parse_args()
 
     if args.cfg is not None:
         update_config(args.cfg)
-    if args.model_dir is not None:
-        config.OUTPUT_PATH = os.path.join(args.model_dir, config.OUTPUT_PATH)
-
-    if args.partial_pretrain is not None:
-        config.NETWORK.PARTIAL_PRETRAIN = args.partial_pretrain
 
     if args.slurm:
         proc_id = int(os.environ['SLURM_PROCID'])
@@ -51,12 +38,8 @@ def parse_args():
 
 def main():
     args, config = parse_args()
-    rank, model = train_net(args, config)
-    if args.do_test and (rank is None or rank == 0):
-        test_net(args, config)
+    rank, model = vis_net(args, config, args.save_dir)
 
 
 if __name__ == '__main__':
     main()
-
-

@@ -5,8 +5,15 @@ from . import samplers
 from .transforms.build import build_transforms
 from .collate_batch import BatchCollator
 import pprint
+from copy import deepcopy
 
-DATASET_CATALOGS = {'vqa': VQA}
+# FM: Added mutli30k to available datasets
+DATASET_CATALOGS = {'conceptual_captions': ConceptualCaptionsDataset,
+                    'coco_captions': COCOCaptionsDataset,
+                    'general_corpus': GeneralCorpus, 
+                    'multi30k': Multi30kDataset
+                    'flickr_30k': Flickr30kDataset
+                    }
 
 
 def build_dataset(dataset_name, *args, **kwargs):
@@ -48,7 +55,7 @@ def make_dataloader(cfg, dataset=None, mode='train', distributed=False, num_repl
         batch_size = cfg.TRAIN.BATCH_IMAGES * num_gpu
         shuffle = cfg.TRAIN.SHUFFLE
         num_workers = cfg.NUM_WORKERS_PER_GPU * num_gpu
-    elif mode == 'val':
+    else:
         ann_file = cfg.DATASET.VAL_ANNOTATION_FILE
         image_set = cfg.DATASET.VAL_IMAGE_SET
         aspect_grouping = False
@@ -56,23 +63,35 @@ def make_dataloader(cfg, dataset=None, mode='train', distributed=False, num_repl
         batch_size = cfg.VAL.BATCH_IMAGES * num_gpu
         shuffle = cfg.VAL.SHUFFLE
         num_workers = cfg.NUM_WORKERS_PER_GPU * num_gpu
-    else:
-        ann_file = cfg.DATASET.TEST_ANNOTATION_FILE
-        image_set = cfg.DATASET.TEST_IMAGE_SET
-        aspect_grouping = False
-        num_gpu = len(cfg.GPUS.split(','))
-        batch_size = cfg.TEST.BATCH_IMAGES * num_gpu
-        shuffle = cfg.TEST.SHUFFLE
-        num_workers = cfg.NUM_WORKERS_PER_GPU * num_gpu
+    # FM edit: use validation dataset for testing in this case
+    # elif mode == 'val':
+    #     ann_file = cfg.DATASET.VAL_ANNOTATION_FILE
+    #     image_set = cfg.DATASET.VAL_IMAGE_SET
+    #     aspect_grouping = False
+    #     num_gpu = len(cfg.GPUS.split(','))
+    #     batch_size = cfg.VAL.BATCH_IMAGES * num_gpu
+    #     shuffle = cfg.VAL.SHUFFLE
+    #     num_workers = cfg.NUM_WORKERS_PER_GPU * num_gpu
+    # else:
+    #     ann_file = cfg.DATASET.TEST_ANNOTATION_FILE
+    #     image_set = cfg.DATASET.TEST_IMAGE_SET
+    #     aspect_grouping = False
+    #     num_gpu = len(cfg.GPUS.split(','))
+    #     batch_size = cfg.TEST.BATCH_IMAGES * num_gpu
+    #     shuffle = cfg.TEST.SHUFFLE
+    #     num_workers = cfg.NUM_WORKERS_PER_GPU * num_gpu
 
     transform = build_transforms(cfg, mode)
 
     if dataset is None:
 
         dataset = build_dataset(dataset_name=cfg.DATASET.DATASET, ann_file=ann_file, image_set=image_set,
-                                use_imdb=cfg.DATASET.USE_IMDB,
+                                seq_len=cfg.DATASET.SEQ_LEN, min_seq_len=cfg.DATASET.MIN_SEQ_LEN,
                                 with_precomputed_visual_feat=cfg.NETWORK.IMAGE_FEAT_PRECOMPUTED,
-                                boxes=cfg.DATASET.BOXES,
+                                mask_raw_pixels=cfg.NETWORK.MASK_RAW_PIXELS,
+                                with_rel_task=cfg.NETWORK.WITH_REL_LOSS,
+                                with_mlm_task=cfg.NETWORK.WITH_MLM_LOSS,
+                                with_mvrc_task=cfg.NETWORK.WITH_MVRC_LOSS,
                                 answer_vocab_file=cfg.DATASET.ANSWER_VOCAB_FILE,
                                 root_path=cfg.DATASET.ROOT_PATH, data_path=cfg.DATASET.DATASET_PATH,
                                 test_mode=(mode == 'test'), transform=transform,
@@ -81,9 +100,11 @@ def make_dataloader(cfg, dataset=None, mode='train', distributed=False, num_repl
                                 ignore_db_cache=cfg.DATASET.IGNORE_DB_CACHE,
                                 add_image_as_a_box=cfg.DATASET.ADD_IMAGE_AS_A_BOX,
                                 aspect_grouping=aspect_grouping,
+                                languages_used=cfg.DATASET.LANGUAGES_USED,
                                 mask_size=(cfg.DATASET.MASK_SIZE, cfg.DATASET.MASK_SIZE),
                                 pretrained_model_name=cfg.NETWORK.BERT_MODEL_NAME)
-
+    # FM edit: for inference do not shuffle
+    shuffle = False if mode=='test' else True
     sampler = make_data_sampler(dataset, shuffle, distributed, num_replicas, rank)
     batch_sampler = make_batch_data_sampler(dataset, sampler, aspect_grouping, batch_size)
     collator = BatchCollator(dataset=dataset, append_ind=cfg.DATASET.APPEND_INDEX)
@@ -97,3 +118,26 @@ def make_dataloader(cfg, dataset=None, mode='train', distributed=False, num_repl
         return dataloader, sampler
 
     return dataloader
+
+
+def make_dataloaders(cfg, mode='train', distributed=False, num_replicas=None, rank=None, expose_sampler=False):
+
+    outputs = []
+
+    for i, dataset_cfg in enumerate(cfg.DATASET):
+        cfg_ = deepcopy(cfg)
+        cfg_.DATASET = dataset_cfg
+        cfg_.TRAIN.BATCH_IMAGES = cfg.TRAIN.BATCH_IMAGES[i]
+        cfg_.VAL.BATCH_IMAGES = cfg.VAL.BATCH_IMAGES[i]
+        cfg_.TEST.BATCH_IMAGES = cfg.TEST.BATCH_IMAGES[i]
+        outputs.append(
+            make_dataloader(cfg_,
+                            mode=mode,
+                            distributed=distributed,
+                            num_replicas=num_replicas,
+                            rank=rank,
+                            expose_sampler=expose_sampler)
+        )
+
+    return outputs
+

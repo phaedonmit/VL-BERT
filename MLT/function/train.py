@@ -2,6 +2,7 @@ import os
 import pprint
 import shutil
 import inspect
+import random
 
 from tensorboardX import SummaryWriter
 import numpy as np
@@ -13,7 +14,7 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 
 from common.utils.create_logger import create_logger
 from common.utils.misc import summary_parameters, bn_fp16_half_eval
-from common.utils.load import smart_resume, smart_partial_load_model_state_dict
+from common.utils.load import smart_resume, smart_partial_load_model_state_dict, smart_hybrid_partial_load_model_state_dict, smart_skip_partial_load_model_state_dict
 from common.trainer import train
 from common.metrics.composite_eval_metric import CompositeEvalMetric
 from common.metrics import retrieval_metrics
@@ -22,7 +23,8 @@ from common.callbacks.epoch_end_callbacks.validation_monitor import ValidationMo
 from common.callbacks.epoch_end_callbacks.checkpoint import Checkpoint
 from common.lr_scheduler import WarmupMultiStepLR
 from common.nlp.bert.optimization import AdamW, WarmupLinearSchedule
-from retrieval.data.build import make_dataloader, build_dataset, build_transforms
+from common.utils.multi_task_dataloader import MultiTaskDataLoader
+from retrieval.data.build import make_dataloader, make_dataloaders
 from retrieval.modules import *
 from retrieval.function.val import do_validation
 
@@ -31,12 +33,15 @@ try:
     from apex.parallel import DistributedDataParallel as Apex_DDP
 except ImportError:
     pass
-    #raise ImportError("Please install apex from https://www.github.com/nvidia/apex if you want to use fp16.")
+    # raise ImportError("Please install apex from https://www.github.com/nvidia/apex if you want to use fp16.")
 
 
 def train_net(args, config):
     # setup logger
-    logger, final_output_path = create_logger(config.OUTPUT_PATH, args.cfg, config.DATASET.TRAIN_IMAGE_SET,
+    logger, final_output_path = create_logger(config.OUTPUT_PATH,
+                                              args.cfg,
+                                              config.DATASET[0].TRAIN_IMAGE_SET if isinstance(config.DATASET, list)
+                                              else config.DATASET.TRAIN_IMAGE_SET,
                                               split='train')
     model_prefix = os.path.join(final_output_path, config.MODEL_PREFIX)
     if args.log_dir is None:
@@ -49,6 +54,7 @@ def train_net(args, config):
 
     # manually set random seed
     if config.RNG_SEED > -1:
+        random.seed(config.RNG_SEED)
         np.random.seed(config.RNG_SEED)
         torch.random.manual_seed(config.RNG_SEED)
         torch.cuda.manual_seed_all(config.RNG_SEED)
@@ -65,6 +71,8 @@ def train_net(args, config):
         torch.cuda.set_device(local_rank)
         master_address = os.environ['MASTER_ADDR']
         master_port = int(os.environ['MASTER_PORT'] or 23456)
+        # master_port = int(9997)
+        # master_port = int(9995)
         world_size = int(os.environ['WORLD_SIZE'] or 1)
         rank = int(os.environ['RANK'] or 0)
         if args.slurm:
@@ -96,17 +104,33 @@ def train_net(args, config):
                 os.makedirs(tb_log_dir)
             writer = SummaryWriter(log_dir=tb_log_dir)
 
-        train_loader, train_sampler = make_dataloader(config,
-                                                      mode='train',
-                                                      distributed=True,
-                                                      num_replicas=world_size,
-                                                      rank=rank,
-                                                      expose_sampler=True)
-        val_loader = make_dataloader(config,
-                                     mode='val',
-                                     distributed=True,
-                                     num_replicas=world_size,
-                                     rank=rank)
+        if isinstance(config.DATASET, list):
+            train_loaders_and_samplers = make_dataloaders(config,
+                                                          mode='train',
+                                                          distributed=True,
+                                                          num_replicas=world_size,
+                                                          rank=rank,
+                                                          expose_sampler=True)
+            val_loaders = make_dataloaders(config,
+                                           mode='val',
+                                           distributed=True,
+                                           num_replicas=world_size,
+                                           rank=rank)
+            train_loader = MultiTaskDataLoader([loader for loader, _ in train_loaders_and_samplers])
+            val_loader = MultiTaskDataLoader(val_loaders)
+            train_sampler = train_loaders_and_samplers[0][1]
+        else:
+            train_loader, train_sampler = make_dataloader(config,
+                                                          mode='train',
+                                                          distributed=True,
+                                                          num_replicas=world_size,
+                                                          rank=rank,
+                                                          expose_sampler=True)
+            val_loader = make_dataloader(config,
+                                         mode='val',
+                                         distributed=True,
+                                         num_replicas=world_size,
+                                         rank=rank)
 
         batch_size = world_size * (sum(config.TRAIN.BATCH_IMAGES)
                                    if isinstance(config.TRAIN.BATCH_IMAGES, list)
@@ -160,8 +184,14 @@ def train_net(args, config):
             model.cuda()
 
         # loader
-        train_loader = make_dataloader(config, mode='train', distributed=False)
-        val_loader = make_dataloader(config, mode='val', distributed=False)
+        if isinstance(config.DATASET, list):
+            train_loaders = make_dataloaders(config, mode='train', distributed=False)
+            val_loaders = make_dataloaders(config, mode='val', distributed=False)
+            train_loader = MultiTaskDataLoader(train_loaders)
+            val_loader = MultiTaskDataLoader(val_loaders)
+        else:
+            train_loader = make_dataloader(config, mode='train', distributed=False)
+            val_loader = make_dataloader(config, mode='val', distributed=False)
         train_sampler = None
 
         batch_size = num_gpus * (sum(config.TRAIN.BATCH_IMAGES) if isinstance(config.TRAIN.BATCH_IMAGES, list)
@@ -211,35 +241,37 @@ def train_net(args, config):
                 if no_match:
                     pretrain_state_dict_parsed[k] = v
             pretrain_state_dict = pretrain_state_dict_parsed
-        smart_partial_load_model_state_dict(model, pretrain_state_dict)
-
-    # pretrained classifier
-    if config.NETWORK.CLASSIFIER_PRETRAINED:
-        print('Initializing classifier weight from pretrained word embeddings...')
-        answers_word_embed = []
-        for k, v in model.state_dict().items():
-            if 'word_embeddings.weight' in k:
-                word_embeddings = v.detach().clone()
-                break
-        for answer in train_loader.dataset.answer_vocab:
-            a_tokens = train_loader.dataset.tokenizer.tokenize(answer)
-            a_ids = train_loader.dataset.tokenizer.convert_tokens_to_ids(a_tokens)
-            a_word_embed = (torch.stack([word_embeddings[a_id] for a_id in a_ids], dim=0)).mean(dim=0)
-            answers_word_embed.append(a_word_embed)
-        answers_word_embed_tensor = torch.stack(answers_word_embed, dim=0)
-        for name, module in model.named_modules():
-            if name.endswith('final_mlp'):
-                module[-1].weight.data = answers_word_embed_tensor.to(device=module[-1].weight.data.device)
+        # FM edit: introduce alternative initialisations
+        if config.NETWORK.INITIALISATION=='hybrid':
+            smart_hybrid_partial_load_model_state_dict(model, pretrain_state_dict)
+        elif config.NETWORK.INITIALISATION=='skip':
+            smart_skip_partial_load_model_state_dict(model, pretrain_state_dict)
+        else:
+            smart_partial_load_model_state_dict(model, pretrain_state_dict)
 
     # metrics
-    train_metrics_list = [retrieval_metrics.SoftAccuracy(allreduce=args.dist,
-                                                   num_replicas=world_size if args.dist else 1)]
-    val_metrics_list = [retrieval_metrics.SoftAccuracy(allreduce=args.dist,
-                                                 num_replicas=world_size if args.dist else 1)]
+    metric_kwargs = {'allreduce': args.dist,
+                     'num_replicas': world_size if args.dist else 1}
+    train_metrics_list = []
+    val_metrics_list = []
+    if config.NETWORK.WITH_REL_LOSS:
+        train_metrics_list.append(retrieval_metrics.RelationshipAccuracy(**metric_kwargs))
+        val_metrics_list.append(retrieval_metrics.RelationshipAccuracy(**metric_kwargs))
+    if config.NETWORK.WITH_MLM_LOSS:
+        if config.MODULE == 'ResNetVLBERTForPretrainingMultitask':
+            train_metrics_list.append(retrieval_metrics.MLMAccuracyWVC(**metric_kwargs))
+            train_metrics_list.append(retrieval_metrics.MLMAccuracyAUX(**metric_kwargs))
+            val_metrics_list.append(retrieval_metrics.MLMAccuracyWVC(**metric_kwargs))
+            val_metrics_list.append(retrieval_metrics.MLMAccuracyAUX(**metric_kwargs))
+        else:
+            train_metrics_list.append(retrieval_metrics.MLMAccuracy(**metric_kwargs))
+            val_metrics_list.append(retrieval_metrics.MLMAccuracy(**metric_kwargs))
+    if config.NETWORK.WITH_MVRC_LOSS:
+        train_metrics_list.append(retrieval_metrics.MVRCAccuracy(**metric_kwargs))
+        val_metrics_list.append(retrieval_metrics.MVRCAccuracy(**metric_kwargs))
     for output_name, display_name in config.TRAIN.LOSS_LOGGERS:
-        train_metrics_list.append(
-            retrieval_metrics.LossLogger(output_name, display_name=display_name, allreduce=args.dist,
-                                   num_replicas=world_size if args.dist else 1))
+        train_metrics_list.append(retrieval_metrics.LossLogger(output_name, display_name=display_name, **metric_kwargs))
+        val_metrics_list.append(retrieval_metrics.LossLogger(output_name, display_name=display_name, **metric_kwargs))
 
     train_metrics = CompositeEvalMetric()
     val_metrics = CompositeEvalMetric()
@@ -252,9 +284,9 @@ def train_net(args, config):
     epoch_end_callbacks = []
     if (rank is None) or (rank == 0):
         epoch_end_callbacks = [Checkpoint(model_prefix, config.CHECKPOINT_FREQUENT)]
+    host_metric_name = 'MLMAcc' if not config.MODULE == 'ResNetVLBERTForPretrainingMultitask' else 'MLMAccWVC'
     validation_monitor = ValidationMonitor(do_validation, val_loader, val_metrics,
-                                           host_metric_name='SoftAcc',
-                                           label_index_in_batch=config.DATASET.LABEL_INDEX_IN_BATCH)
+                                           host_metric_name=host_metric_name)
 
     # optimizer initial lr before
     for group in optimizer.param_groups:
@@ -269,7 +301,9 @@ def train_net(args, config):
         config.TRAIN.BEGIN_EPOCH = begin_epoch.item()
 
     # batch end callbacks
-    batch_size = len(config.GPUS.split(',')) * config.TRAIN.BATCH_IMAGES
+    batch_size = len(config.GPUS.split(',')) * (sum(config.TRAIN.BATCH_IMAGES)
+                                                if isinstance(config.TRAIN.BATCH_IMAGES, list)
+                                                else config.TRAIN.BATCH_IMAGES)
     batch_end_callbacks = [Speedometer(batch_size, config.LOG_FREQUENT,
                                        batches_per_epoch=len(train_loader),
                                        epochs=config.TRAIN.END_EPOCH - config.TRAIN.BEGIN_EPOCH)]
@@ -322,7 +356,8 @@ def train_net(args, config):
                                           opt_level='O2',
                                           keep_batchnorm_fp32=False,
                                           loss_scale=config.TRAIN.FP16_LOSS_SCALE,
-                                          min_loss_scale=32.0)
+                                          max_loss_scale=128.0,
+                                          min_loss_scale=128.0)
         if args.dist:
             model = Apex_DDP(model, delay_allreduce=True)
 

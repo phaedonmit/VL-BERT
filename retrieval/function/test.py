@@ -81,8 +81,8 @@ def test_net(args, config, ckpt_path=None, save_path=None, save_name=None):
         logits.extend(F.sigmoid(output[0]['relationship_logits']).detach().cpu().tolist())
         cur_id += bs
         #TODO: remove this is just for checking
-        if nbatch>900:
-            break
+        # if nbatch>900:
+        #     break
    
     # ************
     # Step 3: Store all logit results in file for later evalution       

@@ -11,10 +11,10 @@ class Compose(object):
     def __init__(self, transforms):
         self.transforms = transforms
 
-    def __call__(self, image, boxes, masks, im_info, flipped):
+    def __call__(self, image, boxes, masks, im_info):
         for t in self.transforms:
-            image, boxes, masks, im_info, flipped = t(image, boxes, masks, im_info, flipped)
-        return image, boxes, masks, im_info, flipped
+            image, boxes, masks, im_info = t(image, boxes, masks, im_info)
+        return image, boxes, masks, im_info
 
     def __repr__(self):
         format_string = self.__class__.__name__ + "("
@@ -53,7 +53,7 @@ class Resize(object):
 
         return (ow, oh)
 
-    def __call__(self, image, boxes, masks, im_info, flipped):
+    def __call__(self, image, boxes, masks, im_info):
         origin_size = im_info[:2]
         size = self.get_size(origin_size)
         if image is not None:
@@ -65,14 +65,14 @@ class Resize(object):
             boxes[:, [1, 3]] *= ratios[1]
         im_info[0], im_info[1] = size
         im_info[2], im_info[3] = ratios
-        return image, boxes, masks, im_info, flipped
+        return image, boxes, masks, im_info
 
 
 class RandomHorizontalFlip(object):
     def __init__(self, prob=0.5):
         self.prob = prob
 
-    def __call__(self, image, boxes, masks, im_info, flipped):
+    def __call__(self, image, boxes, masks, im_info):
         if random.random() < self.prob:
             w, h = im_info[:2]
             if image is not None:
@@ -81,13 +81,12 @@ class RandomHorizontalFlip(object):
                 boxes[:, [0, 2]] = w - 1 - boxes[:, [2, 0]]
             if masks is not None:
                 masks = torch.as_tensor(masks.numpy()[:, :, ::-1].tolist())
-            flipped = not flipped
-        return image, boxes, masks, im_info, flipped
+        return image, boxes, masks, im_info
 
 
 class ToTensor(object):
-    def __call__(self, image, boxes, masks, im_info, flipped):
-        return F.to_tensor(image) if image is not None else image, boxes, masks, im_info, flipped
+    def __call__(self, image, boxes, masks, im_info):
+        return F.to_tensor(image) if image is not None else image, boxes, masks, im_info
 
 
 class Normalize(object):
@@ -96,12 +95,12 @@ class Normalize(object):
         self.std = std
         self.to_bgr255 = to_bgr255
 
-    def __call__(self, image, boxes, masks, im_info, flipped):
+    def __call__(self, image, boxes, masks, im_info):
         if image is not None:
             if self.to_bgr255:
                 image = image[[2, 1, 0]] * 255
             image = F.normalize(image, mean=self.mean, std=self.std)
-        return image, boxes, masks, im_info, flipped
+        return image, boxes, masks, im_info
 
 
 class FixPadding(object):
@@ -110,7 +109,7 @@ class FixPadding(object):
         self.max_size = max_size
         self.pad = pad
 
-    def __call__(self, image, boxes, masks, im_info, flipped):
+    def __call__(self, image, boxes, masks, im_info):
 
         if image is not None:
             # padding to fixed size for determinacy
@@ -125,4 +124,4 @@ class FixPadding(object):
             padded_image[:, :h, :w] = image
             image = padded_image
 
-        return image, boxes, masks, im_info, flipped
+        return image, boxes, masks, im_info

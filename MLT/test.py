@@ -3,14 +3,14 @@ import os
 import argparse
 from copy import deepcopy
 
-from vqa.function.config import config, update_config
-from vqa.function.test import test_net
+from MLT.function.config import config, update_config
+from MLT.function.test import test_net
 
 
 def parse_args():
-    parser = argparse.ArgumentParser('Get Test Result of VQA Network')
-    parser.add_argument('--cfg', type=str, help='path to answer net config yaml')
-    parser.add_argument('--ckpt', type=str, help='path to checkpoint of answer net')
+    parser = argparse.ArgumentParser('Get Test Result of Retrieval Network')
+    parser.add_argument('--cfg', type=str, help='path to retrieval net config yaml')
+    parser.add_argument('--ckpt', type=str, help='path to checkpoint of retrieval net')
     parser.add_argument('--bs', type=int)
     parser.add_argument('--gpus', type=int, nargs='+')
     parser.add_argument('--model-dir', type=str, help='root path to store checkpoint')

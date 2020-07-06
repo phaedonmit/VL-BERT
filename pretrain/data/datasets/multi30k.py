@@ -48,7 +48,8 @@ class Multi30kDataset(Dataset):
         assert not test_mode
 
         annot = {'train': 'train_frcnn.json',
-                 'val': 'val_frcnn.json'}
+                 'val': 'val_frcnn.json',
+                 'test': 'test_frcnn.json'}
 
         self.seq_len = seq_len
         self.with_rel_task = with_rel_task

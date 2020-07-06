@@ -89,6 +89,12 @@ def load_image_ids(split_name, data_root):
           filepath = os.path.join('flickr30k/flickr30k-images.zip@/', line.strip())
           image_id = int(line.split('.')[0])
           split.append((filepath,image_id))   
+    elif split_name == 'flickr30k_test':
+      with open(os.path.join(data_root, 'flickr30k/utils/test_2016_flickr.txt')) as f:
+        for cnt, line in enumerate(f):  
+          filepath = os.path.join('flickr30k/flickr30k-images.zip@/', line.strip())
+          image_id = int(line.split('.')[0])
+          split.append((filepath,image_id))   
     else:
       print 'Unknown split'
     return split

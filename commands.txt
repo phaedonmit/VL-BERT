@@ -42,6 +42,9 @@ pretrain multi30k_pretrained
 CUDA_VISIBLE_DEVICES=3 ./scripts/dist_run_single.sh 1 pretrain/train_end2end.py /experiments/faidon/VL-BERT/cfgs/flickr30k/base_e2e_16x16G_fp16_pretrained.yaml /experiments/faidon/VL-BERT/checkpoints
 CUDA_VISIBLE_DEVICES=0 ./scripts/dist_run_single.sh 1 pretrain/train_end2end.py /experiments/faidon/VL-BERT/cfgs/flickr30k/base_e2e_16x16G_fp16_pretrained_german_corpus.yaml /experiments/faidon/VL-BERT/checkpoints
 
+CUDA_VISIBLE_DEVICES=0 ./scripts/dist_run_single.sh 1 pretrain/train_end2end.py /experiments/faidon/VL-BERT/cfgs/flickr30k/base_prec_16x16G_fp16_pretrained.yaml /experiments/faidon/VL-BERT/checkpoints
+CUDA_VISIBLE_DEVICES=3 ./scripts/dist_run_single.sh 1 pretrain/train_end2end.py /experiments/faidon/VL-BERT/cfgs/flickr30k/base_prec_16x16G_fp16_pretrained_LR6.yaml /experiments/faidon/VL-BERT/checkpoints
+
 pretrain CC
 CUDA_VISIBLE_DEVICES=3 ./scripts/dist_run_single.sh 1 pretrain/train_end2end.py /experiments/faidon/VL-BERT/cfgs/pretrain/base_e2e_11x11G_fp16.yaml /experiments/faidon/VL-BERT/checkpoints
 pretrain CC start from existing
@@ -54,6 +57,12 @@ CUDA_VISIBLE_DEVICES=3 ./scripts/dist_run_single.sh 1 retrieval/train_end2end.py
 CUDA_VISIBLE_DEVICES=2 ./scripts/dist_run_single.sh 1 retrieval/train_end2end.py /experiments/faidon/VL-BERT/cfgs/retrieval/base_e2e_16x16G_fp16_downstream_retrieval_english_LR6.yaml /experiments/faidon/VL-BERT/checkpoints
 CUDA_VISIBLE_DEVICES=0 ./scripts/dist_run_single.sh 1 retrieval/train_end2end.py /experiments/faidon/VL-BERT/cfgs/retrieval/base_e2e_16x16G_fp16_downstream_retrieval_english_LR6_40epochs.yaml /experiments/faidon/VL-BERT/checkpoints
 CUDA_VISIBLE_DEVICES=3 ./scripts/dist_run_single.sh 1 retrieval/train_end2end.py /experiments/faidon/VL-BERT/cfgs/retrieval/base_e2e_16x16G_fp16_downstream_retrieval_german_LR6_40epochs.yaml /experiments/faidon/VL-BERT/checkpoints
+
+CUDA_VISIBLE_DEVICES=0 ./scripts/dist_run_single.sh 1 retrieval/train_end2end.py /experiments/faidon/VL-BERT/cfgs/retrieval/base_prec_16x16G_fp16_downstream_retrieval_english_LR6_startLR6.yaml /experiments/faidon/VL-BERT/checkpoints
+CUDA_VISIBLE_DEVICES=3 ./scripts/dist_run_single.sh 1 retrieval/train_end2end.py /experiments/faidon/VL-BERT/cfgs/retrieval/base_prec_16x16G_fp16_downstream_retrieval_german_LR6_startLR6.yaml /experiments/faidon/VL-BERT/checkpoints
+CUDA_VISIBLE_DEVICES=2 ./scripts/dist_run_single.sh 1 retrieval/train_end2end.py /experiments/faidon/VL-BERT/cfgs/retrieval/base_prec_16x16G_fp16_downstream_retrieval_german_LR6_startEnglish5k.yaml /experiments/faidon/VL-BERT/checkpoints
+CUDA_VISIBLE_DEVICES=3 ./scripts/dist_run_single.sh 1 retrieval/train_end2end.py /experiments/faidon/VL-BERT/cfgs/retrieval/base_prec_16x16G_fp16_downstream_retrieval_english_LR6.yaml /experiments/faidon/VL-BERT/checkpoints
+CUDA_VISIBLE_DEVICES=0 ./scripts/dist_run_single.sh 1 retrieval/train_end2end.py /experiments/faidon/VL-BERT/cfgs/retrieval/base_prec_16x16G_fp16_downstream_retrieval_both_LR6.yaml /experiments/faidon/VL-BERT/checkpoints
 
 # for all tasks together:
 CUDA_VISIBLE_DEVICES=3 ./scripts/dist_run_single.sh 1 pretrain/train_end2end.py /experiments/faidon/VL-BERT/cfgs/flickr30k/base_e2e_16x16G_fp16_fully_trained_itm.yaml /experiments/faidon/VL-BERT/checkpoints
@@ -86,6 +95,33 @@ CUDA_VISIBLE_DEVICES=2 python retrieval/test.py \
   --gpus 0 \
   --result-path /experiments/faidon/VL-BERT/checkpoints --result-name itm_evaluation
 
+CUDA_VISIBLE_DEVICES=3 python retrieval/test.py \
+  --cfg /experiments/faidon/VL-BERT/cfgs/retrieval/base_prec_16x16G_fp16_downstream_retrieval_english_LR6.yaml \
+  --ckpt  /experiments/faidon/VL-BERT/checkpoints/output/pretrain/vl-bert/base_prec_16x16G_fp16_downstream_retrieval_english_LR6/train_train/vl-bert_base_res101_pretrain_multitask-0019.model \
+  --gpus 0 \
+  --result-path /experiments/faidon/VL-BERT/checkpoints --result-name itm_evaluation
+
+CUDA_VISIBLE_DEVICES=3 python retrieval/test.py \
+  --cfg /experiments/faidon/VL-BERT/cfgs/retrieval/base_prec_16x16G_fp16_downstream_retrieval_english_LR6_startLR6.yaml \
+  --ckpt  /experiments/faidon/VL-BERT/checkpoints/output/pretrain/itm_prec/003_prec_retrieval_english_LR6_5cap_startLR6/train_train/vl-bert_base_res101_pretrain_multitask-0019.model \
+  --gpus 0 \
+  --result-path /experiments/faidon/VL-BERT/checkpoints --result-name 003_prec_retrieval_english_LR6_5cap_startLR6
+
+
+CUDA_VISIBLE_DEVICES=0 python retrieval/test.py \
+  --cfg /experiments/faidon/VL-BERT/checkpoints/output/pretrain/itm_prec/002_prec_retrieval_german_LR6/train_train/base_prec_16x16G_fp16_downstream_retrieval_german_LR6_startLR6.yaml \
+  --ckpt  /experiments/faidon/VL-BERT/checkpoints/output/pretrain/itm_prec/002_prec_retrieval_german_LR6/train_train/vl-bert_base_res101_pretrain_multitask-0019.model \
+  --gpus 0 \
+  --result-path /experiments/faidon/VL-BERT/checkpoints --result-name 002_prec_retrieval_german_LR6
+
+CUDA_VISIBLE_DEVICES=3 python retrieval/test.py \
+  --cfg /experiments/faidon/VL-BERT/checkpoints/output/pretrain/itm_prec/002_prec_retrieval_german_LR6/train_train/base_prec_16x16G_fp16_downstream_retrieval_german_LR6_startLR6.yaml \
+  --ckpt  /experiments/faidon/VL-BERT/checkpoints/output/pretrain/itm_prec/003_prec_retrieval_english_LR6_5cap_startLR6/train_train/vl-bert_base_res101_pretrain_multitask-0019.model \
+  --gpus 0 \
+  --result-path /experiments/faidon/VL-BERT/checkpoints --result-name zs_prec_retrieval_german
+
+
+
 
 --------------------------------------
 Tensorboard
@@ -116,8 +152,10 @@ python generate_tsv_v2.py --gpu 3 --cfg /opt/butd/experiments/cfgs/faster_rcnn_e
 
 python generate_tsv_v2.py --gpu 3 --cfg /opt/butd/experiments/cfgs/faster_rcnn_end2end_resnet.yml --def /opt/butd/models/vg/ResNet-101/faster_rcnn_end2end_final/test.prototxt --net /workspace/data/faster_rcnn_models/resnet101_faster_rcnn_final.caffemodel --split flickr30k_val --data_root /workspace/data  --out /workspace/data/flickr30k/val_frcnn/
 python generate_tsv_v2.py --gpu 3 --cfg /opt/butd/experiments/cfgs/faster_rcnn_end2end_resnet.yml --def /opt/butd/models/vg/ResNet-101/faster_rcnn_end2end_final/test.prototxt --net /workspace/data/faster_rcnn_models/resnet101_faster_rcnn_final.caffemodel --split flickr30k_train --data_root /workspace/data  --out /workspace/data/flickr30k/train_frcnn/
+python generate_tsv_v2.py --gpu 3 --cfg /opt/butd/experiments/cfgs/faster_rcnn_end2end_resnet.yml --def /opt/butd/models/vg/ResNet-101/faster_rcnn_end2end_final/test.prototxt --net /workspace/data/faster_rcnn_models/resnet101_faster_rcnn_final.caffemodel --split flickr30k_test --data_root /workspace/data  --out /workspace/data/flickr30k/test_frcnn/
 
 python generate_tsv_v2.py --gpu 0 --cfg /opt/butd/experiments/cfgs/faster_rcnn_end2end_resnet.yml --def /opt/butd/models/vg/ResNet-101/faster_rcnn_end2end_final/test.prototxt --net /workspace/data/faster_rcnn_models/resnet101_faster_rcnn_final.caffemodel --split conceptual_captions_train --data_root /workspace/data/conceptual-captions  --out /workspace/data/conceptual-captions/train_frcnn/
+python generate_tsv_v2.py --gpu 3 --cfg /opt/butd/experiments/cfgs/faster_rcnn_end2end_resnet.yml --def /opt/butd/models/vg/ResNet-101/faster_rcnn_end2end_final/test.prototxt --net /workspace/data/faster_rcnn_models/resnet101_faster_rcnn_final.caffemodel --split conceptual_captions_val --data_root /workspace/data/conceptual-captions  --out /workspace/data/conceptual-captions/val_frcnn/
 python generate_tsv_v2.py --gpu 3 --cfg /opt/butd/experiments/cfgs/faster_rcnn_end2end_resnet.yml --def /opt/butd/models/vg/ResNet-101/faster_rcnn_end2end_final/test.prototxt --net /workspace/data/faster_rcnn_models/resnet101_faster_rcnn_final.caffemodel --split conceptual_captions_val --data_root /workspace/data/conceptual-captions  --out /workspace/data/conceptual-captions/val_frcnn/
 
 
