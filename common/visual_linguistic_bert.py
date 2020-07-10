@@ -178,6 +178,13 @@ class VisualLinguisticBert(BaseModel):
                   object_vl_embeddings,
                   object_mask):
 
+        # print( 'text_input_ids shape: ', text_input_ids.shape)
+        # print( 'text_token_type_ids shape: ', text_token_type_ids.shape)
+        # print( 'text_visual_embeddings shape: ', text_visual_embeddings.shape)
+        # print( 'text_mask shape: ', text_mask.shape)
+        # print( 'object_vl_embeddings shape: ', object_vl_embeddings.shape)
+        # print( 'object_mask shape: ', object_mask.shape)
+
         text_linguistic_embedding = self.word_embeddings_wrapper(text_input_ids)
         if self.visual_1x1_text is not None:
             text_visual_embeddings = self.visual_1x1_text(text_visual_embeddings)
@@ -211,6 +218,7 @@ class VisualLinguisticBert(BaseModel):
         vl_embeddings[grid_pos < text_end] = text_vl_embeddings[text_mask]
         vl_embeddings[(grid_pos >= text_end) & (grid_pos < object_end)]  = object_vl_embeddings[object_mask]
         vl_embeddings[grid_pos == object_end] = self.end_embedding(_zero_id)
+
 
         # token type embeddings/ segment embeddings
         token_type_ids = text_token_type_ids.new_zeros((bs, max_length))

@@ -5,6 +5,7 @@ from copy import deepcopy
 
 from retrieval.function.config import config, update_config
 from retrieval.function.test import test_net
+from retrieval.function.test_translation import test_translation_net
 
 
 def parse_args():
@@ -36,9 +37,12 @@ def parse_args():
 
 def main():
     args, config = parse_args()
-
-    result_json_path = test_net(args, config,
-                                ckpt_path=args.ckpt, save_path=args.result_path, save_name=args.result_name)
+    if config.DATASET.DATASET=='translation_multi30k':
+        result_json_path = test_translation_net(args, config,
+                                    ckpt_path=args.ckpt, save_path=args.result_path, save_name=args.result_name)
+    else:
+        result_json_path = test_net(args, config,
+                                    ckpt_path=args.ckpt, save_path=args.result_path, save_name=args.result_name)
 
 
 if __name__ == '__main__':

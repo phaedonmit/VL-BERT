@@ -10,35 +10,35 @@ import operator
 
 # filepath = "/experiments/faidon/VL-BERT/checkpoints/itm_evaluation_retrieval_test2015.json"
 # filepath = "/experiments/faidon/VL-BERT/checkpoints/imt_model19_prec_5captions_LR1e6_all.json"
-filepath = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/itm_prec/008_prec_retrieval_english_LR6_5cap_cc/008_prec_retrieval_english_LR6_5cap_cc_18model_retrieval_test2015.json"
+filepath = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/translation_retrieval/001_prec_translation_retrieval_with_vision_19model_retrieval_translation_test2015.json"
 
 with open(filepath) as json_file:
     data = json.load(json_file)
     ranks = [1, 5, 10]
     correct = [0, 0, 0]
     total=0
-    captions_dict = {}
-    image_dict = {}
+    captions_en_dict = {}
+    captions_de_dict = {}
 
     #******************************************************
     # Step 1: Read json to dictionaries
     
     # json file to nested dictionary (each caption with all images)
     for p in data:
-        if p['caption_id'] in captions_dict.keys():
-            captions_dict[p['caption_id']][p['image_ids']]= ((torch.tensor(p['logit'][0])).item())
+        if p['caption_en_index'] in captions_en_dict.keys():
+            captions_en_dict[p['caption_en_index']][p['caption_de_index']]= ((torch.tensor(p['logit'][0])).item())
         else:
-            captions_dict[p['caption_id']] = {p['image_ids']: (torch.tensor(p['logit'][0])).item()}
+            captions_en_dict[p['caption_en_index']] = {p['caption_de_index']: (torch.tensor(p['logit'][0])).item()}
     # # json file to nested dictionary (each image with all caption)
-        if p['image_ids'] in image_dict.keys():
-            image_dict[p['image_ids']][p['caption_id']]= ((torch.tensor(p['logit'][0])).item())
+        if p['caption_de_index'] in captions_de_dict.keys():
+            captions_de_dict[p['caption_de_index']][p['caption_en_index']]= ((torch.tensor(p['logit'][0])).item())
         else:
-            image_dict[p['image_ids']] = {p['caption_id']: (torch.tensor(p['logit'][0])).item()}
+            captions_de_dict[p['caption_de_index']] = {p['caption_en_index']: (torch.tensor(p['logit'][0])).item()}
 
     #******************************************************
     # Step 2: Get ranks image retrieval
     # get r1, r5 and r10 for each capion
-    for index, value in captions_dict.items():
+    for index, value in captions_en_dict.items():
         # print('-------')
         # print('Top candiate is: ', (max(value.items(), key=operator.itemgetter(1))))
         # print('Actual image id is: ', index)
@@ -51,7 +51,7 @@ with open(filepath) as json_file:
             correct[2] += 1    
         total += 1
     print('******************************')
-    print('***** Image retrieval    *****')
+    print('***** German Caption retrieval    *****')
     print('******************************')
     print('Total captions assessed: ', total)
     print('******')
@@ -70,7 +70,7 @@ with open(filepath) as json_file:
     # get r1, r5 and r10 for each capion
     correct = [0, 0, 0]
     total=0    
-    for index, value in image_dict.items():
+    for index, value in captions_de_dict.items():
         # print('-------')
         # print('Top candiate is: ', (max(value.items(), key=operator.itemgetter(1))))
         # print('Actual image id is: ', index)
@@ -83,7 +83,7 @@ with open(filepath) as json_file:
             correct[2] += 1    
         total += 1
     print('\n******************************')
-    print('***** Caption retrieval  *****')
+    print('***** English Caption retrieval *****')
     print('******************************')
     print('Total images assessed: ', total)
     print('******')

@@ -12,10 +12,10 @@ BERT_WEIGHTS_NAME = 'pytorch_model.bin'
 
 
 
-class ResNetVLBERTForPretrainingMultitask(Module):
+class ResNetVLBERTForPretrainingTranslationNoVision(Module):
     def __init__(self, config):
 
-        super(ResNetVLBERTForPretrainingMultitask, self).__init__(config)
+        super(ResNetVLBERTForPretrainingTranslationNoVision, self).__init__(config)
 
         # Constructs/initialises model elements
         self.image_feature_extractor = FastRCNN(config,
@@ -72,7 +72,7 @@ class ResNetVLBERTForPretrainingMultitask(Module):
                                                                   std=self.config.NETWORK.VLBERT.initializer_range)
 
     def train(self, mode=True):
-        super(ResNetVLBERTForPretrainingMultitask, self).train(mode)
+        super(ResNetVLBERTForPretrainingTranslationNoVision, self).train(mode)
         # turn some frozen layers to eval mode
         if self.image_feature_bn_eval:
             self.image_feature_extractor.bn_eval()
@@ -108,23 +108,10 @@ class ResNetVLBERTForPretrainingMultitask(Module):
                 mlm_labels,
                 mvrc_ops,
                 mvrc_labels,
-                *aux):
+                caption_index,
+                image_index):
 
-        # concat aux texts from different dataset
-        assert len(aux) > 0 and len(aux) % 2 == 0
-        aux_text_list = aux[0::2]
-        aux_text_mlm_labels_list = aux[1::2]
-        num_aux_text = sum([_text.shape[0] for _text in aux_text_list])
-        max_aux_text_len = max([_text.shape[1] for _text in aux_text_list])
-        aux_text = aux_text_list[0].new_zeros((num_aux_text, max_aux_text_len))
-        aux_text_mlm_labels = aux_text_mlm_labels_list[0].new_zeros((num_aux_text, max_aux_text_len)).fill_(-1)
-        _cur = 0
-        for _text, _mlm_labels in zip(aux_text_list, aux_text_mlm_labels_list):
-            _num = _text.shape[0]
-            aux_text[_cur:(_cur + _num), :_text.shape[1]] = _text
-            aux_text_mlm_labels[_cur:(_cur + _num), :_text.shape[1]] = _mlm_labels
-            _cur += _num
-
+  
         ###########################################
 
         # visual feature extraction
@@ -161,58 +148,51 @@ class ResNetVLBERTForPretrainingMultitask(Module):
         # creates a text_tags tensor of the same shape as text tensor
         text_tags = text.new_zeros(text.shape)
         text_visual_embeddings = self._collect_obj_reps(text_tags, obj_reps['obj_reps'])
+        # ***** FM edit: blank out visual embeddings for translation retrieval task
+        text_visual_embeddings[:] = self.aux_text_visual_embedding.weight[0]
 
-        # linguistic embedding for visual uses [IMG] embedding for all (apart from masked visual)
         object_linguistic_embeddings = self.object_linguistic_embeddings(
             boxes.new_zeros((boxes.shape[0], boxes.shape[1])).long()
         )
         if self.config.NETWORK.WITH_MVRC_LOSS:
             object_linguistic_embeddings[mvrc_ops == 1] = self.object_mask_word_embedding.weight[0]
         object_vl_embeddings = torch.cat((obj_reps['obj_reps'], object_linguistic_embeddings), -1)
+        # ****** FM edit: blank out all visual embeddings
+        object_vl_embeddings = object_vl_embeddings.new_zeros(object_vl_embeddings.shape)
 
+        # FM edit: No auxiliary text is used for text only
         # add auxiliary text - Concatenates the batches from the two dataloaders
         # The visual features for the text only corpus is just the embedding of the aux_visual_embedding (only one embedding)
-        max_text_len = max(text_input_ids.shape[1], aux_text.shape[1])
-        text_input_ids_multi = text_input_ids.new_zeros((text_input_ids.shape[0] + aux_text.shape[0], max_text_len))
-        text_input_ids_multi[:text_input_ids.shape[0], :text_input_ids.shape[1]] = text_input_ids
-        text_input_ids_multi[text_input_ids.shape[0]:, :aux_text.shape[1]] = aux_text
-        text_token_type_ids_multi = text_input_ids_multi.new_zeros(text_input_ids_multi.shape)
-        text_mask_multi = (text_input_ids_multi > 0)
-        text_visual_embeddings_multi = text_visual_embeddings.new_zeros((text_input_ids.shape[0] + aux_text.shape[0],
-                                                                         max_text_len,
-                                                                         text_visual_embeddings.shape[-1]))
-        text_visual_embeddings_multi[:text_visual_embeddings.shape[0], :text_visual_embeddings.shape[1]] \
-            = text_visual_embeddings
-        text_visual_embeddings_multi[text_visual_embeddings.shape[0]:] = self.aux_text_visual_embedding.weight[0]
-        object_vl_embeddings_multi = object_vl_embeddings.new_zeros((text_input_ids.shape[0] + aux_text.shape[0],
-                                                                     *object_vl_embeddings.shape[1:]))
-        object_vl_embeddings_multi[:object_vl_embeddings.shape[0]] = object_vl_embeddings
-        box_mask_multi = box_mask.new_zeros((text_input_ids.shape[0] + aux_text.shape[0], *box_mask.shape[1:]))
-        box_mask_multi[:box_mask.shape[0]] = box_mask
-
-        ###########################################
-
-        # # Visual Linguistic BERT
+        max_text_len = text_input_ids.shape[1]
+        text_token_type_ids = text_input_ids.new_zeros(text_input_ids.shape)
+        text_mask = (text_input_ids > 0)
+        #FM: Edit: i have taken this out, not needed i think since defined above
+        # box_mask = box_mask.new_zeros((text_input_ids.shape[0], *box_mask.shape[1:]))
+        
+        # # FM edit: Remove vision modality - cut short
+        # print('mvrc_ops: ', mvrc_ops)
         # print('text input shape: ', text)
-        # print( 'text_input_ids_multi shape: ', text_input_ids_multi.shape)
-        # print( 'text_token_type_ids_multi shape: ', text_token_type_ids_multi.shape)
-        # print( 'text_visual_embeddings_multi shape: ', text_visual_embeddings_multi.shape)
-        # print( 'text_mask_multi shape: ', text_mask_multi.shape)
-        # print( 'object_vl_embeddings_multi shape: ', object_vl_embeddings_multi.shape)
-        # print( 'box_mask_multi shape: ', box_mask_multi.shape)
+        # print( 'text_input_ids shape: ', text_input_ids.shape)
+        # print( 'text_token_type_ids shape: ', text_token_type_ids.shape)
+        # print( 'text_visual_embeddings shape: ', text_visual_embeddings.shape)
+        # print( 'text_mask shape: ', text_mask.shape)
+        # print( 'object_vl_embeddings shape: ', object_vl_embeddings.shape)
+        # print( 'box_mask shape: ', box_mask.shape)
 
-        # print ('text_mask_multi: ', text_mask_multi)
-        # print ('box_mask_multi: ', box_mask_multi)
+        # print ('text_mask: ', text_mask)
+        # print ('object_mask: ', box_mask)
 
         # exit()
+        ###########################################
 
+        # Visual Linguistic BERT
 
-        relationship_logits_multi, mlm_logits_multi, mvrc_logits_multi = self.vlbert(text_input_ids_multi,
-                                                                                     text_token_type_ids_multi,
-                                                                                     text_visual_embeddings_multi,
-                                                                                     text_mask_multi,
-                                                                                     object_vl_embeddings_multi,
-                                                                                     box_mask_multi)
+        relationship_logits_multi, mlm_logits_multi, mvrc_logits_multi = self.vlbert(text_input_ids,
+                                                                                     text_token_type_ids,
+                                                                                     text_visual_embeddings,
+                                                                                     text_mask,
+                                                                                     object_vl_embeddings,
+                                                                                     box_mask)
 
         ###########################################
         outputs = {}
@@ -223,7 +203,8 @@ class ResNetVLBERTForPretrainingMultitask(Module):
         mvrc_loss = im_info.new_zeros(())
         if self.config.NETWORK.WITH_REL_LOSS:
             relationship_logits = relationship_logits_multi[:text_input_ids.shape[0]]
-            relationship_loss = F.cross_entropy(relationship_logits, relationship_label)
+            # FM edit - change cross_entropy to bce/sigmoid
+            relationship_loss = F.binary_cross_entropy(torch.sigmoid(relationship_logits), relationship_label.unsqueeze(1))
         if self.config.NETWORK.WITH_MLM_LOSS:
             mlm_labels_multi = mlm_labels.new_zeros((text_input_ids.shape[0] + aux_text.shape[0], max_text_len)).fill_(
                 -1)
@@ -292,6 +273,7 @@ class ResNetVLBERTForPretrainingMultitask(Module):
             mvrc_labels_padded[:, :mvrc_labels.shape[1]] = mvrc_labels
             mvrc_labels = mvrc_labels_padded
 
+        # FM edit: removed other two losses that are not defined
         outputs.update({
             'relationship_logits': relationship_logits if self.config.NETWORK.WITH_REL_LOSS else None,
             'relationship_label': relationship_label if self.config.NETWORK.WITH_REL_LOSS else None,
@@ -302,11 +284,9 @@ class ResNetVLBERTForPretrainingMultitask(Module):
             'mvrc_logits': mvrc_logits if self.config.NETWORK.WITH_MVRC_LOSS else None,
             'mvrc_label': mvrc_labels if self.config.NETWORK.WITH_MVRC_LOSS else None,
             'relationship_loss': relationship_loss,
-            'mlm_loss_wvc': mlm_loss_wvc,
-            'mlm_loss_aux': mlm_loss_aux,
-            'mvrc_loss': mvrc_loss,
         })
 
-        loss = relationship_loss.mean() + mlm_loss_wvc.mean() + mlm_loss_aux.mean() + mvrc_loss.mean()
-
+        # FM edit: removed addition of other losses which are not defined
+        loss = relationship_loss.mean()
+        
         return outputs, loss
