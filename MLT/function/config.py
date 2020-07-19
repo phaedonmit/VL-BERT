@@ -106,6 +106,8 @@ _C.NETWORK.VLBERT.attention_probs_dropout_prob = 0.1
 _C.NETWORK.VLBERT.max_position_embeddings = 512
 _C.NETWORK.VLBERT.type_vocab_size = 3
 _C.NETWORK.VLBERT.vocab_size = 30522
+_C.NETWORK.VLBERT.MLT_words = 27000
+_C.NETWORK.VLBERT.MLT_vocab = 'german.txt'
 _C.NETWORK.VLBERT.initializer_range = 0.02
 _C.NETWORK.VLBERT.visual_scale_text_init = 0.0
 _C.NETWORK.VLBERT.visual_scale_object_init = 0.0
@@ -125,6 +127,7 @@ _C.NETWORK.CLASSIFIER_SIGMOID_LOSS_POSITIVE_WEIGHT = 1.0
 _C.NETWORK.WITH_REL_LOSS = True
 _C.NETWORK.WITH_MLM_LOSS = True
 _C.NETWORK.WITH_MVRC_LOSS = True
+_C.NETWORK.WITH_MLT_LOSS = True
 _C.NETWORK.MLM_LOSS_NORM_IN_BATCH_FIRST = False
 _C.NETWORK.MVRC_LOSS_NORM_IN_BATCH_FIRST = False
 

@@ -2,7 +2,7 @@
 RNG_SEED: 12345
 OUTPUT_PATH: './output/pretrain/vl-bert'
 MODULE: ResNetVLBERTForPretrainingMultitask
-GPUS: '2'
+GPUS: '3'
 LOG_FREQUENT: 100
 VAL_FREQUENT: 1
 CHECKPOINT_FREQUENT: 1
@@ -25,10 +25,10 @@ DATASET:
   CACHE_MODE: false
   IGNORE_DB_CACHE: false
   MASK_SIZE: 14
-  LANGUAGES_USED: 'second'
+  LANGUAGES_USED: 'first'
 
 NETWORK:
-  PARTIAL_PRETRAIN: "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/itm_prec/003_prec_retrieval_english_LR6_5cap_startLR6/train_train/vl-bert_base_res101_pretrain_multitask-0019.model"
+  PARTIAL_PRETRAIN: "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/pretrain_prec/002_prec_LR1e6_multi30k/train_train/vl-bert_base_res101_pretrain_multitask-0019.model"
   PARTIAL_PRETRAIN_PREFIX_CHANGES: []
   INITIALISATION: ''
   IMAGE_NUM_LAYERS: 101
@@ -59,9 +59,10 @@ NETWORK:
   ENABLE_CNN_REG_LOSS: false
   MLM_LOSS_NORM_IN_BATCH_FIRST: false
   MVRC_LOSS_NORM_IN_BATCH_FIRST: false
-  WITH_REL_LOSS: true
+  WITH_REL_LOSS: false
   WITH_MLM_LOSS: false
   WITH_MVRC_LOSS: false
+  WITH_MLT_LOSS: true
 
   VLBERT:
     with_pooler: true
@@ -77,6 +78,8 @@ NETWORK:
     max_position_embeddings: 512
     type_vocab_size: 3
     vocab_size: 119547
+    MLT_words: 1502
+    MLT_vocab: 'MLT_vocab.txt'
     initializer_range: 0.02
     visual_scale_text_init: 0.0
     visual_scale_object_init: 0.0
@@ -104,7 +107,7 @@ TRAIN:
   FP16: true
   FP16_LOSS_SCALE: 'dynamic'
   LOSS_LOGGERS:
-  - "relationship_loss,RelLoss"
+  - "MLT_loss,MLTLoss"
 
 VAL:
   SHUFFLE: false

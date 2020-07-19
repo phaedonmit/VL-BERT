@@ -319,19 +319,22 @@ class VisualLinguisticBert(BaseModel):
 
 class VisualLinguisticBertForPretraining(VisualLinguisticBert):
     def __init__(self, config, language_pretrained_model_path=None,
-                 with_rel_head=True, with_mlm_head=True, with_mvrc_head=True):
+                 with_rel_head=True, with_mlm_head=True, with_mvrc_head=True, with_MLT_head=False):
 
         super(VisualLinguisticBertForPretraining, self).__init__(config, language_pretrained_model_path=None)
 
         self.with_rel_head = with_rel_head
         self.with_mlm_head = with_mlm_head
         self.with_mvrc_head = with_mvrc_head
+        self.with_MLT_head = with_MLT_head
         if with_rel_head:
             self.relationsip_head = VisualLinguisticBertRelationshipPredictionHead(config)
         if with_mlm_head:
             self.mlm_head = BertOnlyMLMHead(config, self.word_embeddings.weight)
         if with_mvrc_head:
             self.mvrc_head = VisualLinguisticBertMVRCHead(config)
+        if with_MLT_head:
+            self.MLT_head = VisualLinguisticBertMLTPredictionHead(config)
 
         # init weights
         self.apply(self.init_weights)
@@ -384,6 +387,10 @@ class VisualLinguisticBertForPretraining(VisualLinguisticBert):
             mvrc_logits = self.mvrc_head(object_out)
         else:
             mvrc_logits = None
+        # Add MLT head
+        if self.with_MLT_head:
+            MLT_logits = self.MLT_head(pooled_rep)
+            return relationship_logits, mlm_logits, mvrc_logits, MLT_logits
 
         return relationship_logits, mlm_logits, mvrc_logits
 
@@ -477,7 +484,7 @@ class VisualLinguisticBertForPretraining(VisualLinguisticBert):
             self.relationsip_head.caption_image_relationship.load_state_dict(relationship_head_pretrained_state_dict)
         if self.with_mlm_head:
             self.mlm_head.predictions.load_state_dict(mlm_head_pretrained_state_dict)
-
+        # TODO: load MVRC head 
 
 class VisualLinguisticBertMVRCHeadTransform(BaseModel):
     def __init__(self, config):
@@ -523,6 +530,20 @@ class VisualLinguisticBertRelationshipPredictionHead(BaseModel):
         relationship_logits = self.caption_image_relationship(pooled_rep)
 
         return relationship_logits
+
+
+class VisualLinguisticBertMLTPredictionHead(BaseModel):
+    def __init__(self, config):
+        super(VisualLinguisticBertMLTPredictionHead, self).__init__(config)
+        # FM edit - change to single output
+        self.MLT_cls_pred = nn.Linear(config.hidden_size, config.MLT_words)
+        self.apply(self.init_weights)
+
+    def forward(self, pooled_rep):
+
+        logits = self.MLT_cls_pred(pooled_rep)
+
+        return logits        
 
 
 

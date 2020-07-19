@@ -12,9 +12,12 @@ DATASET_CATALOGS = {'conceptual_captions': ConceptualCaptionsDataset,
                     'coco_captions': COCOCaptionsDataset,
                     'general_corpus': GeneralCorpus, 
                     'multi30k': Multi30kDataset,
+                    'multi30k_5x': Multi30kDataset_5x,
+                    'multi30k_5x_mixed': Multi30kDataset_5x_Mixed,
                     'flickr_30k': Flickr30kDataset,
                     'cc_and_flickr30k': CC_and_Flickr30kDataset,
                     'translation_multi30k': Translation_Multi30kDataset,
+                    'translation_IAPR': Translation_IAPRDataset,
                     }
 
 
@@ -75,6 +78,7 @@ def make_dataloader(cfg, dataset=None, mode='train', distributed=False, num_repl
         shuffle = cfg.VAL.SHUFFLE
         num_workers = cfg.NUM_WORKERS_PER_GPU * num_gpu
     else:
+
         ann_file = cfg.DATASET.TEST_ANNOTATION_FILE
         image_set = cfg.DATASET.TEST_IMAGE_SET
         aspect_grouping = False

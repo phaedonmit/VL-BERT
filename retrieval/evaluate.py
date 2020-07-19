@@ -10,7 +10,7 @@ import operator
 
 # filepath = "/experiments/faidon/VL-BERT/checkpoints/itm_evaluation_retrieval_test2015.json"
 # filepath = "/experiments/faidon/VL-BERT/checkpoints/imt_model19_prec_5captions_LR1e6_all.json"
-filepath = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/itm_prec/009_prec_retrieval_english_monolingualModel/009_prec_retrieval_english_monolingualModel_07model_retrieval_test2015.json"
+filepath = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/itm_prec/011_prec_retrieval_mixed_5x/011_prec_retrieval_mixed_5x_English_retrieval_test2015.json"
 
 with open(filepath) as json_file:
     data = json.load(json_file)
@@ -26,14 +26,14 @@ with open(filepath) as json_file:
     # json file to nested dictionary (each caption with all images)
     for p in data:
         if p['caption_id'] in captions_dict.keys():
-            captions_dict[p['caption_id']][p['image_ids']]= ((torch.tensor(p['logit'][0])).item())
+            captions_dict[p['caption_id']][p['image_ids']]= p['logit'][0]
         else:
-            captions_dict[p['caption_id']] = {p['image_ids']: (torch.tensor(p['logit'][0])).item()}
+            captions_dict[p['caption_id']] = {p['image_ids']: p['logit'][0]}
     # # json file to nested dictionary (each image with all caption)
         if p['image_ids'] in image_dict.keys():
-            image_dict[p['image_ids']][p['caption_id']]= ((torch.tensor(p['logit'][0])).item())
+            image_dict[p['image_ids']][p['caption_id']]= p['logit'][0]
         else:
-            image_dict[p['image_ids']] = {p['caption_id']: (torch.tensor(p['logit'][0])).item()}
+            image_dict[p['image_ids']] = {p['caption_id']: p['logit'][0]}
 
     #******************************************************
     # Step 2: Get ranks image retrieval

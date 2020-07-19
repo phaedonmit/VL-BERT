@@ -17,16 +17,16 @@ from common.utils.misc import summary_parameters, bn_fp16_half_eval
 from common.utils.load import smart_resume, smart_partial_load_model_state_dict, smart_hybrid_partial_load_model_state_dict, smart_skip_partial_load_model_state_dict
 from common.trainer import train
 from common.metrics.composite_eval_metric import CompositeEvalMetric
-from common.metrics import retrieval_metrics
+from common.metrics import MLT_metrics
 from common.callbacks.batch_end_callbacks.speedometer import Speedometer
 from common.callbacks.epoch_end_callbacks.validation_monitor import ValidationMonitor
 from common.callbacks.epoch_end_callbacks.checkpoint import Checkpoint
 from common.lr_scheduler import WarmupMultiStepLR
 from common.nlp.bert.optimization import AdamW, WarmupLinearSchedule
 from common.utils.multi_task_dataloader import MultiTaskDataLoader
-from retrieval.data.build import make_dataloader, make_dataloaders
-from retrieval.modules import *
-from retrieval.function.val import do_validation
+from MLT.data.build import make_dataloader, make_dataloaders
+from MLT.modules import *
+from MLT.function.val import do_validation
 
 try:
     from apex import amp
@@ -255,23 +255,27 @@ def train_net(args, config):
     train_metrics_list = []
     val_metrics_list = []
     if config.NETWORK.WITH_REL_LOSS:
-        train_metrics_list.append(retrieval_metrics.RelationshipAccuracy(**metric_kwargs))
-        val_metrics_list.append(retrieval_metrics.RelationshipAccuracy(**metric_kwargs))
+        train_metrics_list.append(MLT_metrics.RelationshipAccuracy(**metric_kwargs))
+        val_metrics_list.append(MLT_metrics.RelationshipAccuracy(**metric_kwargs))
     if config.NETWORK.WITH_MLM_LOSS:
         if config.MODULE == 'ResNetVLBERTForPretrainingMultitask':
-            train_metrics_list.append(retrieval_metrics.MLMAccuracyWVC(**metric_kwargs))
-            train_metrics_list.append(retrieval_metrics.MLMAccuracyAUX(**metric_kwargs))
-            val_metrics_list.append(retrieval_metrics.MLMAccuracyWVC(**metric_kwargs))
-            val_metrics_list.append(retrieval_metrics.MLMAccuracyAUX(**metric_kwargs))
+            train_metrics_list.append(MLT_metrics.MLMAccuracyWVC(**metric_kwargs))
+            train_metrics_list.append(MLT_metrics.MLMAccuracyAUX(**metric_kwargs))
+            val_metrics_list.append(MLT_metrics.MLMAccuracyWVC(**metric_kwargs))
+            val_metrics_list.append(MLT_metrics.MLMAccuracyAUX(**metric_kwargs))
         else:
-            train_metrics_list.append(retrieval_metrics.MLMAccuracy(**metric_kwargs))
-            val_metrics_list.append(retrieval_metrics.MLMAccuracy(**metric_kwargs))
+            train_metrics_list.append(MLT_metrics.MLMAccuracy(**metric_kwargs))
+            val_metrics_list.append(MLT_metrics.MLMAccuracy(**metric_kwargs))
     if config.NETWORK.WITH_MVRC_LOSS:
-        train_metrics_list.append(retrieval_metrics.MVRCAccuracy(**metric_kwargs))
-        val_metrics_list.append(retrieval_metrics.MVRCAccuracy(**metric_kwargs))
+        train_metrics_list.append(MLT_metrics.MVRCAccuracy(**metric_kwargs))
+        val_metrics_list.append(MLT_metrics.MVRCAccuracy(**metric_kwargs))
+    # FM edit: added MLT accuracy metric
+    if config.NETWORK.WITH_MLT_LOSS:
+        train_metrics_list.append(MLT_metrics.MLTAccuracy(**metric_kwargs))
+        val_metrics_list.append(MLT_metrics.MLTAccuracy(**metric_kwargs))
     for output_name, display_name in config.TRAIN.LOSS_LOGGERS:
-        train_metrics_list.append(retrieval_metrics.LossLogger(output_name, display_name=display_name, **metric_kwargs))
-        val_metrics_list.append(retrieval_metrics.LossLogger(output_name, display_name=display_name, **metric_kwargs))
+        train_metrics_list.append(MLT_metrics.LossLogger(output_name, display_name=display_name, **metric_kwargs))
+        val_metrics_list.append(MLT_metrics.LossLogger(output_name, display_name=display_name, **metric_kwargs))
 
     train_metrics = CompositeEvalMetric()
     val_metrics = CompositeEvalMetric()

@@ -52,6 +52,7 @@ class ResNetVLBERTForPretrainingMultitask(Module):
             with_rel_head=config.NETWORK.WITH_REL_LOSS,
             with_mlm_head=config.NETWORK.WITH_MLM_LOSS,
             with_mvrc_head=config.NETWORK.WITH_MVRC_LOSS,
+            with_MLT_head = config.NETWORK.WITH_MLT_LOSS
         )
 
         # init weights
@@ -108,8 +109,8 @@ class ResNetVLBERTForPretrainingMultitask(Module):
                 mlm_labels,
                 mvrc_ops,
                 mvrc_labels,
-                caption_index,
-                image_index):
+                words_en,
+                word_de_ids):
 
   
         ###########################################
@@ -169,7 +170,7 @@ class ResNetVLBERTForPretrainingMultitask(Module):
 
         # Visual Linguistic BERT
 
-        relationship_logits_multi, mlm_logits_multi, mvrc_logits_multi = self.vlbert(text_input_ids,
+        relationship_logits_multi, mlm_logits_multi, mvrc_logits_multi, MLT_logits = self.vlbert(text_input_ids,
                                                                                      text_token_type_ids,
                                                                                      text_visual_embeddings,
                                                                                      text_mask,
@@ -183,6 +184,7 @@ class ResNetVLBERTForPretrainingMultitask(Module):
         relationship_loss = im_info.new_zeros(())
         mlm_loss = im_info.new_zeros(())
         mvrc_loss = im_info.new_zeros(())
+        MLT_loss = im_info.new_zeros(())
         if self.config.NETWORK.WITH_REL_LOSS:
             relationship_logits = relationship_logits_multi[:text_input_ids.shape[0]]
             # FM edit - change cross_entropy to bce/sigmoid
@@ -255,6 +257,10 @@ class ResNetVLBERTForPretrainingMultitask(Module):
             mvrc_labels_padded[:, :mvrc_labels.shape[1]] = mvrc_labels
             mvrc_labels = mvrc_labels_padded
 
+        # TODO: MLT loss check it's correct
+        if self.config.NETWORK.WITH_MLT_LOSS:
+            MLT_loss = F.cross_entropy(MLT_logits, word_de_ids.unsqueeze(1))
+
         # FM edit: removed other two losses that are not defined
         outputs.update({
             'relationship_logits': relationship_logits if self.config.NETWORK.WITH_REL_LOSS else None,
@@ -265,10 +271,14 @@ class ResNetVLBERTForPretrainingMultitask(Module):
             'mlm_label_aux': mlm_labels_aux if self.config.NETWORK.WITH_MLM_LOSS else None,
             'mvrc_logits': mvrc_logits if self.config.NETWORK.WITH_MVRC_LOSS else None,
             'mvrc_label': mvrc_labels if self.config.NETWORK.WITH_MVRC_LOSS else None,
-            'relationship_loss': relationship_loss,
+            'MLT_logits': MLT_logits if self.config.NETWORK.WITH_MLT_LOSS else None,
+            'MLT_label': word_de_ids if self.config.NETWORK.WITH_MLT_LOSS else None,
+            'MLT_loss': MLT_loss,
         })
-
+        print('***************')
+        print('Inside Resnet This loss: ', MLT_loss)
+        exit()
         # FM edit: removed addition of other losses which are not defined
-        loss = relationship_loss.mean()
+        loss = MLT_loss.mean()
         
         return outputs, loss

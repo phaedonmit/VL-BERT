@@ -11,8 +11,7 @@ from copy import deepcopy
 DATASET_CATALOGS = {'conceptual_captions': ConceptualCaptionsDataset,
                     'coco_captions': COCOCaptionsDataset,
                     'general_corpus': GeneralCorpus, 
-                    'multi30k': Multi30kDataset
-                    'flickr_30k': Flickr30kDataset
+                    'multi30k': Multi30kDataset,
                     }
 
 
@@ -55,16 +54,8 @@ def make_dataloader(cfg, dataset=None, mode='train', distributed=False, num_repl
         batch_size = cfg.TRAIN.BATCH_IMAGES * num_gpu
         shuffle = cfg.TRAIN.SHUFFLE
         num_workers = cfg.NUM_WORKERS_PER_GPU * num_gpu
-    else:
-        ann_file = cfg.DATASET.VAL_ANNOTATION_FILE
-        image_set = cfg.DATASET.VAL_IMAGE_SET
-        aspect_grouping = False
-        num_gpu = len(cfg.GPUS.split(','))
-        batch_size = cfg.VAL.BATCH_IMAGES * num_gpu
-        shuffle = cfg.VAL.SHUFFLE
-        num_workers = cfg.NUM_WORKERS_PER_GPU * num_gpu
     # FM edit: use validation dataset for testing in this case
-    # elif mode == 'val':
+    # else:
     #     ann_file = cfg.DATASET.VAL_ANNOTATION_FILE
     #     image_set = cfg.DATASET.VAL_IMAGE_SET
     #     aspect_grouping = False
@@ -72,14 +63,22 @@ def make_dataloader(cfg, dataset=None, mode='train', distributed=False, num_repl
     #     batch_size = cfg.VAL.BATCH_IMAGES * num_gpu
     #     shuffle = cfg.VAL.SHUFFLE
     #     num_workers = cfg.NUM_WORKERS_PER_GPU * num_gpu
-    # else:
-    #     ann_file = cfg.DATASET.TEST_ANNOTATION_FILE
-    #     image_set = cfg.DATASET.TEST_IMAGE_SET
-    #     aspect_grouping = False
-    #     num_gpu = len(cfg.GPUS.split(','))
-    #     batch_size = cfg.TEST.BATCH_IMAGES * num_gpu
-    #     shuffle = cfg.TEST.SHUFFLE
-    #     num_workers = cfg.NUM_WORKERS_PER_GPU * num_gpu
+    elif mode == 'val':
+        ann_file = cfg.DATASET.VAL_ANNOTATION_FILE
+        image_set = cfg.DATASET.VAL_IMAGE_SET
+        aspect_grouping = False
+        num_gpu = len(cfg.GPUS.split(','))
+        batch_size = cfg.VAL.BATCH_IMAGES * num_gpu
+        shuffle = cfg.VAL.SHUFFLE
+        num_workers = cfg.NUM_WORKERS_PER_GPU * num_gpu
+    else:
+        ann_file = cfg.DATASET.TEST_ANNOTATION_FILE
+        image_set = cfg.DATASET.TEST_IMAGE_SET
+        aspect_grouping = False
+        num_gpu = len(cfg.GPUS.split(','))
+        batch_size = cfg.TEST.BATCH_IMAGES * num_gpu
+        shuffle = cfg.TEST.SHUFFLE
+        num_workers = cfg.NUM_WORKERS_PER_GPU * num_gpu
 
     transform = build_transforms(cfg, mode)
 
@@ -101,6 +100,7 @@ def make_dataloader(cfg, dataset=None, mode='train', distributed=False, num_repl
                                 add_image_as_a_box=cfg.DATASET.ADD_IMAGE_AS_A_BOX,
                                 aspect_grouping=aspect_grouping,
                                 languages_used=cfg.DATASET.LANGUAGES_USED,
+                                MLT_vocab=cfg.NETWORK.VLBERT.MLT_vocab,
                                 mask_size=(cfg.DATASET.MASK_SIZE, cfg.DATASET.MASK_SIZE),
                                 pretrained_model_name=cfg.NETWORK.BERT_MODEL_NAME)
     # FM edit: for inference do not shuffle

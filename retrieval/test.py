@@ -37,7 +37,7 @@ def parse_args():
 
 def main():
     args, config = parse_args()
-    if config.DATASET.DATASET=='translation_multi30k':
+    if config.DATASET.DATASET=='translation_multi30k' or 'translation_IAPR':
         result_json_path = test_translation_net(args, config,
                                     ckpt_path=args.ckpt, save_path=args.result_path, save_name=args.result_name)
     else:

@@ -2,7 +2,7 @@
 RNG_SEED: 12345
 OUTPUT_PATH: './output/pretrain/vl-bert'
 MODULE: ResNetVLBERTForPretrainingMultitask
-GPUS: '2'
+GPUS: '3'
 LOG_FREQUENT: 100
 VAL_FREQUENT: 1
 CHECKPOINT_FREQUENT: 1
@@ -13,7 +13,7 @@ SCALES:
 - 1000
 
 DATASET:
-  DATASET: multi30k
+  DATASET: multi30k_5x
   APPEND_INDEX: false
   DATASET_PATH: './data/flickr30k'
   ROOT_PATH: './'
@@ -28,7 +28,7 @@ DATASET:
   LANGUAGES_USED: 'second'
 
 NETWORK:
-  PARTIAL_PRETRAIN: "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/itm_prec/003_prec_retrieval_english_LR6_5cap_startLR6/train_train/vl-bert_base_res101_pretrain_multitask-0019.model"
+  PARTIAL_PRETRAIN: "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/pretrain_prec/002_prec_LR1e6_multi30k/train_train/vl-bert_base_res101_pretrain_multitask-0019.model"
   PARTIAL_PRETRAIN_PREFIX_CHANGES: []
   INITIALISATION: ''
   IMAGE_NUM_LAYERS: 101

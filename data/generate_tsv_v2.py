@@ -47,6 +47,7 @@ import csv
 from multiprocessing import Process
 import random
 import json
+import jsonlines
 
 csv.field_size_limit(sys.maxsize)
 
@@ -95,6 +96,22 @@ def load_image_ids(split_name, data_root):
           filepath = os.path.join('flickr30k/flickr30k-images.zip@/', line.strip())
           image_id = int(line.split('.')[0])
           split.append((filepath,image_id))   
+    # FM: added image loader for IAPR dataset
+    elif split_name == 'IAPR_train':
+      database = list(jsonlines.open(os.path.join(data_root, 'IAPR/train.json')))
+      for cnt, line in enumerate(database):  
+        image_id = int((line['image'].split('/')[1]).split('.')[0])
+        split.append((os.path.join('IAPR',line['image']),image_id))   
+    elif split_name == 'IAPR_val':
+      database = list(jsonlines.open(os.path.join(data_root, 'IAPR/val.json')))
+      for cnt, line in enumerate(database):  
+        image_id = int((line['image'].split('/')[1]).split('.')[0])
+        split.append((os.path.join('IAPR',line['image']),image_id))     
+    elif split_name == 'IAPR_test':
+      database = list(jsonlines.open(os.path.join(data_root, 'IAPR/test.json')))
+      for cnt, line in enumerate(database):  
+        image_id = int((line['image'].split('/')[1]).split('.')[0])
+        split.append((os.path.join('IAPR',line['image']),image_id)) 
     else:
       print 'Unknown split'
     return split
