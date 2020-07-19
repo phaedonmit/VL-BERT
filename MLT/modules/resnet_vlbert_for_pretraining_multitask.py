@@ -109,7 +109,6 @@ class ResNetVLBERTForPretrainingMultitask(Module):
                 mlm_labels,
                 mvrc_ops,
                 mvrc_labels,
-                words_en,
                 word_de_ids):
 
   
@@ -259,7 +258,7 @@ class ResNetVLBERTForPretrainingMultitask(Module):
 
         # TODO: MLT loss check it's correct
         if self.config.NETWORK.WITH_MLT_LOSS:
-            MLT_loss = F.cross_entropy(MLT_logits, word_de_ids.unsqueeze(1))
+            MLT_loss = F.cross_entropy(MLT_logits, word_de_ids)
 
         # FM edit: removed other two losses that are not defined
         outputs.update({
@@ -275,9 +274,7 @@ class ResNetVLBERTForPretrainingMultitask(Module):
             'MLT_label': word_de_ids if self.config.NETWORK.WITH_MLT_LOSS else None,
             'MLT_loss': MLT_loss,
         })
-        print('***************')
-        print('Inside Resnet This loss: ', MLT_loss)
-        exit()
+
         # FM edit: removed addition of other losses which are not defined
         loss = MLT_loss.mean()
         

@@ -8,13 +8,12 @@ import json
 import torch
 import operator 
 
-filepath = "/experiments/faidon/VL-BERT/checkpoints/itm_evaluation_retrieval_test2015.json"
+filepath = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/MLT/001_MTL_ende_with_vision/001_MTL_ende_with_vision_MLT_test2015.json"
 # filepath = "/experiments/faidon/VL-BERT/checkpoints/itm_model19_LR1e_6_all.json"
 
 with open(filepath) as json_file:
     data = json.load(json_file)
-    ranks = [1, 5, 10]
-    correct = [0, 0, 0]
+    correct = 0
     total=0
     captions_dict = {}
     image_dict = {}
@@ -24,72 +23,17 @@ with open(filepath) as json_file:
     
     # json file to nested dictionary (each caption with all images)
     for p in data:
-        if p['caption_id'] in captions_dict.keys():
-            captions_dict[p['caption_id']][p['image_ids']]= ((torch.tensor(p['logit'][0])).item())
-        else:
-            captions_dict[p['caption_id']] = {p['image_ids']: (torch.tensor(p['logit'][0])).item()}
-    # # json file to nested dictionary (each image with all caption)
-        if p['image_ids'] in image_dict.keys():
-            image_dict[p['image_ids']][p['caption_id']]= ((torch.tensor(p['logit'][0])).item())
-        else:
-            image_dict[p['image_ids']] = {p['caption_id']: (torch.tensor(p['logit'][0])).item()}
+        print(p)
+        total += 1
+        if p['word_de_id'] == p['logit']:
+            correct += 1
 
     #******************************************************
     # Step 2: Get ranks image retrieval
-    # get r1, r5 and r10 for each capion
-    for index, value in captions_dict.items():
-        # print('-------')
-        # print('Top candiate is: ', (max(value.items(), key=operator.itemgetter(1))))
-        # print('Actual image id is: ', index)
-        if (max(value.items(), key=operator.itemgetter(1)))[0] == index:
-            correct[0] += 1
-        # Get top 5
-        if index in dict(sorted(value.items(), key=operator.itemgetter(1),reverse=True)[:ranks[1]]).keys():
-            correct[1] += 1
-        if index in dict(sorted(value.items(), key=operator.itemgetter(1),reverse=True)[:ranks[2]]).keys():
-            correct[2] += 1    
-        total += 1
     print('******************************')
-    print('***** Image retrieval    *****')
+    print('***** MLT Task    *****')
     print('******************************')
-    print('Total captions assessed: ', total)
+    print('Total words assessed: ', total)
+    print(f'Correct translations retrieved: ', correct)
     print('******')
-    print(f'Correct rank {ranks[0]}: ', correct[0])
-    print(f'Correct rank {ranks[1]}: ', correct[1])
-    print(f'Correct rank {ranks[2]}: ', correct[2])
-    print('******')
-    print(f"The total percentage rank {ranks[0]} is {correct[0]/total*100:.2f}%")
-    print(f"The total percentage rank {ranks[1]} is {correct[1]/total*100:.2f}%")
-    print(f"The total percentage rank {ranks[2]} is {correct[2]/total*100:.2f}%")
-
-
-
-    #******************************************************
-    # Step 3: Get ranks caption retrieval
-    # get r1, r5 and r10 for each capion
-    correct = [0, 0, 0]
-    total=0    
-    for index, value in image_dict.items():
-        # print('-------')
-        # print('Top candiate is: ', (max(value.items(), key=operator.itemgetter(1))))
-        # print('Actual image id is: ', index)
-        if (max(value.items(), key=operator.itemgetter(1)))[0] == index:
-            correct[0] += 1
-        # Get top 5
-        if index in dict(sorted(value.items(), key=operator.itemgetter(1),reverse=True)[:ranks[1]]).keys():
-            correct[1] += 1
-        if index in dict(sorted(value.items(), key=operator.itemgetter(1),reverse=True)[:ranks[2]]).keys():
-            correct[2] += 1    
-        total += 1
-    print('\n******************************')
-    print('***** Caption retrieval  *****')
-    print('******************************')
-    print('Total images assessed: ', total)
-    print('******')
-    print(f'Correct rank {ranks[0]}: ', correct[0])
-    print(f'Correct rank {ranks[1]}: ', correct[1])
-    print(f'Correct rank {ranks[2]}: ', correct[2])
-    print('******')
-    print(f"The total percentage rank {ranks[0]} is {correct[0]/total*100:.2f}%")
-    print(f"The total percentage rank {ranks[1]} is {correct[1]/total*100:.2f}%")
-    print(f"The total percentage rank {ranks[2]} is {correct[2]/total*100:.2f}%")    
+    print(f"Accuracy is {correct/total*100:.2f}%")

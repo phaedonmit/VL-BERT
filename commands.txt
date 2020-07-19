@@ -121,7 +121,15 @@ CUDA_VISIBLE_DEVICES=2 python retrieval/test.py \
   --gpus 0 \
   --result-path /experiments/faidon/VL-BERT/checkpoints --result-name 003_translation_retrieval_IAPR
 
+------------------------------
 
+MLT evaluation
+
+CUDA_VISIBLE_DEVICES=3 python MLT/test.py \
+  --cfg /experiments/faidon/VL-BERT/checkpoints/output/pretrain/MLT/001_MTL_ende_with_vision/train_train/base_prec_16x16G_fp16_MLT_LR6_startLR6.yaml \
+  --ckpt  /experiments/faidon/VL-BERT/checkpoints/output/pretrain/MLT/001_MTL_ende_with_vision/train_train/vl-bert_base_res101_pretrain_multitask-0019.model \
+  --gpus 0 \
+  --result-path /experiments/faidon/VL-BERT/checkpoints --result-name 001_MTL_ende_with_vision
 
 
 --------------------------------------

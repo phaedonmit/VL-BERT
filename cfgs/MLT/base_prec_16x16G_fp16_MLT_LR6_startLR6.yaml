@@ -78,7 +78,7 @@ NETWORK:
     max_position_embeddings: 512
     type_vocab_size: 3
     vocab_size: 119547
-    MLT_words: 1502
+    MLT_words: 1536
     MLT_vocab: 'MLT_vocab.txt'
     initializer_range: 0.02
     visual_scale_text_init: 0.0

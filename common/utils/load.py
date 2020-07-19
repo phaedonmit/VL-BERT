@@ -13,6 +13,8 @@ def smart_load_model_state_dict(model, state_dict):
         if k in model.state_dict():
             parsed_state_dict[k] = v
         else:
+            print('********')
+            print(k)
             raise ValueError('failed to match key of state dict smartly!')
     model.load_state_dict(parsed_state_dict)
 

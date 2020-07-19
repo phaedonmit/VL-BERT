@@ -97,7 +97,7 @@ class MLTAccuracy(EvalMetric):
     def update(self, outputs):
         with torch.no_grad():
             logits = outputs['MLT_logits']
-            label = outputs['word_de_ids']
+            label = outputs['MLT_label']
             # FM edit: change to deal with sigmoid, single output
             self.sum_metric += float((logits.argmax(dim=1) == label).sum().item())
             self.num_inst += logits.shape[0]
