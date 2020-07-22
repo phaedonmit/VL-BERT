@@ -12,10 +12,10 @@ BERT_WEIGHTS_NAME = 'pytorch_model.bin'
 
 
 
-class ResNetVLBERTForPretrainingTranslationNoVision(Module):
+class ResNetVLBERTForPretrainingMultitaskNoVision(Module):
     def __init__(self, config):
 
-        super(ResNetVLBERTForPretrainingTranslationNoVision, self).__init__(config)
+        super(ResNetVLBERTForPretrainingMultitaskNoVision, self).__init__(config)
 
         # Constructs/initialises model elements
         self.image_feature_extractor = FastRCNN(config,
@@ -52,6 +52,7 @@ class ResNetVLBERTForPretrainingTranslationNoVision(Module):
             with_rel_head=config.NETWORK.WITH_REL_LOSS,
             with_mlm_head=config.NETWORK.WITH_MLM_LOSS,
             with_mvrc_head=config.NETWORK.WITH_MVRC_LOSS,
+            with_MLT_head = config.NETWORK.WITH_MLT_LOSS
         )
 
         # init weights
@@ -72,7 +73,7 @@ class ResNetVLBERTForPretrainingTranslationNoVision(Module):
                                                                   std=self.config.NETWORK.VLBERT.initializer_range)
 
     def train(self, mode=True):
-        super(ResNetVLBERTForPretrainingTranslationNoVision, self).train(mode)
+        super(ResNetVLBERTForPretrainingMultitaskNoVision, self).train(mode)
         # turn some frozen layers to eval mode
         if self.image_feature_bn_eval:
             self.image_feature_extractor.bn_eval()
@@ -100,19 +101,53 @@ class ResNetVLBERTForPretrainingTranslationNoVision(Module):
         return object_reps[row_id.view(-1), span_tags_fixed.view(-1)].view(*span_tags_fixed.shape, -1)
 
     def forward(self,
+                image,
+                boxes,
+                im_info,
                 text,
                 relationship_label,
                 mlm_labels,
-                caption_index,
-                image_index):
+                mvrc_ops,
+                mvrc_labels,
+                word_de_ids):
 
   
         ###########################################
+
+        # visual feature extraction
+        images = image
+        box_mask = (boxes[:, :, 0] > -1.5)
+        origin_len = boxes.shape[1]
+        max_len = int(box_mask.sum(1).max().item())
+        box_mask = box_mask[:, :max_len]
+        boxes = boxes[:, :max_len]
+        mvrc_ops = mvrc_ops[:, :max_len]
+        mvrc_labels = mvrc_labels[:, :max_len]
+
+        if self.config.NETWORK.IMAGE_FEAT_PRECOMPUTED:
+            box_features = boxes[:, :, 4:]
+            box_features[mvrc_ops == 1] = self.object_mask_visual_embedding.weight[0]
+            boxes[:, :, 4:] = box_features
+
+        obj_reps = self.image_feature_extractor(images=images,
+                                                boxes=boxes,
+                                                box_mask=box_mask,
+                                                im_info=im_info,
+                                                classes=None,
+                                                segms=None,
+                                                mvrc_ops=mvrc_ops,
+                                                mask_visual_embed=self.object_mask_visual_embedding.weight[0]
+                                                if (not self.config.NETWORK.IMAGE_FEAT_PRECOMPUTED)
+                                                   and (not self.config.NETWORK.MASK_RAW_PIXELS)
+                                                else None)
+
+        ############################################
 
         # prepare text
         text_input_ids = text
         # creates a text_tags tensor of the same shape as text tensor
         text_tags = text.new_zeros(text.shape)
+        text_visual_embeddings = self._collect_obj_reps(text_tags, obj_reps['obj_reps'])
         # ***** FM edit: blank out visual embeddings for translation retrieval task
         text_visual_embeddings[:] = self.aux_text_visual_embedding.weight[0]
 
@@ -122,8 +157,9 @@ class ResNetVLBERTForPretrainingTranslationNoVision(Module):
         if self.config.NETWORK.WITH_MVRC_LOSS:
             object_linguistic_embeddings[mvrc_ops == 1] = self.object_mask_word_embedding.weight[0]
         object_vl_embeddings = torch.cat((obj_reps['obj_reps'], object_linguistic_embeddings), -1)
-        # ****** FM edit: blank visual embeddings (use known dimensions)
-        object_vl_embeddings = object_vl_embeddings.new_zeros(text_input_ids.shape[0], 15, 1536)
+        # ****** FM edit: blank out all visual embeddings
+        object_vl_embeddings = object_vl_embeddings.new_zeros(object_vl_embeddings.shape)
+
 
         # FM edit: No auxiliary text is used for text only
         # add auxiliary text - Concatenates the batches from the two dataloaders
@@ -131,28 +167,14 @@ class ResNetVLBERTForPretrainingTranslationNoVision(Module):
         max_text_len = text_input_ids.shape[1]
         text_token_type_ids = text_input_ids.new_zeros(text_input_ids.shape)
         text_mask = (text_input_ids > 0)
-        #FM: Edit: set to zero to ignore vision
-        box_mask = box_mask.new_zeros((text_input_ids.shape[0], 15))
+        #FM: Edit: i have taken this out, not needed i think since defined above
+        # box_mask = box_mask.new_zeros((text_input_ids.shape[0], *box_mask.shape[1:]))
         
-        # # FM edit: Remove vision modality - cut short
-        # print('mvrc_ops: ', mvrc_ops)
-        # print('text input shape: ', text)
-        # print( 'text_input_ids shape: ', text_input_ids.shape)
-        # print( 'text_token_type_ids shape: ', text_token_type_ids.shape)
-        # print( 'text_visual_embeddings shape: ', text_visual_embeddings.shape)
-        # print( 'text_mask shape: ', text_mask.shape)
-        # print( 'object_vl_embeddings shape: ', object_vl_embeddings.shape)
-        # print( 'box_mask shape: ', box_mask.shape)
-
-        # print ('text_mask: ', text_mask)
-        # print ('object_mask: ', box_mask)
-
-        # exit()
         ###########################################
 
         # Visual Linguistic BERT
 
-        relationship_logits_multi, mlm_logits_multi, mvrc_logits_multi = self.vlbert(text_input_ids,
+        relationship_logits_multi, mlm_logits_multi, mvrc_logits_multi, MLT_logits = self.vlbert(text_input_ids,
                                                                                      text_token_type_ids,
                                                                                      text_visual_embeddings,
                                                                                      text_mask,
@@ -166,6 +188,7 @@ class ResNetVLBERTForPretrainingTranslationNoVision(Module):
         relationship_loss = im_info.new_zeros(())
         mlm_loss = im_info.new_zeros(())
         mvrc_loss = im_info.new_zeros(())
+        MLT_loss = im_info.new_zeros(())
         if self.config.NETWORK.WITH_REL_LOSS:
             relationship_logits = relationship_logits_multi[:text_input_ids.shape[0]]
             # FM edit - change cross_entropy to bce/sigmoid
@@ -238,6 +261,10 @@ class ResNetVLBERTForPretrainingTranslationNoVision(Module):
             mvrc_labels_padded[:, :mvrc_labels.shape[1]] = mvrc_labels
             mvrc_labels = mvrc_labels_padded
 
+        # TODO: MLT loss check it's correct
+        if self.config.NETWORK.WITH_MLT_LOSS:
+            MLT_loss = F.cross_entropy(MLT_logits, word_de_ids)
+
         # FM edit: removed other two losses that are not defined
         outputs.update({
             'relationship_logits': relationship_logits if self.config.NETWORK.WITH_REL_LOSS else None,
@@ -248,10 +275,12 @@ class ResNetVLBERTForPretrainingTranslationNoVision(Module):
             'mlm_label_aux': mlm_labels_aux if self.config.NETWORK.WITH_MLM_LOSS else None,
             'mvrc_logits': mvrc_logits if self.config.NETWORK.WITH_MVRC_LOSS else None,
             'mvrc_label': mvrc_labels if self.config.NETWORK.WITH_MVRC_LOSS else None,
-            'relationship_loss': relationship_loss,
+            'MLT_logits': MLT_logits if self.config.NETWORK.WITH_MLT_LOSS else None,
+            'MLT_label': word_de_ids if self.config.NETWORK.WITH_MLT_LOSS else None,
+            'MLT_loss': MLT_loss,
         })
 
         # FM edit: removed addition of other losses which are not defined
-        loss = relationship_loss.mean()
+        loss = MLT_loss.mean()
         
         return outputs, loss

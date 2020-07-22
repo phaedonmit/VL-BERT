@@ -95,3 +95,13 @@ with open(filepath) as json_file:
     print(f"The total percentage rank {ranks[0]} is {correct[0]/total*100:.2f}%")
     print(f"The total percentage rank {ranks[1]} is {correct[1]/total*100:.2f}%")
     print(f"The total percentage rank {ranks[2]} is {correct[2]/total*100:.2f}%")    
+
+
+
+#******************************************************
+# Step 4: Inspect scores
+# get r1, r5 and r10 for each capion
+for index, value in captions_en_dict.items():
+    if index == 9:
+        for ind, score in value.items():
+            print(ind, ': ',score)

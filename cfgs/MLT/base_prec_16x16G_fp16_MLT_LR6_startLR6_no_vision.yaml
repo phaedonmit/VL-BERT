@@ -1,8 +1,8 @@
 ---
 RNG_SEED: 12345
 OUTPUT_PATH: './output/pretrain/vl-bert'
-MODULE: ResNetVLBERTForPretrainingMultitask
-GPUS: '0'
+MODULE: ResNetVLBERTForPretrainingMultitaskNoVision
+GPUS: '3'
 LOG_FREQUENT: 100
 VAL_FREQUENT: 1
 CHECKPOINT_FREQUENT: 1
@@ -13,8 +13,7 @@ SCALES:
 - 1000
 
 DATASET:
-
-- DATASET: multi30k
+  DATASET: multi30k
   APPEND_INDEX: false
   DATASET_PATH: './data/flickr30k'
   ROOT_PATH: './'
@@ -26,18 +25,12 @@ DATASET:
   CACHE_MODE: false
   IGNORE_DB_CACHE: false
   MASK_SIZE: 14
-
-- DATASET: general_corpus
-  TRAIN_ANNOTATION_FILE: './data/en_corpus/bc1g.doc+./data/en_corpus/wiki.doc'
-  VAL_ANNOTATION_FILE: './data/en_corpus/bc1g.doc'
-  TEST_ANNOTATION_FILE: './data/en_corpus/bc1g.doc'
-  SEQ_LEN: 96
-  MIN_SEQ_LEN: 96
+  LANGUAGES_USED: 'first'
 
 NETWORK:
-  PARTIAL_PRETRAIN: "/experiments/faidon/VL-BERT/model/pretrained_model/vl-bert-base-prec.model"
+  PARTIAL_PRETRAIN: "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/pretrain_prec/002_prec_LR1e6_multi30k/train_train/vl-bert_base_res101_pretrain_multitask-0019.model"
   PARTIAL_PRETRAIN_PREFIX_CHANGES: []
-  INITIALISATION: 'hybrid'
+  INITIALISATION: ''
   IMAGE_NUM_LAYERS: 101
   IMAGE_C5_DILATED: true
   IMAGE_STRIDE_IN_1x1: true
@@ -67,11 +60,12 @@ NETWORK:
   MLM_LOSS_NORM_IN_BATCH_FIRST: false
   MVRC_LOSS_NORM_IN_BATCH_FIRST: false
   WITH_REL_LOSS: false
-  WITH_MLM_LOSS: true
-  WITH_MVRC_LOSS: true
+  WITH_MLM_LOSS: false
+  WITH_MVRC_LOSS: false
+  WITH_MLT_LOSS: true
 
   VLBERT:
-    with_pooler: false
+    with_pooler: true
     input_transform_type: 1
     visual_size: 768
     hidden_size: 768
@@ -84,6 +78,8 @@ NETWORK:
     max_position_embeddings: 512
     type_vocab_size: 3
     vocab_size: 119547
+    MLT_words: 1536
+    MLT_vocab: 'MLT_vocab.txt'
     initializer_range: 0.02
     visual_scale_text_init: 0.0
     visual_scale_object_init: 0.0
@@ -93,9 +89,7 @@ NETWORK:
 TRAIN:
   SHUFFLE: true
   FLIP_PROB: 0.5
-  BATCH_IMAGES:
-  - 8
-  - 8
+  BATCH_IMAGES: 16
   ASPECT_GROUPING: false
   RESUME: false
   AUTO_RESUME: true
@@ -103,31 +97,25 @@ TRAIN:
   END_EPOCH: 20
   OPTIMIZER: 'AdamW'
   CLIP_GRAD_NORM: 10
-  LR: 1.0e-7
+  LR: 1.0e-6
   LR_SCHEDULE: 'triangle'
   WD: 0.0001
   WARMUP: true
   WARMUP_METHOD: 'linear'
   WARMUP_FACTOR: 0.0
   WARMUP_STEPS: 16000
-  FP16: false
-  FP16_LOSS_SCALE: 128.0
+  FP16: true
+  FP16_LOSS_SCALE: 'dynamic'
   LOSS_LOGGERS:
-  - "mlm_loss_wvc,MLMLossWVC"
-  - "mlm_loss_aux,MLMLossAUX"
-  - "mvrc_loss,MVRCLoss"
+  - "MLT_loss,MLTLoss"
 
 VAL:
   SHUFFLE: false
   FLIP_PROB: 0
-  BATCH_IMAGES:
-  - 8
-  - 8
+  BATCH_IMAGES: 16
 
 TEST:
   SHUFFLE: false
   FLIP_PROB: 0
   TEST_EPOCH: 0
-  BATCH_IMAGES:
-  - 8
-  - 8
+  BATCH_IMAGES: 16

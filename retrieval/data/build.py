@@ -18,6 +18,7 @@ DATASET_CATALOGS = {'conceptual_captions': ConceptualCaptionsDataset,
                     'cc_and_flickr30k': CC_and_Flickr30kDataset,
                     'translation_multi30k': Translation_Multi30kDataset,
                     'translation_IAPR': Translation_IAPRDataset,
+                    'translation_Europarl': Translation_EuroparlDataset
                     }
 
 

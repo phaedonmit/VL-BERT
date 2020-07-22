@@ -8,8 +8,7 @@ import json
 import torch
 import operator 
 
-filepath = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/MLT/001_MTL_ende_with_vision/001_MTL_ende_with_vision_MLT_test2015.json"
-# filepath = "/experiments/faidon/VL-BERT/checkpoints/itm_model19_LR1e_6_all.json"
+filepath = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/MLT/003_MLT_ende_with_vision_no_pretraining/003_MLT_ende_with_vision_no_pretraining_MLT_test2015.json"
 
 with open(filepath) as json_file:
     data = json.load(json_file)
@@ -23,10 +22,17 @@ with open(filepath) as json_file:
     
     # json file to nested dictionary (each caption with all images)
     for p in data:
-        print(p)
+        # print(p)
         total += 1
         if p['word_de_id'] == p['logit']:
             correct += 1
+        else:
+            print('***********************')
+            print(p['caption_en'])
+            print(p['caption_de'])
+            print('word en: ', p['word_en'])
+            print('word de: ', p['word_de'])
+            print('predicted: ', p['word_pred'])
 
     #******************************************************
     # Step 2: Get ranks image retrieval

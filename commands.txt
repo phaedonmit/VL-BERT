@@ -50,6 +50,10 @@ CUDA_VISIBLE_DEVICES=3 ./scripts/dist_run_single.sh 1 pretrain/train_end2end.py 
 pretrain CC start from existing
 CUDA_VISIBLE_DEVICES=3 ./scripts/dist_run_single.sh 1 pretrain/train_end2end.py /experiments/faidon/VL-BERT/cfgs/pretrain/base_e2e_11x11G_fp16_pretrained.yaml /experiments/faidon/VL-BERT/checkpoints
 
+pretrain task B
+CUDA_VISIBLE_DEVICES=3 ./scripts/dist_run_single.sh 1 pretrain/train_end2end.py /experiments/faidon/VL-BERT/cfgs/flickr30k/base_prec_16x16G_fp16_pretrained_LR6_taskB.yaml /experiments/faidon/VL-BERT/checkpoints
+
+
 downstream image retrieval
 CUDA_VISIBLE_DEVICES=0 ./scripts/dist_run_single.sh 1 retrieval/train_end2end.py /experiments/faidon/VL-BERT/cfgs/retrieval/base_e2e_16x16G_fp16_downstream_retrieval_LR_original.yaml /experiments/faidon/VL-BERT/checkpoints
 CUDA_VISIBLE_DEVICES=0 ./scripts/dist_run_single.sh 1 retrieval/train_end2end.py /experiments/faidon/VL-BERT/cfgs/retrieval/base_e2e_16x16G_fp16_downstream_retrieval_both_languages.yaml /experiments/faidon/VL-BERT/checkpoints
@@ -78,6 +82,8 @@ CUDA_VISIBLE_DEVICES=3 ./scripts/dist_run_single.sh 1 retrieval/train_end2end.py
 
 MLT
 CUDA_VISIBLE_DEVICES=3 ./scripts/dist_run_single.sh 1 MLT/train_end2end.py /experiments/faidon/VL-BERT/cfgs/MLT/base_prec_16x16G_fp16_MLT_LR6_startLR6.yaml /experiments/faidon/VL-BERT/checkpoints
+CUDA_VISIBLE_DEVICES=3 ./scripts/dist_run_single.sh 1 MLT/train_end2end.py /experiments/faidon/VL-BERT/cfgs/MLT/base_prec_16x16G_fp16_MLT_LR6_startLR6_no_vision.yaml /experiments/faidon/VL-BERT/checkpoints
+CUDA_VISIBLE_DEVICES=3 ./scripts/dist_run_single.sh 1 MLT/train_end2end.py /experiments/faidon/VL-BERT/cfgs/MLT/base_prec_16x16G_fp16_MLT_LR6_no_pretraining.yaml /experiments/faidon/VL-BERT/checkpoints
 
 
 # for all tasks together:
@@ -109,7 +115,7 @@ CUDA_VISIBLE_DEVICES=3 python retrieval/test.py \
   --gpus 0 \
   --result-path /experiments/faidon/VL-BERT/checkpoints --result-name 002_prec_translation_retrieval_no_vision_19model
 
-CUDA_VISIBLE_DEVICES=1 python retrieval/test.py \
+CUDA_VISIBLE_DEVICES=3 python retrieval/test.py \
   --cfg /experiments/faidon/VL-BERT/checkpoints/output/pretrain/translation_retrieval/002_prec_translation_retrieval_no_vision/train_train/base_prec_16x16G_fp16_translate_no_vision.yaml \
   --ckpt  /experiments/faidon/VL-BERT/checkpoints/output/pretrain/translation_retrieval/002_prec_translation_retrieval_no_vision/train_train/vl-bert_base_res101_pretrain_multitask-0019.model \
   --gpus 0 \
@@ -117,6 +123,13 @@ CUDA_VISIBLE_DEVICES=1 python retrieval/test.py \
 
 CUDA_VISIBLE_DEVICES=2 python retrieval/test.py \
   --cfg /experiments/faidon/VL-BERT/cfgs/retrieval/base_prec_16x16G_fp16_translate_no_vision_IAPR.yaml \
+  --ckpt  /experiments/faidon/VL-BERT/checkpoints/output/pretrain/translation_retrieval/002_prec_translation_retrieval_no_vision/train_train/vl-bert_base_res101_pretrain_multitask-0019.model \
+  --gpus 0 \
+  --result-path /experiments/faidon/VL-BERT/checkpoints --result-name 003_translation_retrieval_IAPR
+
+
+CUDA_VISIBLE_DEVICES=2 python retrieval/test.py \
+  --cfg /experiments/faidon/VL-BERT/retrieval/data/datasets/translation_europarl.py \
   --ckpt  /experiments/faidon/VL-BERT/checkpoints/output/pretrain/translation_retrieval/002_prec_translation_retrieval_no_vision/train_train/vl-bert_base_res101_pretrain_multitask-0019.model \
   --gpus 0 \
   --result-path /experiments/faidon/VL-BERT/checkpoints --result-name 003_translation_retrieval_IAPR
@@ -130,6 +143,18 @@ CUDA_VISIBLE_DEVICES=3 python MLT/test.py \
   --ckpt  /experiments/faidon/VL-BERT/checkpoints/output/pretrain/MLT/001_MTL_ende_with_vision/train_train/vl-bert_base_res101_pretrain_multitask-0019.model \
   --gpus 0 \
   --result-path /experiments/faidon/VL-BERT/checkpoints --result-name 001_MTL_ende_with_vision
+
+CUDA_VISIBLE_DEVICES=3 python MLT/test.py \
+  --cfg /experiments/faidon/VL-BERT/checkpoints/output/pretrain/MLT/002_MLT_ende_no_vision/train_train/base_prec_16x16G_fp16_MLT_LR6_startLR6_no_vision.yaml \
+  --ckpt  /experiments/faidon/VL-BERT/checkpoints/output/pretrain/MLT/002_MLT_ende_no_vision/train_train/vl-bert_base_res101_pretrain_multitask-0019.model \
+  --gpus 0 \
+  --result-path /experiments/faidon/VL-BERT/checkpoints --result-name 002_MLT_ende_no_vision
+
+CUDA_VISIBLE_DEVICES=3 python MLT/test.py \
+  --cfg /experiments/faidon/VL-BERT/checkpoints/output/pretrain/MLT/003_MLT_ende_with_vision_no_pretraining/train_train/base_prec_16x16G_fp16_MLT_LR6_no_pretraining.yaml \
+  --ckpt  /experiments/faidon/VL-BERT/checkpoints/output/pretrain/MLT/003_MLT_ende_with_vision_no_pretraining/train_train/vl-bert_base_res101_pretrain_multitask-0019.model \
+  --gpus 0 \
+  --result-path /experiments/faidon/VL-BERT/checkpoints --result-name 003_MLT_ende_with_vision_no_pretraining
 
 
 --------------------------------------

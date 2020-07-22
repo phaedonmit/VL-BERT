@@ -11,7 +11,8 @@ from copy import deepcopy
 DATASET_CATALOGS = {'conceptual_captions': ConceptualCaptionsDataset,
                     'coco_captions': COCOCaptionsDataset,
                     'general_corpus': GeneralCorpus, 
-                    'multi30k': Multi30kDataset
+                    'multi30k': Multi30kDataset,
+                    'multi30k_taskB': Multi30kTaskBDataset
                     }
 
 

@@ -2,7 +2,7 @@
 RNG_SEED: 12345
 OUTPUT_PATH: './output/pretrain/vl-bert'
 MODULE: ResNetVLBERTForPretrainingMultitask
-GPUS: '0'
+GPUS: '3'
 LOG_FREQUENT: 100
 VAL_FREQUENT: 1
 CHECKPOINT_FREQUENT: 1
@@ -14,7 +14,7 @@ SCALES:
 
 DATASET:
 
-- DATASET: multi30k
+- DATASET: multi30k_taskB
   APPEND_INDEX: false
   DATASET_PATH: './data/flickr30k'
   ROOT_PATH: './'
@@ -103,7 +103,7 @@ TRAIN:
   END_EPOCH: 20
   OPTIMIZER: 'AdamW'
   CLIP_GRAD_NORM: 10
-  LR: 1.0e-7
+  LR: 1.0e-6
   LR_SCHEDULE: 'triangle'
   WD: 0.0001
   WARMUP: true

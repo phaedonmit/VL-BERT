@@ -71,6 +71,8 @@ def test_net(args, config, ckpt_path=None, save_path=None, save_name=None):
     word_de_ids = []
     words_de = []
     words_en = []
+    captions_en = []
+    captions_de = []
     logit_words = []
     logits = []
     model.eval()
@@ -81,6 +83,8 @@ def test_net(args, config, ckpt_path=None, save_path=None, save_name=None):
         #     print(test_database[id])
         words_de.extend([test_database[id]['word_de'] for id in range(cur_id, min(cur_id + bs, len(test_database)))])
         words_en.extend([test_database[id]['word_en'] for id in range(cur_id, min(cur_id + bs, len(test_database)))])
+        captions_en.extend([test_database[id]['caption_en'] for id in range(cur_id, min(cur_id + bs, len(test_database)))])
+        captions_de.extend([test_database[id]['caption_de'] for id in range(cur_id, min(cur_id + bs, len(test_database)))])
         batch = to_cuda(batch)
         output = model(*batch)
         # FM note: output is tuple (outputs, loss)
@@ -88,7 +92,7 @@ def test_net(args, config, ckpt_path=None, save_path=None, save_name=None):
         batch_size = probs.shape[0]
         logits.extend(probs.argmax(dim=1).detach().cpu().tolist())
         word_de_ids.extend(output[0]['MLT_label'].detach().cpu().tolist())
-        logit_words.extend([vocab[id] for id in word_de_ids[cur_id:min(cur_id + bs, len(test_database))]])
+        logit_words.extend([vocab[id] for id in logits[cur_id:min(cur_id + bs, len(test_database))]])
 
         cur_id += bs
 
@@ -101,8 +105,10 @@ def test_net(args, config, ckpt_path=None, save_path=None, save_name=None):
 
     # ************
     # Step 3: Store all logit results in file for later evalution       
-    result = [{'word_de_id': c_id, 'logit': l_id, 'word_en': word_en, 'word_de': word_de, 'word_pred': logit_word} 
-                for c_id, l_id, word_en, word_de, logit_word in zip(word_de_ids, logits, words_en, words_de, logit_words)]
+    result = [{'word_de_id': c_id, 'logit': l_id, 'word_en': word_en, 'word_de': word_de, 'word_pred': logit_word,
+             'caption_en': caption_en, 'caption_de': caption_de} 
+                for c_id, l_id, word_en, word_de, logit_word, caption_en, caption_de
+                 in zip(word_de_ids, logits, words_en, words_de, logit_words, captions_en, captions_de)]
     cfg_name = os.path.splitext(os.path.basename(args.cfg))[0]
     result_json_path = os.path.join(save_path, '{}_MLT_{}.json'.format(cfg_name if save_name is None else save_name,
                                                                         config.DATASET.TEST_IMAGE_SET))
