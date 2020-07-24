@@ -11,7 +11,7 @@ import operator
 # filepath = "/experiments/faidon/VL-BERT/checkpoints/itm_evaluation_retrieval_test2015.json"
 # filepath = "/experiments/faidon/VL-BERT/checkpoints/imt_model19_prec_5captions_LR1e6_all.json"
 # filepath = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/translation_retrieval/002_prec_translation_retrieval_no_vision/002_prec_translation_retrieval_no_vision_19model_retrieval_translation_test2015.json"
-filepath = "/experiments/faidon/VL-BERT/checkpoints/dummy_classification_retrieval_translation_test2015.json"
+filepath = "/experiments/faidon/VL-BERT/checkpoints/dummy_full_multi30k_new_no_vision_retrieval_translation_test2015.json"
 
 with open(filepath) as json_file:
     data = json.load(json_file)

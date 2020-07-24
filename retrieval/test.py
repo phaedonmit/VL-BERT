@@ -6,6 +6,7 @@ from copy import deepcopy
 from retrieval.function.config import config, update_config
 from retrieval.function.test import test_net
 from retrieval.function.test_translation import test_translation_net
+from retrieval.function.test_distance_translation import test_distance_translation_net
 
 
 def parse_args():
@@ -37,8 +38,11 @@ def parse_args():
 
 def main():
     args, config = parse_args()
-    if config.DATASET.DATASET=='translation_multi30k' or 'translation_IAPR':
+    if config.DATASET.DATASET=='translation_multi30k' or config.DATASET.DATASET=='translation_IAPR' or config.DATASET.DATASET=='translation_Europarl':
         result_json_path = test_translation_net(args, config,
+                                    ckpt_path=args.ckpt, save_path=args.result_path, save_name=args.result_name)
+    elif config.DATASET.DATASET=='distance_translation_multi30k' or config.DATASET.DATASET=='distance_translation_multi30k_with_vision':
+        result_json_path = test_distance_translation_net(args, config,
                                     ckpt_path=args.ckpt, save_path=args.result_path, save_name=args.result_name)
     else:
         result_json_path = test_net(args, config,

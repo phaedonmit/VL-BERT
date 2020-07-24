@@ -1,7 +1,7 @@
 ---
 RNG_SEED: 12345
 OUTPUT_PATH: './output/pretrain/vl-bert'
-MODULE: ResNetVLBERTForPretrainingTranslationNoVision
+MODULE: ResNetVLBERTDistanceTranslationNoVision
 GPUS: '3'
 LOG_FREQUENT: 100
 VAL_FREQUENT: 1
@@ -13,9 +13,9 @@ SCALES:
 - 1000
 
 DATASET:
-  DATASET: translation_Europarl
+  DATASET: distance_translation_multi30k
   APPEND_INDEX: false
-  DATASET_PATH: './data/europarl'
+  DATASET_PATH: './data/flickr30k'
   ROOT_PATH: './'
   TRAIN_IMAGE_SET: 'train'
   VAL_IMAGE_SET: 'val'
@@ -25,7 +25,7 @@ DATASET:
   CACHE_MODE: false
   IGNORE_DB_CACHE: false
   MASK_SIZE: 14
-  LANGUAGES_USED: 'first'
+  LANGUAGES_USED: 'second'
 
 NETWORK:
   PARTIAL_PRETRAIN: "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/pretrain_prec/002_prec_LR1e6_multi30k/train_train/vl-bert_base_res101_pretrain_multitask-0019.model"
@@ -59,12 +59,12 @@ NETWORK:
   ENABLE_CNN_REG_LOSS: false
   MLM_LOSS_NORM_IN_BATCH_FIRST: false
   MVRC_LOSS_NORM_IN_BATCH_FIRST: false
-  WITH_REL_LOSS: true
-  WITH_MLM_LOSS: false
-  WITH_MVRC_LOSS: false
+  WITH_REL_LOSS: false
+  WITH_MLM_LOSS: true
+  WITH_MVRC_LOSS: true
 
   VLBERT:
-    with_pooler: true
+    with_pooler: false
     input_transform_type: 1
     visual_size: 768
     hidden_size: 768

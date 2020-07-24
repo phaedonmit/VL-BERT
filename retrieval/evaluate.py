@@ -10,7 +10,7 @@ import operator
 
 # filepath = "/experiments/faidon/VL-BERT/checkpoints/itm_evaluation_retrieval_test2015.json"
 # filepath = "/experiments/faidon/VL-BERT/checkpoints/imt_model19_prec_5captions_LR1e6_all.json"
-filepath = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/itm_prec/011_prec_retrieval_mixed_5x/011_prec_retrieval_mixed_5x_English_retrieval_test2015.json"
+filepath = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/itm_prec/013_prec_retrieval_mixed_5x/013_prec_retrieval_mixed_5x_German_retrieval_test2015.json"
 
 with open(filepath) as json_file:
     data = json.load(json_file)
