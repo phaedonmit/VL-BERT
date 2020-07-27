@@ -1,7 +1,7 @@
 ---
 RNG_SEED: 12345
 OUTPUT_PATH: './output/pretrain/vl-bert'
-MODULE: ResNetVLBERTDistanceTranslationNoVision
+MODULE: ResNetVLBERTForPretrainingMultitask
 GPUS: '3'
 LOG_FREQUENT: 100
 VAL_FREQUENT: 1
@@ -13,7 +13,7 @@ SCALES:
 - 1000
 
 DATASET:
-  DATASET: distance_translation_multi30k
+  DATASET: multi30k
   APPEND_INDEX: false
   DATASET_PATH: './data/flickr30k'
   ROOT_PATH: './'
@@ -59,12 +59,12 @@ NETWORK:
   ENABLE_CNN_REG_LOSS: false
   MLM_LOSS_NORM_IN_BATCH_FIRST: false
   MVRC_LOSS_NORM_IN_BATCH_FIRST: false
-  WITH_REL_LOSS: false
-  WITH_MLM_LOSS: true
-  WITH_MVRC_LOSS: true
+  WITH_REL_LOSS: true
+  WITH_MLM_LOSS: false
+  WITH_MVRC_LOSS: false
 
   VLBERT:
-    with_pooler: false
+    with_pooler: true
     input_transform_type: 1
     visual_size: 768
     hidden_size: 768

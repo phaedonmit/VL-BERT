@@ -10,8 +10,9 @@ import operator
 import numpy as np
 
 # filepath_en = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/pretrain_prec/002_prec_LR1e6_multi30k/distance_002_prec_LR1e6_multi30k_cls_English_retrieval_translation_test2015.json"
-filepath_en = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/pretrain_prec/002_prec_LR1e6_multi30k/distance_002_prec_LR1e6_multi30k_cls_out_with_vision_English_retrieval_translation_test2015.json"
-filepath_de = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/pretrain_prec/002_prec_LR1e6_multi30k/distance_002_prec_LR1e6_multi30k_cls_German_retrieval_translation_test2015.json"
+filepath_en = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/pretrain_prec/003_prec_LR1e6_taskB_multi30k_5x/003_prec_LR1e6_taskB_multi30k_5x_cls_output_English_retrieval_translation_test2015.json"
+# filepath_de = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/pretrain_prec/002_prec_LR1e6_multi30k/distance_002_prec_LR1e6_multi30k_cls_German_retrieval_translation_test2015.json"
+filepath_de = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/pretrain_prec/003_prec_LR1e6_taskB_multi30k_5x/003_prec_LR1e6_taskB_multi30k_5x_cls_output_German_retrieval_translation_test2015.json"
 
 # Step 1 - Read json files with outputs
 with open(filepath_en) as json_file:

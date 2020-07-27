@@ -151,3 +151,8 @@ cache
 !data/flickr30k
 data/flickr30k/*
 !data/flickr30k/utils
+
+!retrieval/data
+!retrieval/data/datasets
+!MLT/data
+!MLT/data/datasets

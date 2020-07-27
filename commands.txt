@@ -72,7 +72,8 @@ CUDA_VISIBLE_DEVICES=3 ./scripts/dist_run_single.sh 1 retrieval/train_end2end.py
 CUDA_VISIBLE_DEVICES=3 ./scripts/dist_run_single.sh 1 retrieval/train_end2end.py /experiments/faidon/VL-BERT/cfgs/retrieval/base_prec_16x16G_fp16_downstream_retrieval_german_5x_LR6_startLR6.yaml /experiments/faidon/VL-BERT/checkpoints
 
 CUDA_VISIBLE_DEVICES=2 ./scripts/dist_run_single.sh 1 retrieval/train_end2end.py /experiments/faidon/VL-BERT/cfgs/retrieval/base_prec_16x16G_fp16_downstream_retrieval_mixed_5x_LR6_startLR6.yaml /experiments/faidon/VL-BERT/checkpoints
-CUDA_VISIBLE_DEVICES=3 ./scripts/dist_run_single.sh 1 retrieval/train_end2end.py /experiments/faidon/VL-BERT/cfgs/retrieval/base_prec_16x16G_fp16_downstream_retrieval_german_5x_LR6_startEnglish5k.yaml /experiments/faidon/VL-BERT/checkpoints
+CUDA_VISIBLE_DEVICES=2 ./scripts/dist_run_single.sh 1 retrieval/train_end2end.py /experiments/faidon/VL-BERT/cfgs/retrieval/base_prec_16x16G_fp16_downstream_retrieval_mixed_5x_LR6_startTaskB.yaml /experiments/faidon/VL-BERT/checkpoints
+CUDA_VISIBLE_DEVICES=3 ./scripts/dist_run_single.sh 1 retrieval/train_end2end.py /experiments/faidon/VL-BERT/cfgs/retrieval/base_prec_16x16G_fp16_downstream_retrieval_english_LR6_startLR6_multi30k.yaml /experiments/faidon/VL-BERT/checkpoints
 
 
 downstream translation retrieval
@@ -95,9 +96,9 @@ image retrieval inference:
 
 CUDA_VISIBLE_DEVICES=2 python retrieval/test.py \
   --cfg /experiments/faidon/VL-BERT/checkpoints/output/pretrain/itm_prec/004_prec_retrieval_german_LR6_startEnglish5k/train_train/base_prec_16x16G_fp16_downstream_retrieval_german_LR6_startEnglish5k.yaml \
-  --ckpt  /experiments/faidon/VL-BERT/checkpoints/output/pretrain/itm_prec/013_prec_retrieval_mixed_5x/train_train/vl-bert_base_res101_pretrain_multitask-0019.model \
+  --ckpt  /experiments/faidon/VL-BERT/checkpoints/output/pretrain/itm_prec/015_prec_retrieval_mixed_5x_startTaskB/train_train/vl-bert_base_res101_pretrain_multitask-0019.model \
   --gpus 0 \
-  --result-path /experiments/faidon/VL-BERT/checkpoints --result-name 013_prec_retrieval_mixed_5x_German
+  --result-path /experiments/faidon/VL-BERT/checkpoints --result-name 015_prec_retrieval_mixed_5x_startTaskB_German
 
 --------------------------------------
 

@@ -1,0 +1,15 @@
+from .conceptual_captions import ConceptualCaptionsDataset
+from .coco_captions import COCOCaptionsDataset
+from .general_corpus import GeneralCorpus
+from .multi30k import Multi30kDataset
+from .multi30k_5x import Multi30kDataset_5x
+from .multi30k_5x_mixed import Multi30kDataset_5x_Mixed
+from .flickr30k import Flickr30kDataset
+from .cc_and_flickr30k import CC_and_Flickr30kDataset
+from .translation_multi30k import Translation_Multi30kDataset
+from .translation_europarl import Translation_EuroparlDataset
+from .distance_translation_multi30k import Distance_Translation_Multi30kDataset
+from .distance_translation_multi30k_with_vision import Distance_Translation_With_Vision_Multi30kDataset
+from .translation_IAPR import Translation_IAPRDataset
+
+
