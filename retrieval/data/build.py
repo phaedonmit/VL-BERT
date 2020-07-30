@@ -20,7 +20,8 @@ DATASET_CATALOGS = {'conceptual_captions': ConceptualCaptionsDataset,
                     'translation_IAPR': Translation_IAPRDataset,
                     'translation_Europarl': Translation_EuroparlDataset,
                     'distance_translation_multi30k': Distance_Translation_Multi30kDataset,
-                    'distance_translation_multi30k_with_vision': Distance_Translation_With_Vision_Multi30kDataset
+                    'distance_translation_multi30k_with_vision': Distance_Translation_With_Vision_Multi30kDataset,
+                    'distance_multi30k_vision_only': Distance_Vision_Only_Multi30kDataset
                     }
 
 

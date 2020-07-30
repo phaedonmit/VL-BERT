@@ -88,7 +88,7 @@ def train_net(args, config):
         config.GPUS = str(local_rank)
         model = model.cuda()
         if not config.TRAIN.FP16:
-            model = DDP(model, device_ids=[local_rank], output_device=local_rank)
+            model = DDP(model, find_unused_parameters=True, device_ids=[local_rank], output_device=local_rank)
 
         if rank == 0:
             summary_parameters(model.module if isinstance(model, torch.nn.parallel.DistributedDataParallel) else model,
@@ -178,7 +178,7 @@ def train_net(args, config):
         # model
         if num_gpus > 1:
             model = torch.nn.DataParallel(model, device_ids=[int(d) for d in config.GPUS.split(',')]).cuda()
-        else:
+        else:          
             torch.cuda.set_device(int(config.GPUS))
             model.cuda()
 

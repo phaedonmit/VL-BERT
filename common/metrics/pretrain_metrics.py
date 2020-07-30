@@ -25,7 +25,9 @@ class RelationshipAccuracy(EvalMetric):
         with torch.no_grad():
             logits = outputs['relationship_logits']
             label = outputs['relationship_label']
-            self.sum_metric += float((logits.argmax(dim=1) == label).sum().item())
+            # FM edit: change to deal with sigmoid, single output
+            # self.sum_metric += float((logits.argmax(dim=1) == label).sum().item())
+            self.sum_metric += float(( ((logits>0.5).to(device=logits.device, dtype=torch.float)).squeeze() == label).sum().item())
             self.num_inst += logits.shape[0]
 
 

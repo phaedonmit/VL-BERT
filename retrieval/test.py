@@ -41,7 +41,7 @@ def main():
     if config.DATASET.DATASET=='translation_multi30k' or config.DATASET.DATASET=='translation_IAPR' or config.DATASET.DATASET=='translation_Europarl':
         result_json_path = test_translation_net(args, config,
                                     ckpt_path=args.ckpt, save_path=args.result_path, save_name=args.result_name)
-    elif config.DATASET.DATASET=='distance_translation_multi30k' or config.DATASET.DATASET=='distance_translation_multi30k_with_vision':
+    elif config.DATASET.DATASET=='distance_translation_multi30k' or config.DATASET.DATASET=='distance_translation_multi30k_with_vision' or config.DATASET.DATASET=='distance_multi30k_vision_only':
         result_json_path = test_distance_translation_net(args, config,
                                     ckpt_path=args.ckpt, save_path=args.result_path, save_name=args.result_name)
     else:

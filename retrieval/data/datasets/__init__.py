@@ -10,6 +10,7 @@ from .translation_multi30k import Translation_Multi30kDataset
 from .translation_europarl import Translation_EuroparlDataset
 from .distance_translation_multi30k import Distance_Translation_Multi30kDataset
 from .distance_translation_multi30k_with_vision import Distance_Translation_With_Vision_Multi30kDataset
+from .distance_multi30k_vision_only import Distance_Vision_Only_Multi30kDataset
 from .translation_IAPR import Translation_IAPRDataset
 
 

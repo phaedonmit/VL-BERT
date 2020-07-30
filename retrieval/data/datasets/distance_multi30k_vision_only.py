@@ -16,7 +16,7 @@ from common.utils.zipreader import ZipReader
 from common.utils.create_logger import makedirsExist
 
 
-class Distance_Translation_Multi30kDataset(Dataset):
+class Distance_Vision_Only_Multi30kDataset(Dataset):
     def __init__(self, ann_file, image_set, root_path, data_path, seq_len=64,
                  with_precomputed_visual_feat=False, mask_raw_pixels=True,
                  with_rel_task=True, with_mlm_task=False, with_mvrc_task=False,
@@ -42,15 +42,15 @@ class Distance_Translation_Multi30kDataset(Dataset):
         :param aspect_grouping: whether to group images via their aspect
         :param kwargs:
         """
-        super(Distance_Translation_Multi30kDataset, self).__init__()
+        super(Distance_Vision_Only_Multi30kDataset, self).__init__()
 
         assert not cache_mode, 'currently not support cache mode!'
         # TODO: need to remove this to allows testing
         # assert not test_mode
 
-        annot = {'train': 'train.json',
-                 'val': 'val.json',
-                 'test2015': 'test.json'}
+        annot = {'train': 'train_frcnn.json',
+                 'val': 'val_frcnn.json',
+                 'test2015': 'test_frcnn.json'}
 
         self.seq_len = seq_len
         self.with_rel_task = with_rel_task
@@ -82,25 +82,14 @@ class Distance_Translation_Multi30kDataset(Dataset):
 
         self.zipreader = ZipReader()
 
-        # FM: Customise for multi30k dataset - only used for inference
+        # FM: Customise for multi30k dataset
         self.database = list(jsonlines.open(self.ann_file))
-        # if not self.test_mode:
-        #     self.database = list(jsonlines.open(self.ann_file))
-        # # FM edit: create dataset for test mode 
-        # else:
-        #     self.simple_database = list(jsonlines.open(self.ann_file))
-        #     # create database cross-coupling each caption_en with all captions_de
-        #     self.database = []
-        #     db_index = 0
-        #     for x, idb_x in enumerate(self.simple_database):
-        #         for y, idb_y in enumerate(self.simple_database):                    
-        #             self.database.append({})
-        #             self.database[db_index]['label'] = 1.0 if x==y else 0.0
-        #             self.database[db_index]['caption_en'] = self.simple_database[x]['caption_en']
-        #             self.database[db_index]['caption_de'] = self.simple_database[y]['caption_de']
-        #             self.database[db_index]['caption_en_index'] = x
-        #             self.database[db_index]['caption_de_index'] = y
-        #             db_index += 1
+        if not self.zip_mode:
+            for i, idb in enumerate(self.database):
+                self.database[i]['frcnn'] = idb['frcnn'].replace('.zip@', '')\
+                    .replace('.0', '').replace('.1', '').replace('.2', '').replace('.3', '')
+                self.database[i]['image'] = idb['image'].replace('.zip@', '')
+ 
 
         if self.aspect_grouping:
             assert False, "not support aspect grouping currently!"
@@ -110,14 +99,66 @@ class Distance_Translation_Multi30kDataset(Dataset):
 
     @property
     def data_names(self):
-        return ['text', 'relationship_label', 'mlm_labels']
+        return ['image', 'boxes', 'im_info', 'text',
+                'relationship_label', 'mlm_labels', 'mvrc_ops', 'mvrc_labels']
 
     def __getitem__(self, index):
         idb = self.database[index]
 
-        # # indeces for inference
-        # caption_en_index = idb['caption_en_index'] if self.test_mode else 0
-        # caption_de_index = idb['caption_de_index'] if self.test_mode else 0
+
+        # image data
+        # IN ALL CASES: boxes and cls scores are available for each image
+        frcnn_data = self._load_json(os.path.join(self.data_path, idb['frcnn']))
+        boxes = np.frombuffer(self.b64_decode(frcnn_data['boxes']),
+                              dtype=np.float32).reshape((frcnn_data['num_boxes'], -1))
+        boxes_cls_scores = np.frombuffer(self.b64_decode(frcnn_data['classes']),
+                                         dtype=np.float32).reshape((frcnn_data['num_boxes'], -1))
+        boxes_max_conf = boxes_cls_scores.max(axis=1)
+        inds = np.argsort(boxes_max_conf)[::-1]
+        boxes = boxes[inds]
+        boxes_cls_scores = boxes_cls_scores[inds]
+        boxes = torch.as_tensor(boxes)
+
+        # load precomputed features or the whole image depending on setup
+        if self.with_precomputed_visual_feat:
+            image = None
+            w0, h0 = frcnn_data['image_w'], frcnn_data['image_h']
+            boxes_features = np.frombuffer(self.b64_decode(frcnn_data['features']),
+                                           dtype=np.float32).reshape((frcnn_data['num_boxes'], -1))
+            boxes_features = boxes_features[inds]
+            boxes_features = torch.as_tensor(boxes_features)
+        else:
+            try:
+                image = self._load_image(os.path.join(self.data_path, idb['image']))
+                w0, h0 = image.size
+            except:
+                print("Failed to load image {}, use zero image!".format(idb['image']))
+                image = None
+                w0, h0 = frcnn_data['image_w'], frcnn_data['image_h']
+
+        # append whole image to tensor of boxes (used for all linguistic tokens)
+        if self.add_image_as_a_box:
+            image_box = torch.as_tensor([[0.0, 0.0, w0 - 1.0, h0 - 1.0]])
+            boxes = torch.cat((image_box, boxes), dim=0)
+            if self.with_precomputed_visual_feat:
+                image_box_feat = boxes_features.mean(dim=0, keepdim=True)
+                boxes_features = torch.cat((image_box_feat, boxes_features), dim=0)
+
+        # transform
+        im_info = torch.tensor([w0, h0, 1.0, 1.0, index])
+        if self.transform is not None:
+            image, boxes, _, im_info = self.transform(image, boxes, None, im_info)
+
+        if image is None and (not self.with_precomputed_visual_feat):
+            w = int(im_info[0].item())
+            h = int(im_info[1].item())
+            image = im_info.new_zeros((3, h, w), dtype=torch.float)
+
+        # clamp boxes
+        w = im_info[0].item()
+        h = im_info[1].item()
+        boxes[:, [0, 2]] = boxes[:, [0, 2]].clamp(min=0, max=w-1)
+        boxes[:, [1, 3]] = boxes[:, [1, 3]].clamp(min=0, max=h-1)
 
         # Task #1: Caption-Image Relationship Prediction
         _p = random.random()
@@ -131,9 +172,8 @@ class Distance_Translation_Multi30kDataset(Dataset):
                 rand_index = random.randrange(0, len(self.database))
                 while rand_index == index:
                     rand_index = random.randrange(0, len(self.database))
-                # caption_en and image match, german caption is random
-                caption_en = idb['caption_en']
-                caption_de = self.database[rand_index]['caption_de']
+                caption_en =self.database[rand_index]['caption_en']
+                caption_de =self.database[rand_index]['caption_de']
         # for inference
         else:
             relationship_label = 1
@@ -146,32 +186,43 @@ class Distance_Translation_Multi30kDataset(Dataset):
         mlm_labels_en = [-1] * len(caption_tokens_en)
         mlm_labels_de = [-1] * len(caption_tokens_de)
         
-        # FM edit: captions of both languages exist in all cases
-        if self.languages_used == 'first':
-            text_tokens = ['[CLS]'] + caption_tokens_en + ['[SEP]']
-            mlm_labels = [-1] + mlm_labels_en + [-1]
-        elif self.languages_used == 'second':
-            text_tokens = ['[CLS]'] + caption_tokens_de + ['[SEP]']
-            mlm_labels = [-1] + mlm_labels_de + [-1]
-        else:
-            text_tokens = ['[CLS]'] + caption_tokens_en + ['[SEP]'] + caption_tokens_de + ['[SEP]']
-            mlm_labels = [-1] + mlm_labels_en + [-1] + mlm_labels_de + [-1]
+        # FM edit: use vision modality only
+        text_tokens = ['[CLS]']+ ['[SEP]']
+        mlm_labels = [-1] + [-1]
 
+        # Construct boxes
+        mvrc_ops = [0] * boxes.shape[0]
+        mvrc_labels = [np.zeros_like(boxes_cls_scores[0])] * boxes.shape[0]
 
+        # store labels for masked regions
+        mvrc_labels = np.stack(mvrc_labels, axis=0)
 
         # convert tokens to ids 
         text = self.tokenizer.convert_tokens_to_ids(text_tokens)
 
+        if self.with_precomputed_visual_feat:
+            boxes = torch.cat((boxes, boxes_features), dim=1)
+
         # truncate seq to max len
-        if len(text)  > self.seq_len:
+        if len(text) + len(boxes) > self.seq_len:
             text_len_keep = len(text)
-            while (text_len_keep) > self.seq_len and (text_len_keep > 0):
-                text_len_keep -= 1
+            box_len_keep = len(boxes)
+            while (text_len_keep + box_len_keep) > self.seq_len and (text_len_keep > 0) and (box_len_keep > 0):
+                if box_len_keep > text_len_keep:
+                    box_len_keep -= 1
+                else:
+                    text_len_keep -= 1
             if text_len_keep < 2:
                 text_len_keep = 2
+            if box_len_keep < 1:
+                box_len_keep = 1
+            boxes = boxes[:box_len_keep]
             text = text[:(text_len_keep - 1)] + [text[-1]]
+            mlm_labels = mlm_labels[:(text_len_keep - 1)] + [mlm_labels[-1]]
+            mvrc_ops = mvrc_ops[:box_len_keep]
+            mvrc_labels = mvrc_labels[:box_len_keep]
 
-        return text, relationship_label, mlm_labels
+        return image, boxes, im_info, text, relationship_label, mlm_labels, mvrc_ops, mvrc_labels
 
     @staticmethod
     def b64_decode(string):
