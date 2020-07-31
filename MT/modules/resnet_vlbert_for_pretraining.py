@@ -47,6 +47,8 @@ class ResNetVLBERTForPretraining(Module):
             with_mvrc_head=config.NETWORK.WITH_MVRC_LOSS,
         )
 
+
+
         # init weights
         self.init_weight()
 
@@ -142,8 +144,11 @@ class ResNetVLBERTForPretraining(Module):
         object_vl_embeddings = torch.cat((obj_reps['obj_reps'], object_linguistic_embeddings), -1)
 
         ###########################################
-
+        
         # Visual Linguistic BERT
+        # #loop here for test mode:
+        # if self.test_mode:
+        #     pass
 
         relationship_logits, mlm_logits, mvrc_logits = self.vlbert(text_input_ids,
                                                                    text_token_type_ids,
@@ -154,7 +159,17 @@ class ResNetVLBERTForPretraining(Module):
 
         ###########################################
         outputs = {}
-
+        # print(mlm_labels)
+        # print('shape: ', mlm_labels.shape)
+        # print(mlm_logits[mlm_labels==-10].shape)
+        # answers = torch.topk(mlm_logits[mlm_labels==-10], k=8,  dim=1)
+        # print(answers)
+        # print('dictionary: ', self.tokenizer.ids_to_tokens[102])
+        # for row in answers[1]:
+        #     for ele in row:
+        #         print (self.tokenizer.ids_to_tokens[ele.item()], end="  ")
+        #     print('\n')
+        # exit()
         # loss
         relationship_loss = im_info.new_zeros(())
         mlm_loss = im_info.new_zeros(())
@@ -198,7 +213,7 @@ class ResNetVLBERTForPretraining(Module):
             mvrc_labels_padded = mvrc_labels.new_zeros((mvrc_labels.shape[0], origin_len, mvrc_labels.shape[2])).fill_(0.0)
             mvrc_labels_padded[:, :mvrc_labels.shape[1]] = mvrc_labels
             mvrc_labels = mvrc_labels_padded
-
+        
         outputs.update({
             'relationship_logits': relationship_logits if self.config.NETWORK.WITH_REL_LOSS else None,
             'relationship_label': relationship_label if self.config.NETWORK.WITH_REL_LOSS else None,
