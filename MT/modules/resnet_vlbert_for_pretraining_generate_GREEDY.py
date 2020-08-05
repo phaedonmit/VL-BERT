@@ -11,10 +11,10 @@ from common.utils.misc import soft_cross_entropy
 BERT_WEIGHTS_NAME = 'pytorch_model.bin'
 
 
-class ResNetVLBERTForPretraining(Module):
+class ResNetVLBERTForPretrainingGenerate(Module):
     def __init__(self, config):
 
-        super(ResNetVLBERTForPretraining, self).__init__(config)
+        super(ResNetVLBERTForPretrainingGenerate, self).__init__(config)
 
         self.image_feature_extractor = FastRCNN(config,
                                                 average_pool=True,
@@ -65,7 +65,7 @@ class ResNetVLBERTForPretraining(Module):
                                                                   std=self.config.NETWORK.VLBERT.initializer_range)
 
     def train(self, mode=True):
-        super(ResNetVLBERTForPretraining, self).train(mode)
+        super(ResNetVLBERTForPretrainingGenerate, self).train(mode)
         # turn some frozen layers to eval mode
         if self.image_feature_bn_eval:
             self.image_feature_extractor.bn_eval()
@@ -144,15 +144,83 @@ class ResNetVLBERTForPretraining(Module):
         object_vl_embeddings = torch.cat((obj_reps['obj_reps'], object_linguistic_embeddings), -1)
 
         ###########################################
-        
         # Visual Linguistic BERT
         # #loop here for test mode:
-        relationship_logits, mlm_logits, mvrc_logits = self.vlbert(text_input_ids,
-                                                                text_token_type_ids,
-                                                                text_visual_embeddings,
-                                                                text_mask,
-                                                                object_vl_embeddings,
-                                                                box_mask)
+        generated = []
+        stop = [False]*text.shape[0]
+        curr_len = 0
+        max_len = 48
+        while not all(stop) and curr_len<=max_len:
+            relationship_logits, mlm_logits, mvrc_logits = self.vlbert(text_input_ids,
+                                                                    text_token_type_ids,
+                                                                    text_visual_embeddings,
+                                                                    text_mask,
+                                                                    object_vl_embeddings,
+                                                                    box_mask)
+            answers = torch.topk(mlm_logits[mlm_labels==103], k=1,  dim=1)
+
+            # print('mlm_labels shape:', mlm_labels.shape)
+            # print('text_input_ids shape:', text_input_ids.shape)            
+            # print('text_token_type_ids shape:', text_token_type_ids.shape)            
+            # print('text_visual_embeddings shape:', text_visual_embeddings.shape)            
+            # print('text_mask shape:', text_mask.shape)        
+            # print('answers shape: ', answers[1].shape)    
+            
+            # Get size of each tensor
+            position_tensor = torch.arange(mlm_labels.shape[1])
+            position_tensor = position_tensor.repeat(mlm_labels.shape[0]).view(mlm_labels.shape[0],-1)
+            indeces = position_tensor[mlm_labels==103]
+
+            # 1. Update mlm_labels:
+            mlm_labels_new = mlm_labels.new_zeros(mlm_labels.shape[0], mlm_labels.shape[1]+1)
+            mlm_labels_new = mlm_labels_new - 1
+            mlm_labels_new[torch.arange(mlm_labels.shape[0]), indeces+1] = 103
+            mlm_labels = mlm_labels_new
+
+            # 2. Update text_input_ids:
+            text_input_ids_new = text_input_ids.new_zeros(text_input_ids.shape[0], text_input_ids.shape[1]+1)
+            text_input_ids_new[:, :-1] = text_input_ids
+            text_input_ids_new[torch.arange(text_input_ids.shape[0]), indeces] = answers[1][:,0]
+            text_input_ids_new[torch.arange(text_input_ids.shape[0]), indeces+1] = (self.tokenizer.convert_tokens_to_ids(['[MASK]'])[0])
+            text_input_ids_new[torch.arange(text_input_ids.shape[0]), indeces+2] = (self.tokenizer.convert_tokens_to_ids(['[STOP]'])[0])
+            text_input_ids_new[torch.arange(text_input_ids.shape[0]), indeces+3] = (self.tokenizer.convert_tokens_to_ids(['[SEP]'])[0])
+            text_input_ids = text_input_ids_new
+
+            # 3. Update text_token_type_ids:
+            text_token_type_ids = text_token_type_ids.new_zeros(text_token_type_ids.shape[0], text_token_type_ids.shape[1]+1)
+
+            # 4. Update text_input_ids:
+            text_visual_embeddings_new = text_visual_embeddings.new_zeros(text_visual_embeddings.shape[0], text_visual_embeddings.shape[1]+1, text_visual_embeddings.shape[2])
+            text_visual_embeddings_new = text_visual_embeddings_new.transpose(0,1)
+            text_visual_embeddings_new[:] = text_visual_embeddings[:,0,:]
+            text_visual_embeddings = text_visual_embeddings_new.transpose(0,1)
+
+            # 5. Update text_mask:
+            text_mask = (text_input_ids > 0)
+
+            # TODO step 3
+            for nid, row in enumerate(answers[1]):
+                if curr_len == 0:
+                    generated.append([])
+                for ele in row:
+                    # try:
+                    if not stop[nid]:
+                        if self.tokenizer.ids_to_tokens[ele.item()]=='[STOP]':
+                            stop[nid]=True
+                        else:
+                            generated[nid].append(self.tokenizer.ids_to_tokens[ele.item()])
+                    # except:
+                    #     generated[nid].append(self.tokenizer.ids_to_tokens[100])
+            curr_len += 1
+
+        # Join in sentences
+        generated_sentences = []
+        for sentence in generated:
+            new_sentence = ' '.join(sentence)
+            generated_sentences.append(new_sentence.replace(' ##', ''))
+        # print(generated_sentences)
+        # exit()
+     
 
         ###########################################
         outputs = {}
@@ -211,6 +279,7 @@ class ResNetVLBERTForPretraining(Module):
             'relationship_loss': relationship_loss,
             'mlm_loss': mlm_loss,
             'mvrc_loss': mvrc_loss,
+            'generated_sentences': generated_sentences
         })
 
         loss = relationship_loss.mean() + mlm_loss.mean() + mvrc_loss.mean()

@@ -67,26 +67,32 @@ def test_net(args, config, ckpt_path=None, save_path=None, save_name=None):
 
     # ************
     # Step 3: Run all pairs through model for inference
-    logits = []
+    generated_sentences = []
+    captions_en = []
+    captions_de = []    
     model.eval()
     cur_id = 0
     for nbatch, batch in zip(trange(len(test_loader)), test_loader):
         bs = test_loader.batch_sampler.batch_size if test_loader.batch_sampler is not None else test_loader.batch_size
         # image_ids.extend([test_database[id]['image_index'] for id in range(cur_id, min(cur_id + bs, len(test_database)))])
+        captions_en.extend([test_database[id]['caption_en'] for id in range(cur_id, min(cur_id + bs, len(test_database)))])
+        captions_de.extend([test_database[id]['caption_de'] for id in range(cur_id, min(cur_id + bs, len(test_database)))])
         batch = to_cuda(batch)
         output = model(*batch)
-        logits.append(output[0]['mlm_logits'].detach().cpu())
+        generated_sentences.extend((output[0]['generated_sentences']))
         cur_id += bs
-        exit()
+        # break
+        # exit()
         #TODO: remove this is just for checking
         # if nbatch>900:
         #     break
    
     # ************
     # Step 3: Store all logit results in file for later evalution       
-    result = [{'caption_id': c_id, 'image_ids': i_id, 'logit': l_id} for c_id, i_id, l_id in zip(caption_ids, image_ids, logits)]
+    result = [{'generated_sentence': c_id, 'caption_en': caption_en, 'caption_de': caption_de} 
+                for c_id, caption_en, caption_de in zip(generated_sentences, captions_en, captions_de)]
     cfg_name = os.path.splitext(os.path.basename(args.cfg))[0]
-    result_json_path = os.path.join(save_path, '{}_retrieval_{}.json'.format(cfg_name if save_name is None else save_name,
+    result_json_path = os.path.join(save_path, '{}_MT_{}.json'.format(cfg_name if save_name is None else save_name,
                                                                         config.DATASET.TEST_IMAGE_SET))
     with open(result_json_path, 'w') as f:
         json.dump(result, f)

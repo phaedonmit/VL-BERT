@@ -178,10 +178,10 @@ CUDA_VISIBLE_DEVICES=3 python MLT/test.py \
 MT evaluation
 
 CUDA_VISIBLE_DEVICES=2 python MT/test.py \
-  --cfg /experiments/faidon/VL-BERT/cfgs/MT/base_prec_16x16G_fp16_MT_LR6.yaml \
-  --ckpt  /experiments/faidon/VL-BERT/checkpoints/output/pretrain/MT/001_MT_LR6_with_vision/train_train/vl-bert_base_res101_pretrain_multitask-0019.model \
+  --cfg /experiments/faidon/VL-BERT/cfgs/MT/base_prec_16x16G_fp16_MT_LR6_generate.yaml \
+  --ckpt  /experiments/faidon/VL-BERT/checkpoints/output/pretrain/MT/002_MT_LR6_with_vision_last_token/train_train/vl-bert_base_res101_pretrain_multitask-0019.model \
   --gpus 0 \
-  --result-path /experiments/faidon/VL-BERT/checkpoints --result-name 001_MT_LR6_with_vision
+  --result-path /experiments/faidon/VL-BERT/checkpoints --result-name 002_MT_LR6_with_vision_last_token
 
 --------------------------------------
 Tensorboard
