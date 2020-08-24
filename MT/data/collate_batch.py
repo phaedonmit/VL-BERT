@@ -23,6 +23,10 @@ class BatchCollator(object):
             max_boxes = max([data[self.data_names.index('boxes')].shape[0] for data in batch])
         if 'text' in self.data_names:
             max_text_length = max([len(data[self.data_names.index('text')]) for data in batch])
+        if 'text_en' in self.data_names:
+            max_text_length_en = max([len(data[self.data_names.index('text_en')]) for data in batch])
+        if 'text_de' in self.data_names:
+            max_text_length_de = max([len(data[self.data_names.index('text_de')]) for data in batch])
 
         for i, ibatch in enumerate(batch):
             out = {}
@@ -45,7 +49,26 @@ class BatchCollator(object):
             if 'mlm_labels' in self.data_names:
                 mlm_labels = ibatch[self.data_names.index('mlm_labels')]
                 out['mlm_labels'] = clip_pad_1d(mlm_labels, max_text_length, pad=-1)
+            
+            #****************
+            # FM edit: added for MT decoder encoder
+            if 'text_en' in self.data_names:
+                text_en = ibatch[self.data_names.index('text_en')]
+                out['text_en'] = clip_pad_1d(text_en, max_text_length_en, pad=0)
 
+            if 'mlm_labels_en' in self.data_names:
+                mlm_labels_en = ibatch[self.data_names.index('mlm_labels_en')]
+                out['mlm_labels_en'] = clip_pad_1d(mlm_labels_en, max_text_length_en, pad=-1)
+
+            if 'text_de' in self.data_names:
+                text_de = ibatch[self.data_names.index('text_de')]
+                out['text_de'] = clip_pad_1d(text_de, max_text_length_de, pad=0)
+
+            if 'mlm_labels_de' in self.data_names:
+                mlm_labels_de = ibatch[self.data_names.index('mlm_labels_de')]
+                out['mlm_labels_de'] = clip_pad_1d(mlm_labels_de, max_text_length_de, pad=-1)
+            #****************
+            
             if 'mvrc_ops' in self.data_names:
                 mvrc_ops = ibatch[self.data_names.index('mvrc_ops')]
                 out['mvrc_ops'] = clip_pad_1d(mvrc_ops, max_boxes, pad=0)

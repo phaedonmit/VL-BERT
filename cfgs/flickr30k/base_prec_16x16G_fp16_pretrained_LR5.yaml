@@ -1,8 +1,8 @@
 ---
 RNG_SEED: 12345
 OUTPUT_PATH: './output/pretrain/vl-bert'
-MODULE: ResNetVLBERTForPretraining
-GPUS: '3'
+MODULE: ResNetVLBERTForPretrainingMultitask
+GPUS: '2'
 LOG_FREQUENT: 100
 VAL_FREQUENT: 1
 CHECKPOINT_FREQUENT: 1
@@ -13,7 +13,8 @@ SCALES:
 - 1000
 
 DATASET:
-  DATASET: multi30k
+
+- DATASET: multi30k
   APPEND_INDEX: false
   DATASET_PATH: './data/flickr30k'
   ROOT_PATH: './'
@@ -26,10 +27,17 @@ DATASET:
   IGNORE_DB_CACHE: false
   MASK_SIZE: 14
 
+- DATASET: general_corpus
+  TRAIN_ANNOTATION_FILE: './data/en_corpus/bc1g.doc+./data/en_corpus/wiki.doc'
+  VAL_ANNOTATION_FILE: './data/en_corpus/bc1g.doc'
+  TEST_ANNOTATION_FILE: './data/en_corpus/bc1g.doc'
+  SEQ_LEN: 96
+  MIN_SEQ_LEN: 96
+
 NETWORK:
-  PARTIAL_PRETRAIN: "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/pretrain_prec/005_pretrained_LR6_taskB_taskC_taskB/train_train/vl-bert_base_res101_pretrain_multitask-0018.model"
+  PARTIAL_PRETRAIN: "/experiments/faidon/VL-BERT/model/pretrained_model/vl-bert-base-prec.model"
   PARTIAL_PRETRAIN_PREFIX_CHANGES: []
-  INITIALISATION: ''
+  INITIALISATION: 'hybrid'
   IMAGE_NUM_LAYERS: 101
   IMAGE_C5_DILATED: true
   IMAGE_STRIDE_IN_1x1: true
@@ -60,7 +68,7 @@ NETWORK:
   MVRC_LOSS_NORM_IN_BATCH_FIRST: false
   WITH_REL_LOSS: false
   WITH_MLM_LOSS: true
-  WITH_MVRC_LOSS: false
+  WITH_MVRC_LOSS: true
 
   VLBERT:
     with_pooler: false
@@ -85,7 +93,9 @@ NETWORK:
 TRAIN:
   SHUFFLE: true
   FLIP_PROB: 0.5
-  BATCH_IMAGES: 8
+  BATCH_IMAGES:
+  - 8
+  - 8
   ASPECT_GROUPING: false
   RESUME: false
   AUTO_RESUME: true
@@ -93,7 +103,7 @@ TRAIN:
   END_EPOCH: 20
   OPTIMIZER: 'AdamW'
   CLIP_GRAD_NORM: 10
-  LR: 1.0e-6
+  LR: 1.0e-5
   LR_SCHEDULE: 'triangle'
   WD: 0.0001
   WARMUP: true
@@ -110,10 +120,14 @@ TRAIN:
 VAL:
   SHUFFLE: false
   FLIP_PROB: 0
-  BATCH_IMAGES: 8
+  BATCH_IMAGES:
+  - 8
+  - 8
 
 TEST:
   SHUFFLE: false
   FLIP_PROB: 0
   TEST_EPOCH: 0
-  BATCH_IMAGES: 8
+  BATCH_IMAGES:
+  - 8
+  - 8

@@ -11,10 +11,10 @@ from common.utils.misc import soft_cross_entropy
 BERT_WEIGHTS_NAME = 'pytorch_model.bin'
 
 
-class ResNetVLBERTForPretrainingGenerate(Module):
+class ResNetVLBERTForPretrainingGenerateNoVision(Module):
     def __init__(self, config):
 
-        super(ResNetVLBERTForPretrainingGenerate, self).__init__(config)
+        super(ResNetVLBERTForPretrainingGenerateNoVision, self).__init__(config)
 
         self.image_feature_extractor = FastRCNN(config,
                                                 average_pool=True,
@@ -65,7 +65,7 @@ class ResNetVLBERTForPretrainingGenerate(Module):
                                                                   std=self.config.NETWORK.VLBERT.initializer_range)
 
     def train(self, mode=True):
-        super(ResNetVLBERTForPretrainingGenerate, self).train(mode)
+        super(ResNetVLBERTForPretrainingGenerateNoVision, self).train(mode)
         # turn some frozen layers to eval mode
         if self.image_feature_bn_eval:
             self.image_feature_extractor.bn_eval()
@@ -93,39 +93,10 @@ class ResNetVLBERTForPretrainingGenerate(Module):
         return object_reps[row_id.view(-1), span_tags_fixed.view(-1)].view(*span_tags_fixed.shape, -1)
 
     def forward(self,
-                image,
-                boxes,
-                im_info,
                 text,
                 relationship_label,
-                mlm_labels,
-                mvrc_ops,
-                mvrc_labels):
+                mlm_labels):
         ###########################################
-
-        # visual feature extraction
-        images = image
-        box_mask = (boxes[:, :, 0] > -1.5)
-        origin_len = boxes.shape[1]
-        max_len = int(box_mask.sum(1).max().item())
-        box_mask = box_mask[:, :max_len]
-        boxes = boxes[:, :max_len]
-        mvrc_ops = mvrc_ops[:, :max_len]
-        mvrc_labels = mvrc_labels[:, :max_len]
-
-        if self.config.NETWORK.IMAGE_FEAT_PRECOMPUTED:
-            box_features = boxes[:, :, 4:]
-            box_features[mvrc_ops == 1] = self.object_mask_visual_embedding.weight[0]
-            boxes[:, :, 4:] = box_features
-
-        obj_reps = self.image_feature_extractor(images=images,
-                                                boxes=boxes,
-                                                box_mask=box_mask,
-                                                im_info=im_info,
-                                                classes=None,
-                                                segms=None,
-                                                mvrc_ops=mvrc_ops,
-                                                mask_visual_embed=None)
 
         ############################################
 
@@ -133,15 +104,22 @@ class ResNetVLBERTForPretrainingGenerate(Module):
         text_input_ids = text
         text_tags = text.new_zeros(text.shape)
         text_token_type_ids = text.new_zeros(text.shape)
-        text_mask = (text_input_ids > 0)
-        text_visual_embeddings = self._collect_obj_reps(text_tags, obj_reps['obj_reps'])
 
-        object_linguistic_embeddings = self.object_linguistic_embeddings(
-            boxes.new_zeros((boxes.shape[0], boxes.shape[1])).long()
-        )
-        if self.config.NETWORK.WITH_MVRC_LOSS:
-            object_linguistic_embeddings[mvrc_ops == 1] = self.object_mask_word_embedding.weight[0]
-        object_vl_embeddings = torch.cat((obj_reps['obj_reps'], object_linguistic_embeddings), -1)
+        # ***** FM edit: blank out visual embeddings for translation retrieval task
+        text_visual_embeddings = text_input_ids.new_zeros((text_input_ids.shape[0], text_input_ids.shape[1], 768), dtype=torch.float)
+        # text_visual_embeddings[:] = self.aux_text_visual_embedding.weight[0]
+
+        # ****** FM edit: blank visual embeddings (use known dimensions)
+        object_vl_embeddings = text_input_ids.new_zeros((text_input_ids.shape[0], 1, 1536), dtype=torch.float)
+
+        # FM edit: No auxiliary text is used for text only
+        # add auxiliary text - Concatenates the batches from the two dataloaders
+        # The visual features for the text only corpus is just the embedding of the aux_visual_embedding (only one embedding)
+        max_text_len = text_input_ids.shape[1]
+        text_token_type_ids = text_input_ids.new_zeros(text_input_ids.shape)
+        text_mask = (text_input_ids > 0)
+        #FM: Edit: set to zero to ignore vision
+        box_mask = text_input_ids.new_zeros((text_input_ids.shape[0], 1), dtype=torch.uint8)
 
         ###########################################
         # Visual Linguistic BERT
@@ -164,10 +142,7 @@ class ResNetVLBERTForPretrainingGenerate(Module):
             # print('text_token_type_ids shape:', text_token_type_ids.shape)            
             # print('text_visual_embeddings shape:', text_visual_embeddings.shape)            
             # print('text_mask shape:', text_mask.shape)        
-            # print('answers shape: ', answers[1].shape) 
-            # print('answers: ', answers[1]) 
-
-            # exit()
+            # print('answers shape: ', answers[1].shape)    
             
             # Get size of each tensor
             position_tensor = torch.arange(mlm_labels.shape[1])
@@ -202,7 +177,6 @@ class ResNetVLBERTForPretrainingGenerate(Module):
             text_mask = (text_input_ids > 0)
 
             # TODO step 3
-            # 6. Append generated words from each sentence in the batch to list - terminate if all [STOP]
             for nid, row in enumerate(answers[1]):
                 if curr_len == 0:
                     generated.append([])
@@ -230,9 +204,9 @@ class ResNetVLBERTForPretrainingGenerate(Module):
         outputs = {}
 
         # loss
-        relationship_loss = im_info.new_zeros(())
-        mlm_loss = im_info.new_zeros(())
-        mvrc_loss = im_info.new_zeros(())
+        # relationship_loss = im_info.new_zeros(())
+        # mlm_loss = im_info.new_zeros(())
+        # mvrc_loss = im_info.new_zeros(())
         if self.config.NETWORK.WITH_REL_LOSS:
             relationship_loss = F.cross_entropy(relationship_logits, relationship_label)
         if self.config.NETWORK.WITH_MLM_LOSS:
@@ -280,13 +254,11 @@ class ResNetVLBERTForPretrainingGenerate(Module):
             'mlm_label': mlm_labels if self.config.NETWORK.WITH_MLM_LOSS else None,
             'mvrc_logits': mvrc_logits if self.config.NETWORK.WITH_MVRC_LOSS else None,
             'mvrc_label': mvrc_labels if self.config.NETWORK.WITH_MVRC_LOSS else None,
-            'relationship_loss': relationship_loss,
             'mlm_loss': mlm_loss,
-            'mvrc_loss': mvrc_loss,
             'generated_sentences': generated_sentences
         })
 
-        loss = relationship_loss.mean() + mlm_loss.mean() + mvrc_loss.mean()
+        loss = mlm_loss.mean()
 
         return outputs, loss
 

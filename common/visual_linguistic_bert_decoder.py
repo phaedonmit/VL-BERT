@@ -1,15 +1,16 @@
 import torch
 import torch.nn as nn
 from external.pytorch_pretrained_bert.modeling import BertLayerNorm, BertEncoder, BertPooler, ACT2FN, BertOnlyMLMHead
+from transformers import BertModel, BertConfig
 
 # todo: add this to config
 NUM_SPECIAL_WORDS = 1000
 
 
-class BaseModel(nn.Module):
+class BaseModelDecoder(nn.Module):
     def __init__(self, config, **kwargs):
         self.config = config
-        super(BaseModel, self).__init__()
+        super(BaseModelDecoder, self).__init__()
 
     def init_weights(self, module):
         """ Initialize the weights.
@@ -28,9 +29,9 @@ class BaseModel(nn.Module):
         raise NotImplemented
 
 
-class VisualLinguisticBert(BaseModel):
+class VisualLinguisticBertDecoder(BaseModelDecoder):
     def __init__(self, config, language_pretrained_model_path=None):
-        super(VisualLinguisticBert, self).__init__(config)
+        super(VisualLinguisticBertDecoder, self).__init__(config)
 
         self.config = config
 
@@ -62,7 +63,17 @@ class VisualLinguisticBert(BaseModel):
                                                requires_grad=True)
             self.register_parameter('visual_scale_object', visual_scale_object)
 
-        self.encoder = BertEncoder(config)
+        # *********************************************
+        # FM addition - Set-up decoder layer for MT
+        #  Initializing a BERT bert-base-uncased style configuration
+        configuration = BertConfig()
+        configuration.vocab_size = config.vocab_size
+        # TODO: doesn't fit one GPU
+        configuration.num_hidden_layers=6
+        configuration.is_decoder = True
+        # Initializing a model from the bert-base-uncased style configuration
+        self.decoder = BertModel(configuration)
+        # *********************************************
 
         if self.config.with_pooler:
             self.pooler = BertPooler(config)
@@ -99,6 +110,7 @@ class VisualLinguisticBert(BaseModel):
                 text_mask,
                 object_vl_embeddings,
                 object_mask,
+                encoder_hidden_states,
                 output_all_encoded_layers=True,
                 output_text_and_object_separately=False,
                 output_attention_probs=False):
@@ -129,15 +141,20 @@ class VisualLinguisticBert(BaseModel):
         # extended_attention_mask[extended_attention_mask != 0] = float('-inf')
 
         if output_attention_probs:
-            encoded_layers, attention_probs = self.encoder(embedding_output,
-                                                        extended_attention_mask,
-                                                        output_all_encoded_layers=output_all_encoded_layers,
-                                                        output_attention_probs=output_attention_probs)
+            encoded_layers, attention_probs = self.decoder(inputs_embeds=embedding_output,
+                                                        attention_mask=extended_attention_mask,
+                                                        output_attentions=output_all_encoded_layers)
         else:
-            encoded_layers = self.encoder(embedding_output,
-                                        extended_attention_mask,
-                                        output_all_encoded_layers=output_all_encoded_layers,
-                                        output_attention_probs=output_attention_probs)    
+            decoder_output = self.decoder(inputs_embeds=embedding_output,
+                                        attention_mask=extended_attention_mask.view(embedding_output.shape[0], embedding_output.shape[1]),
+                                        output_attentions=output_all_encoded_layers,
+                                        encoder_hidden_states=encoder_hidden_states)
+            encoded_layers = [decoder_output[0]]
+            # print('*********')
+            # print('encoded layers shape: ',encoded_layers.shape )
+            # # # print('attention_mask shape: ',extended_attention_mask.shape )
+            # # # print('extended_attention_mask.view() shape: ',extended_attention_mask.view(embedding_output.shape[0], embedding_output.shape[1]).shape )
+            # exit()                                        
         sequence_output = encoded_layers[-1]
         pooled_output = self.pooler(sequence_output) if self.config.with_pooler else None
         if not output_all_encoded_layers:
@@ -332,24 +349,24 @@ class VisualLinguisticBert(BaseModel):
             self.pooler.load_state_dict(pooler_pretrained_state_dict)
 
 
-class VisualLinguisticBertForPretraining(VisualLinguisticBert):
+class VisualLinguisticBertForPretrainingDecoder(VisualLinguisticBertDecoder):
     def __init__(self, config, language_pretrained_model_path=None,
                  with_rel_head=True, with_mlm_head=True, with_mvrc_head=True, with_MLT_head=False):
 
-        super(VisualLinguisticBertForPretraining, self).__init__(config, language_pretrained_model_path=None)
+        super(VisualLinguisticBertForPretrainingDecoder, self).__init__(config, language_pretrained_model_path=None)
 
         self.with_rel_head = with_rel_head
         self.with_mlm_head = with_mlm_head
         self.with_mvrc_head = with_mvrc_head
         self.with_MLT_head = with_MLT_head
         if with_rel_head:
-            self.relationsip_head = VisualLinguisticBertRelationshipPredictionHead(config)
+            self.relationsip_head = VisualLinguisticBertRelationshipPredictionHeadDecoder(config)
         if with_mlm_head:
             self.mlm_head = BertOnlyMLMHead(config, self.word_embeddings.weight)
         if with_mvrc_head:
-            self.mvrc_head = VisualLinguisticBertMVRCHead(config)
+            self.mvrc_head = VisualLinguisticBertMVRCHeadDecoder(config)
         if with_MLT_head:
-            self.MLT_head = VisualLinguisticBertMLTPredictionHead(config)
+            self.MLT_head = VisualLinguisticBertMLTPredictionHeadDecoder(config)
 
         # init weights
         self.apply(self.init_weights)
@@ -376,16 +393,18 @@ class VisualLinguisticBertForPretraining(VisualLinguisticBert):
                 text_mask,
                 object_vl_embeddings,
                 object_mask,
+                encoder_hidden_states,
                 output_all_encoded_layers=True,
                 output_text_and_object_separately=False):
 
-        text_out, object_out, pooled_rep = super(VisualLinguisticBertForPretraining, self).forward(
+        text_out, object_out, pooled_rep = super(VisualLinguisticBertForPretrainingDecoder, self).forward(
             text_input_ids,
             text_token_type_ids,
             text_visual_embeddings,
             text_mask,
             object_vl_embeddings,
             object_mask,
+            encoder_hidden_states,
             output_all_encoded_layers=False,
             output_text_and_object_separately=True
         )
@@ -411,7 +430,7 @@ class VisualLinguisticBertForPretraining(VisualLinguisticBert):
 
     def load_language_pretrained_model(self, language_pretrained_model_path):
         pretrained_state_dict = torch.load(language_pretrained_model_path, map_location=lambda storage, loc: storage)
-        encoder_pretrained_state_dict = {}
+        decoder_pretrained_state_dict = {}
         pooler_pretrained_state_dict = {}
         embedding_ln_pretrained_state_dict = {}
         relationship_head_pretrained_state_dict = {}
@@ -424,10 +443,10 @@ class VisualLinguisticBertForPretraining(VisualLinguisticBert):
                     k = k.replace('gamma', 'weight')
                 if 'beta' in k:
                     k = k.replace('beta', 'bias')
-                if k.startswith('encoder.'):
-                    k_ = k[len('encoder.'):]
-                    if k_ in self.encoder.state_dict():
-                        encoder_pretrained_state_dict[k_] = v
+                if k.startswith('decoder.'):
+                    k_ = k[len('decoder.'):]
+                    if k_ in self.decoder.state_dict():
+                        decoder_pretrained_state_dict[k_] = v
                     else:
                         unexpected_keys.append(_k)
                 elif k.startswith('embeddings.'):
@@ -454,6 +473,7 @@ class VisualLinguisticBertForPretraining(VisualLinguisticBert):
                         else:
                             unexpected_keys.append(_k)
                     else:
+                        print('UNEXPECTED')
                         unexpected_keys.append(_k)
                 elif self.config.with_pooler and k.startswith('pooler.'):
                     k_ = k[len('pooler.'):]
@@ -491,7 +511,8 @@ class VisualLinguisticBertForPretraining(VisualLinguisticBert):
         if len(unexpected_keys) > 0:
             print("Warnings: Unexpected keys: {}.".format(unexpected_keys))
         self.embedding_LayerNorm.load_state_dict(embedding_ln_pretrained_state_dict)
-        self.encoder.load_state_dict(encoder_pretrained_state_dict)
+        if decoder_pretrained_state_dict:
+            self.decoder.load_state_dict(decoder_pretrained_state_dict)
         if self.config.with_pooler and len(pooler_pretrained_state_dict) > 0:
             self.pooler.load_state_dict(pooler_pretrained_state_dict)
         if self.with_rel_head and len(relationship_head_pretrained_state_dict) > 0 and \
@@ -501,9 +522,9 @@ class VisualLinguisticBertForPretraining(VisualLinguisticBert):
             self.mlm_head.predictions.load_state_dict(mlm_head_pretrained_state_dict)
         # TODO: load MVRC head 
 
-class VisualLinguisticBertMVRCHeadTransform(BaseModel):
+class VisualLinguisticBertMVRCHeadTransformDecoder(BaseModelDecoder):
     def __init__(self, config):
-        super(VisualLinguisticBertMVRCHeadTransform, self).__init__(config)
+        super(VisualLinguisticBertMVRCHeadTransformDecoder, self).__init__(config)
 
         self.dense = nn.Linear(config.hidden_size, config.hidden_size)
         self.act = ACT2FN[config.hidden_act]
@@ -517,9 +538,9 @@ class VisualLinguisticBertMVRCHeadTransform(BaseModel):
         return hidden_states
 
 
-class VisualLinguisticBertMVRCHead(BaseModel):
+class VisualLinguisticBertMVRCHeadDecoder(BaseModelDecoder):
     def __init__(self, config):
-        super(VisualLinguisticBertMVRCHead, self).__init__(config)
+        super(VisualLinguisticBertMVRCHeadDecoder, self).__init__(config)
 
         self.transform = VisualLinguisticBertMVRCHeadTransform(config)
         self.region_cls_pred = nn.Linear(config.hidden_size, config.visual_region_classes)
@@ -533,9 +554,9 @@ class VisualLinguisticBertMVRCHead(BaseModel):
         return logits
 
 
-class VisualLinguisticBertRelationshipPredictionHead(BaseModel):
+class VisualLinguisticBertRelationshipPredictionHeadDecoder(BaseModelDecoder):
     def __init__(self, config):
-        super(VisualLinguisticBertRelationshipPredictionHead, self).__init__(config)
+        super(VisualLinguisticBertRelationshipPredictionHeadDecoder, self).__init__(config)
         # FM edit - change to single output
         self.caption_image_relationship = nn.Linear(config.hidden_size, 1)
         self.apply(self.init_weights)
@@ -547,9 +568,9 @@ class VisualLinguisticBertRelationshipPredictionHead(BaseModel):
         return relationship_logits
 
 
-class VisualLinguisticBertMLTPredictionHead(BaseModel):
+class VisualLinguisticBertMLTPredictionHeadDecoder(BaseModelDecoder):
     def __init__(self, config):
-        super(VisualLinguisticBertMLTPredictionHead, self).__init__(config)
+        super(VisualLinguisticBertMLTPredictionHeadDecoder, self).__init__(config)
         # FM edit - change to single output
         self.MLT_cls_pred = nn.Linear(config.hidden_size, config.MLT_words)
         self.apply(self.init_weights)
@@ -560,350 +581,3 @@ class VisualLinguisticBertMLTPredictionHead(BaseModel):
 
         return logits        
 
-
-
-# FM edit: added for purely getting embeddings
-class VisualLinguisticBertForDistance(VisualLinguisticBert):
-    def __init__(self, config, language_pretrained_model_path=None,
-                 with_rel_head=True, with_mlm_head=True, with_mvrc_head=True, with_MLT_head=False):
-
-        super(VisualLinguisticBertForDistance, self).__init__(config, language_pretrained_model_path=None)
-
-        self.with_rel_head = with_rel_head
-        self.with_mlm_head = with_mlm_head
-        self.with_mvrc_head = with_mvrc_head
-        self.with_MLT_head = with_MLT_head
-        if with_rel_head:
-            self.relationsip_head = VisualLinguisticBertRelationshipPredictionHead(config)
-        if with_mlm_head:
-            self.mlm_head = BertOnlyMLMHead(config, self.word_embeddings.weight)
-        if with_mvrc_head:
-            self.mvrc_head = VisualLinguisticBertMVRCHead(config)
-        if with_MLT_head:
-            self.MLT_head = VisualLinguisticBertMLTPredictionHead(config)
-
-        # init weights
-        self.apply(self.init_weights)
-        if config.visual_ln:
-            self.visual_ln_text.weight.data.fill_(self.config.visual_scale_text_init)
-            self.visual_ln_object.weight.data.fill_(self.config.visual_scale_object_init)
-
-        # load language pretrained model
-        if language_pretrained_model_path is not None:
-            self.load_language_pretrained_model(language_pretrained_model_path)
-
-        if config.word_embedding_frozen:
-            for p in self.word_embeddings.parameters():
-                p.requires_grad = False
-
-        if config.pos_embedding_frozen:
-            for p in self.position_embeddings.parameters():
-                p.requires_grad = False
-
-    def forward(self,
-                text_input_ids,
-                text_token_type_ids,
-                text_visual_embeddings,
-                text_mask,
-                object_vl_embeddings,
-                object_mask,
-                output_all_encoded_layers=True,
-                output_text_and_object_separately=False):
-
-        text_out, object_out, pooled_rep = super(VisualLinguisticBertForDistance, self).forward(
-            text_input_ids,
-            text_token_type_ids,
-            text_visual_embeddings,
-            text_mask,
-            object_vl_embeddings,
-            object_mask,
-            output_all_encoded_layers=False,
-            output_text_and_object_separately=True
-        )
-
-        if self.with_rel_head:
-            relationship_logits = self.relationsip_head(pooled_rep)
-        else:
-            relationship_logits = None
-        if self.with_mlm_head:
-            mlm_logits = self.mlm_head(text_out)
-        else:
-            mlm_logits = None
-        if self.with_mvrc_head:
-            mvrc_logits = self.mvrc_head(object_out)
-        else:
-            mvrc_logits = None
-        # Add MLT head
-        if self.with_MLT_head:
-            MLT_logits = self.MLT_head(pooled_rep)
-            return relationship_logits, mlm_logits, mvrc_logits, MLT_logits
-
-        return relationship_logits, mlm_logits, mvrc_logits, pooled_rep, text_out
-
-    def load_language_pretrained_model(self, language_pretrained_model_path):
-        pretrained_state_dict = torch.load(language_pretrained_model_path, map_location=lambda storage, loc: storage)
-        encoder_pretrained_state_dict = {}
-        pooler_pretrained_state_dict = {}
-        embedding_ln_pretrained_state_dict = {}
-        relationship_head_pretrained_state_dict = {}
-        mlm_head_pretrained_state_dict = {}
-        unexpected_keys = []
-        for _k, v in pretrained_state_dict.items():
-            if _k.startswith('bert.') or _k.startswith('roberta.'):
-                k = _k[len('bert.'):] if _k.startswith('bert.') else _k[len('roberta.'):]
-                if 'gamma' in k:
-                    k = k.replace('gamma', 'weight')
-                if 'beta' in k:
-                    k = k.replace('beta', 'bias')
-                if k.startswith('encoder.'):
-                    k_ = k[len('encoder.'):]
-                    if k_ in self.encoder.state_dict():
-                        encoder_pretrained_state_dict[k_] = v
-                    else:
-                        unexpected_keys.append(_k)
-                elif k.startswith('embeddings.'):
-                    k_ = k[len('embeddings.'):]
-                    if k_ == 'word_embeddings.weight':
-                        self.word_embeddings.weight.data = v.to(dtype=self.word_embeddings.weight.data.dtype,
-                                                                device=self.word_embeddings.weight.data.device)
-                    elif k_ == 'position_embeddings.weight':
-                        self.position_embeddings.weight.data = v.to(dtype=self.position_embeddings.weight.data.dtype,
-                                                                    device=self.position_embeddings.weight.data.device)
-                    elif k_ == 'token_type_embeddings.weight':
-                        self.token_type_embeddings.weight.data[:v.size(0)] = v.to(
-                            dtype=self.token_type_embeddings.weight.data.dtype,
-                            device=self.token_type_embeddings.weight.data.device)
-                        if v.size(0) == 1:
-                            # Todo: roberta token type embedding
-                            self.token_type_embeddings.weight.data[1] = v[0].to(
-                                dtype=self.token_type_embeddings.weight.data.dtype,
-                                device=self.token_type_embeddings.weight.data.device)
-                    elif k_.startswith('LayerNorm.'):
-                        k__ = k_[len('LayerNorm.'):]
-                        if k__ in self.embedding_LayerNorm.state_dict():
-                            embedding_ln_pretrained_state_dict[k__] = v
-                        else:
-                            unexpected_keys.append(_k)
-                    else:
-                        unexpected_keys.append(_k)
-                elif self.config.with_pooler and k.startswith('pooler.'):
-                    k_ = k[len('pooler.'):]
-                    if k_ in self.pooler.state_dict():
-                        pooler_pretrained_state_dict[k_] = v
-                    else:
-                        unexpected_keys.append(_k)
-            elif _k.startswith('cls.seq_relationship.') and self.with_rel_head:
-                k_ = _k[len('cls.seq_relationship.'):]
-                if 'gamma' in k_:
-                    k_ = k_.replace('gamma', 'weight')
-                if 'beta' in k_:
-                    k_ = k_.replace('beta', 'bias')
-                if k_ in self.relationsip_head.caption_image_relationship.state_dict():
-                    relationship_head_pretrained_state_dict[k_] = v
-                else:
-                    unexpected_keys.append(_k)
-            elif (_k.startswith('cls.predictions.') or _k.startswith('lm_head.')) and self.with_mlm_head:
-                k_ = _k[len('cls.predictions.'):] if _k.startswith('cls.predictions.') else _k[len('lm_head.'):]
-                if _k.startswith('lm_head.'):
-                    if 'dense' in k_ or 'layer_norm' in k_:
-                        k_ = 'transform.' + k_
-                    if 'layer_norm' in k_:
-                        k_ = k_.replace('layer_norm', 'LayerNorm')
-                if 'gamma' in k_:
-                    k_ = k_.replace('gamma', 'weight')
-                if 'beta' in k_:
-                    k_ = k_.replace('beta', 'bias')
-                if k_ in self.mlm_head.predictions.state_dict():
-                    mlm_head_pretrained_state_dict[k_] = v
-                else:
-                    unexpected_keys.append(_k)
-            else:
-                unexpected_keys.append(_k)
-        if len(unexpected_keys) > 0:
-            print("Warnings: Unexpected keys: {}.".format(unexpected_keys))
-        self.embedding_LayerNorm.load_state_dict(embedding_ln_pretrained_state_dict)
-        self.encoder.load_state_dict(encoder_pretrained_state_dict)
-        if self.config.with_pooler and len(pooler_pretrained_state_dict) > 0:
-            self.pooler.load_state_dict(pooler_pretrained_state_dict)
-        if self.with_rel_head and len(relationship_head_pretrained_state_dict) > 0 and \
-            relationship_head_pretrained_state_dict['weight'].shape[0] == self.relationsip_head.caption_image_relationship.weight.shape[0]:
-            self.relationsip_head.caption_image_relationship.load_state_dict(relationship_head_pretrained_state_dict)
-        if self.with_mlm_head:
-            self.mlm_head.predictions.load_state_dict(mlm_head_pretrained_state_dict)
-        # TODO: load MVRC head 
-
-
-
-
-
-
-# FM added: Visual Linguistic Encoder that returns output hidden representations
-#              for all output tokens
-class VisualLinguisticBertEncoder(VisualLinguisticBert):
-    def __init__(self, config, language_pretrained_model_path=None,
-                 with_rel_head=True, with_mlm_head=True, with_mvrc_head=True, with_MLT_head=False):
-
-        super(VisualLinguisticBertEncoder, self).__init__(config, language_pretrained_model_path=None)
-
-        self.with_rel_head = with_rel_head
-        self.with_mlm_head = with_mlm_head
-        self.with_mvrc_head = with_mvrc_head
-        self.with_MLT_head = with_MLT_head
-        if with_rel_head:
-            self.relationsip_head = VisualLinguisticBertRelationshipPredictionHead(config)
-        if with_mlm_head:
-            self.mlm_head = BertOnlyMLMHead(config, self.word_embeddings.weight)
-        if with_mvrc_head:
-            self.mvrc_head = VisualLinguisticBertMVRCHead(config)
-        if with_MLT_head:
-            self.MLT_head = VisualLinguisticBertMLTPredictionHead(config)
-
-        # init weights
-        self.apply(self.init_weights)
-        if config.visual_ln:
-            self.visual_ln_text.weight.data.fill_(self.config.visual_scale_text_init)
-            self.visual_ln_object.weight.data.fill_(self.config.visual_scale_object_init)
-
-        # load language pretrained model
-        if language_pretrained_model_path is not None:
-            self.load_language_pretrained_model(language_pretrained_model_path)
-
-        if config.word_embedding_frozen:
-            for p in self.word_embeddings.parameters():
-                p.requires_grad = False
-
-        if config.pos_embedding_frozen:
-            for p in self.position_embeddings.parameters():
-                p.requires_grad = False
-
-    def forward(self,
-                text_input_ids,
-                text_token_type_ids,
-                text_visual_embeddings,
-                text_mask,
-                object_vl_embeddings,
-                object_mask,
-                output_all_encoded_layers=True,
-                output_text_and_object_separately=False):
-
-        encoder_output_embeddings, pooled_rep = super(VisualLinguisticBertEncoder, self).forward(
-            text_input_ids,
-            text_token_type_ids,
-            text_visual_embeddings,
-            text_mask,
-            object_vl_embeddings,
-            object_mask,
-            output_all_encoded_layers=False,
-            output_text_and_object_separately=False
-        )
-
-        if self.with_rel_head:
-            relationship_logits = self.relationsip_head(pooled_rep)
-        else:
-            relationship_logits = None
-        if self.with_mlm_head:
-            mlm_logits = self.mlm_head(text_out)
-        else:
-            mlm_logits = None
-        if self.with_mvrc_head:
-            mvrc_logits = self.mvrc_head(object_out)
-        else:
-            mvrc_logits = None
-        # Add MLT head
-        if self.with_MLT_head:
-            MLT_logits = self.MLT_head(pooled_rep)
-            return relationship_logits, mlm_logits, mvrc_logits, MLT_logits
-
-        return relationship_logits, mlm_logits, mvrc_logits, encoder_output_embeddings
-
-    def load_language_pretrained_model(self, language_pretrained_model_path):
-        pretrained_state_dict = torch.load(language_pretrained_model_path, map_location=lambda storage, loc: storage)
-        encoder_pretrained_state_dict = {}
-        pooler_pretrained_state_dict = {}
-        embedding_ln_pretrained_state_dict = {}
-        relationship_head_pretrained_state_dict = {}
-        mlm_head_pretrained_state_dict = {}
-        unexpected_keys = []
-        for _k, v in pretrained_state_dict.items():
-            if _k.startswith('bert.') or _k.startswith('roberta.'):
-                k = _k[len('bert.'):] if _k.startswith('bert.') else _k[len('roberta.'):]
-                if 'gamma' in k:
-                    k = k.replace('gamma', 'weight')
-                if 'beta' in k:
-                    k = k.replace('beta', 'bias')
-                if k.startswith('encoder.'):
-                    k_ = k[len('encoder.'):]
-                    if k_ in self.encoder.state_dict():
-                        encoder_pretrained_state_dict[k_] = v
-                    else:
-                        unexpected_keys.append(_k)
-                elif k.startswith('embeddings.'):
-                    k_ = k[len('embeddings.'):]
-                    if k_ == 'word_embeddings.weight':
-                        self.word_embeddings.weight.data = v.to(dtype=self.word_embeddings.weight.data.dtype,
-                                                                device=self.word_embeddings.weight.data.device)
-                    elif k_ == 'position_embeddings.weight':
-                        self.position_embeddings.weight.data = v.to(dtype=self.position_embeddings.weight.data.dtype,
-                                                                    device=self.position_embeddings.weight.data.device)
-                    elif k_ == 'token_type_embeddings.weight':
-                        self.token_type_embeddings.weight.data[:v.size(0)] = v.to(
-                            dtype=self.token_type_embeddings.weight.data.dtype,
-                            device=self.token_type_embeddings.weight.data.device)
-                        if v.size(0) == 1:
-                            # Todo: roberta token type embedding
-                            self.token_type_embeddings.weight.data[1] = v[0].to(
-                                dtype=self.token_type_embeddings.weight.data.dtype,
-                                device=self.token_type_embeddings.weight.data.device)
-                    elif k_.startswith('LayerNorm.'):
-                        k__ = k_[len('LayerNorm.'):]
-                        if k__ in self.embedding_LayerNorm.state_dict():
-                            embedding_ln_pretrained_state_dict[k__] = v
-                        else:
-                            unexpected_keys.append(_k)
-                    else:
-                        unexpected_keys.append(_k)
-                elif self.config.with_pooler and k.startswith('pooler.'):
-                    k_ = k[len('pooler.'):]
-                    if k_ in self.pooler.state_dict():
-                        pooler_pretrained_state_dict[k_] = v
-                    else:
-                        unexpected_keys.append(_k)
-            elif _k.startswith('cls.seq_relationship.') and self.with_rel_head:
-                k_ = _k[len('cls.seq_relationship.'):]
-                if 'gamma' in k_:
-                    k_ = k_.replace('gamma', 'weight')
-                if 'beta' in k_:
-                    k_ = k_.replace('beta', 'bias')
-                if k_ in self.relationsip_head.caption_image_relationship.state_dict():
-                    relationship_head_pretrained_state_dict[k_] = v
-                else:
-                    unexpected_keys.append(_k)
-            elif (_k.startswith('cls.predictions.') or _k.startswith('lm_head.')) and self.with_mlm_head:
-                k_ = _k[len('cls.predictions.'):] if _k.startswith('cls.predictions.') else _k[len('lm_head.'):]
-                if _k.startswith('lm_head.'):
-                    if 'dense' in k_ or 'layer_norm' in k_:
-                        k_ = 'transform.' + k_
-                    if 'layer_norm' in k_:
-                        k_ = k_.replace('layer_norm', 'LayerNorm')
-                if 'gamma' in k_:
-                    k_ = k_.replace('gamma', 'weight')
-                if 'beta' in k_:
-                    k_ = k_.replace('beta', 'bias')
-                if k_ in self.mlm_head.predictions.state_dict():
-                    mlm_head_pretrained_state_dict[k_] = v
-                else:
-                    unexpected_keys.append(_k)
-            else:
-                unexpected_keys.append(_k)
-        if len(unexpected_keys) > 0:
-            print("Warnings: Unexpected keys: {}.".format(unexpected_keys))
-        self.embedding_LayerNorm.load_state_dict(embedding_ln_pretrained_state_dict)
-        self.encoder.load_state_dict(encoder_pretrained_state_dict)
-        if self.config.with_pooler and len(pooler_pretrained_state_dict) > 0:
-            self.pooler.load_state_dict(pooler_pretrained_state_dict)
-        if self.with_rel_head and len(relationship_head_pretrained_state_dict) > 0 and \
-            relationship_head_pretrained_state_dict['weight'].shape[0] == self.relationsip_head.caption_image_relationship.weight.shape[0]:
-            self.relationsip_head.caption_image_relationship.load_state_dict(relationship_head_pretrained_state_dict)
-        if self.with_mlm_head:
-            self.mlm_head.predictions.load_state_dict(mlm_head_pretrained_state_dict)
-        # TODO: load MVRC head 

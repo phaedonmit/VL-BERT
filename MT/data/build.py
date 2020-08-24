@@ -12,6 +12,8 @@ DATASET_CATALOGS = {'conceptual_captions': ConceptualCaptionsDataset,
                     'coco_captions': COCOCaptionsDataset,
                     'general_corpus': GeneralCorpus, 
                     'multi30k': Multi30kDataset,
+                    'multi30k_decoder': Multi30kDatasetDecoder,
+                    'multi30k_no_vision': Multi30kDatasetNoVision,
                     'multi30k_taskB': Multi30kTaskBDataset,
                     'parallel_text': ParallelTextDataset
                     }

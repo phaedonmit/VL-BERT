@@ -96,6 +96,12 @@ def load_image_ids(split_name, data_root):
           filepath = os.path.join('flickr30k/flickr30k-images.zip@/', line.strip())
           image_id = int(line.split('.')[0])
           split.append((filepath,image_id))   
+    elif split_name == 'flickr30k_test2018':
+      with open(os.path.join(data_root, 'flickr30k/utils/test_2018_flickr.txt')) as f:
+        for cnt, line in enumerate(f):  
+          filepath = os.path.join('flickr30k/test_image2018_renamed.zip@/', line.split('_')[0]+'.jpg')
+          image_id = int(line.split('_')[0])
+          split.append((filepath,image_id))   
     # FM: added image loader for IAPR dataset
     elif split_name == 'IAPR_train':
       database = list(jsonlines.open(os.path.join(data_root, 'IAPR/train.json')))

@@ -11,10 +11,10 @@ from common.utils.misc import soft_cross_entropy
 BERT_WEIGHTS_NAME = 'pytorch_model.bin'
 
 
-class ResNetVLBERTForPretrainingTaskC(Module):
+class ResNetVLBERTForPretrainingNoVision(Module):
     def __init__(self, config):
 
-        super(ResNetVLBERTForPretrainingTaskC, self).__init__(config)
+        super(ResNetVLBERTForPretrainingNoVision, self).__init__(config)
 
         self.image_feature_extractor = FastRCNN(config,
                                                 average_pool=True,
@@ -47,6 +47,8 @@ class ResNetVLBERTForPretrainingTaskC(Module):
             with_mvrc_head=config.NETWORK.WITH_MVRC_LOSS,
         )
 
+
+
         # init weights
         self.init_weight()
 
@@ -63,7 +65,7 @@ class ResNetVLBERTForPretrainingTaskC(Module):
                                                                   std=self.config.NETWORK.VLBERT.initializer_range)
 
     def train(self, mode=True):
-        super(ResNetVLBERTForPretrainingTaskC, self).train(mode)
+        super(ResNetVLBERTForPretrainingNoVision, self).train(mode)
         # turn some frozen layers to eval mode
         if self.image_feature_bn_eval:
             self.image_feature_extractor.bn_eval()
@@ -96,34 +98,40 @@ class ResNetVLBERTForPretrainingTaskC(Module):
                 mlm_labels):
         ###########################################
 
-        # FM edit: remove visual feature extraction
-        
+        # Blank out visual feature extraction
+   
         ############################################
 
         # prepare text
         text_input_ids = text
+        # creates a text_tags tensor of the same shape as text tensor
         text_tags = text.new_zeros(text.shape)
-        text_token_type_ids = text.new_zeros(text.shape)
-        text_mask = (text_input_ids > 0)
-        # text_visual_embeddings = self._collect_obj_reps(text_tags, obj_reps['obj_reps'])
         # ***** FM edit: blank out visual embeddings for translation retrieval task
         text_visual_embeddings = text_input_ids.new_zeros((text_input_ids.shape[0], text_input_ids.shape[1], 768), dtype=torch.float)
+        # text_visual_embeddings[:] = self.aux_text_visual_embedding.weight[0]
 
         # ****** FM edit: blank visual embeddings (use known dimensions)
         object_vl_embeddings = text_input_ids.new_zeros((text_input_ids.shape[0], 1, 1536), dtype=torch.float)
+
+        # FM edit: No auxiliary text is used for text only
+        # add auxiliary text - Concatenates the batches from the two dataloaders
+        # The visual features for the text only corpus is just the embedding of the aux_visual_embedding (only one embedding)
+        max_text_len = text_input_ids.shape[1]
+        text_token_type_ids = text_input_ids.new_zeros(text_input_ids.shape)
+        text_mask = (text_input_ids > 0)
         #FM: Edit: set to zero to ignore vision
         box_mask = text_input_ids.new_zeros((text_input_ids.shape[0], 1), dtype=torch.uint8)
 
         ###########################################
-
+        
         # Visual Linguistic BERT
-
+        # #loop here for test mode:
         relationship_logits, mlm_logits, mvrc_logits = self.vlbert(text_input_ids,
-                                                                   text_token_type_ids,
-                                                                   text_visual_embeddings,
-                                                                   text_mask,
-                                                                   object_vl_embeddings,
-                                                                   box_mask)
+                                                                text_token_type_ids,
+                                                                text_visual_embeddings,
+                                                                text_mask,
+                                                                object_vl_embeddings,
+                                                                box_mask)
 
         ###########################################
         outputs = {}
@@ -171,7 +179,7 @@ class ResNetVLBERTForPretrainingTaskC(Module):
             mvrc_labels_padded = mvrc_labels.new_zeros((mvrc_labels.shape[0], origin_len, mvrc_labels.shape[2])).fill_(0.0)
             mvrc_labels_padded[:, :mvrc_labels.shape[1]] = mvrc_labels
             mvrc_labels = mvrc_labels_padded
-
+        
         outputs.update({
             'relationship_logits': relationship_logits if self.config.NETWORK.WITH_REL_LOSS else None,
             'relationship_label': relationship_label if self.config.NETWORK.WITH_REL_LOSS else None,
@@ -182,7 +190,7 @@ class ResNetVLBERTForPretrainingTaskC(Module):
             'mlm_loss': mlm_loss,
         })
 
-        loss = mlm_loss.mean()
+        loss =  mlm_loss.mean()
 
         return outputs, loss
 

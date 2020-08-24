@@ -2,7 +2,7 @@
 RNG_SEED: 12345
 OUTPUT_PATH: './output/pretrain/vl-bert'
 MODULE: ResNetVLBERTForPretraining
-GPUS: '3'
+GPUS: '2'
 LOG_FREQUENT: 100
 VAL_FREQUENT: 1
 CHECKPOINT_FREQUENT: 1
@@ -27,9 +27,9 @@ DATASET:
   MASK_SIZE: 14
 
 NETWORK:
-  PARTIAL_PRETRAIN: "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/pretrain_prec/005_pretrained_LR6_taskB_taskC_taskB/train_train/vl-bert_base_res101_pretrain_multitask-0018.model"
+  PARTIAL_PRETRAIN: "/experiments/faidon/VL-BERT/model/pretrained_model/vl-bert-base-prec.model"
   PARTIAL_PRETRAIN_PREFIX_CHANGES: []
-  INITIALISATION: ''
+  INITIALISATION: 'hybrid'
   IMAGE_NUM_LAYERS: 101
   IMAGE_C5_DILATED: true
   IMAGE_STRIDE_IN_1x1: true

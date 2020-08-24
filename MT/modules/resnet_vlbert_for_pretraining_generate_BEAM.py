@@ -150,6 +150,8 @@ class ResNetVLBERTForPretrainingGenerate(Module):
         stop = [False]*text.shape[0]
         curr_len = 0
         max_len = 48
+        beam_k = 3
+        mlm_logits_top = torch.zeros((text.shape[0], beam_k))
         while not all(stop) and curr_len<=max_len:
             relationship_logits, mlm_logits, mvrc_logits = self.vlbert(text_input_ids,
                                                                     text_token_type_ids,
@@ -157,19 +159,16 @@ class ResNetVLBERTForPretrainingGenerate(Module):
                                                                     text_mask,
                                                                     object_vl_embeddings,
                                                                     box_mask)
-            answers = torch.topk(mlm_logits[mlm_labels==103], k=1,  dim=1)
-
+            answers = torch.topk(mlm_logits[mlm_labels==103], k=beam_k,  dim=1)
+            mlm_logits_top = answers[0]
             # print('mlm_labels shape:', mlm_labels.shape)
             # print('text_input_ids shape:', text_input_ids.shape)            
             # print('text_token_type_ids shape:', text_token_type_ids.shape)            
             # print('text_visual_embeddings shape:', text_visual_embeddings.shape)            
             # print('text_mask shape:', text_mask.shape)        
-            # print('answers shape: ', answers[1].shape) 
-            # print('answers: ', answers[1]) 
-
-            # exit()
+            # print('answers shape: ', answers[1].shape)    
             
-            # Get size of each tensor
+            # Get sequence size of each sentence in batch
             position_tensor = torch.arange(mlm_labels.shape[1])
             position_tensor = position_tensor.repeat(mlm_labels.shape[0]).view(mlm_labels.shape[0],-1)
             indeces = position_tensor[mlm_labels==103]
@@ -180,29 +179,60 @@ class ResNetVLBERTForPretrainingGenerate(Module):
             mlm_labels_new[torch.arange(mlm_labels.shape[0]), indeces+1] = 103
             mlm_labels = mlm_labels_new
 
+            # expand to beam_k size for consistent tensor size
+            text_input_ids = text_input_ids.repeat((beam_k,1,1)).view(beam_k, *text_input_ids.shape)
+            text_token_type_ids = text_token_type_ids.repeat((beam_k,1,1)).view(beam_k, *text_token_type_ids.shape)
+            text_visual_embeddings = text_visual_embeddings.repeat((beam_k,1,1)).view(beam_k, *text_visual_embeddings.shape)
+            text_mask = text_mask.repeat((beam_k,1,1)).view(beam_k, *text_mask.shape)
+
             # 2. Update text_input_ids:
-            text_input_ids_new = text_input_ids.new_zeros(text_input_ids.shape[0], text_input_ids.shape[1]+1)
-            text_input_ids_new[:, :-1] = text_input_ids
-            text_input_ids_new[torch.arange(text_input_ids.shape[0]), indeces] = answers[1][:,0]
-            text_input_ids_new[torch.arange(text_input_ids.shape[0]), indeces+1] = (self.tokenizer.convert_tokens_to_ids(['[MASK]'])[0])
-            text_input_ids_new[torch.arange(text_input_ids.shape[0]), indeces+2] = (self.tokenizer.convert_tokens_to_ids(['[PAD]'])[0])
-            text_input_ids_new[torch.arange(text_input_ids.shape[0]), indeces+3] = (self.tokenizer.convert_tokens_to_ids(['[SEP]'])[0])
-            text_input_ids = text_input_ids_new
-
+            # TODO: if this is the first iteration
+            text_input_ids_new = text_input_ids.new_zeros(beam_k, text_input_ids.shape[1], text_input_ids.shape[2]+1)
             # 3. Update text_token_type_ids:
-            text_token_type_ids = text_token_type_ids.new_zeros(text_token_type_ids.shape[0], text_token_type_ids.shape[1]+1)
+            text_token_type_ids = text_token_type_ids.new_zeros(beam_k, text_token_type_ids.shape[1], text_token_type_ids.shape[2]+1)
 
-            # 4. Update text_input_ids:
-            text_visual_embeddings_new = text_visual_embeddings.new_zeros(text_visual_embeddings.shape[0], text_visual_embeddings.shape[1]+1, text_visual_embeddings.shape[2])
-            text_visual_embeddings_new = text_visual_embeddings_new.transpose(0,1)
-            text_visual_embeddings_new[:] = text_visual_embeddings[:,0,:]
-            text_visual_embeddings = text_visual_embeddings_new.transpose(0,1)
+            for k in range(beam_k):
+                text_input_ids_new[k, :, :-1] = text_input_ids[k]
+                text_input_ids_new[k, torch.arange(text_input_ids.shape[1]), indeces] = answers[1][:,k]
+                text_input_ids_new[k, torch.arange(text_input_ids.shape[1]), indeces+1] = (self.tokenizer.convert_tokens_to_ids(['[MASK]'])[0])
+                text_input_ids_new[k, torch.arange(text_input_ids.shape[1]), indeces+2] = (self.tokenizer.convert_tokens_to_ids(['[PAD]'])[0])
+                text_input_ids_new[k, torch.arange(text_input_ids.shape[1]), indeces+3] = (self.tokenizer.convert_tokens_to_ids(['[SEP]'])[0])
+                # text_input_ids = text_input_ids_new
 
-            # 5. Update text_mask:
-            text_mask = (text_input_ids > 0)
+                # 4. Update text_input_ids:
+                text_visual_embeddings_new = text_visual_embeddings.new_zeros(beam_k, text_visual_embeddings.shape[1], text_visual_embeddings.shape[2]+1, text_visual_embeddings.shape[3])
+                text_visual_embeddings_new = text_visual_embeddings_new.transpose(1,2)
+                text_visual_embeddings_new[k, :, :, :] = text_visual_embeddings[k,:,0,:]
+                text_visual_embeddings_new = text_visual_embeddings_new.transpose(1,2)
 
+                # 5. Update text_mask:
+                text_mask = (text_input_ids_new > 0)
+
+                print('text_input_ids_new shape:', text_input_ids_new.shape)
+                print('text_token_type_ids shape:', text_token_type_ids.shape)            
+                print('text_visual_embeddings_new shape:', text_visual_embeddings_new.shape)            
+                print('text_mask shape:', text_mask.shape)            
+                print('object_vl_embeddings shape:', object_vl_embeddings.shape)        
+                print('box_mask shape: ', box_mask.shape)    
+                print("***************")
+
+                # 6. Run through model 
+                relationship_logits, mlm_logits, mvrc_logits = self.vlbert(text_input_ids_new[k],
+                                                                        text_token_type_ids[k],
+                                                                        text_visual_embeddings_new[k],
+                                                                        text_mask[k],
+                                                                        object_vl_embeddings,
+                                                                        box_mask)  
+                print('mlm_logits shape: ', mlm_logits.shape)
+                print('mlm_logits_top shape: ', mlm_logits_top.shape)
+                print('mlm_logits_top[:,k]: ', mlm_logits_top[:,k].shape)
+                to_add = mlm_logits_top[:,k].unsqueeze(1)@mlm_logits.new_ones((1, mlm_logits.shape[1], mlm_logits.shape[2]))
+                print("to_add shape: ", to_add.shape)
+                print("***************")
+                mlm_logits = mlm_logits + to_add
+
+            exit()
             # TODO step 3
-            # 6. Append generated words from each sentence in the batch to list - terminate if all [STOP]
             for nid, row in enumerate(answers[1]):
                 if curr_len == 0:
                     generated.append([])

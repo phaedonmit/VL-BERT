@@ -1,7 +1,7 @@
 ---
 RNG_SEED: 12345
 OUTPUT_PATH: './output/pretrain/vl-bert'
-MODULE: ResNetVLBERTForPretraining
+MODULE: ResNetVLBERTForPretrainingEncDec
 GPUS: '3'
 LOG_FREQUENT: 100
 VAL_FREQUENT: 1
@@ -13,7 +13,7 @@ SCALES:
 - 1000
 
 DATASET:
-  DATASET: multi30k
+  DATASET: multi30k_decoder
   APPEND_INDEX: false
   DATASET_PATH: './data/flickr30k'
   ROOT_PATH: './'
@@ -27,7 +27,7 @@ DATASET:
   MASK_SIZE: 14
 
 NETWORK:
-  PARTIAL_PRETRAIN: "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/pretrain_prec/005_pretrained_LR6_taskB_taskC_taskB/train_train/vl-bert_base_res101_pretrain_multitask-0018.model"
+  PARTIAL_PRETRAIN: "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/pretrain_prec/002_prec_LR1e6_multi30k/train_train/vl-bert_base_res101_pretrain_multitask-0019.model"
   PARTIAL_PRETRAIN_PREFIX_CHANGES: []
   INITIALISATION: ''
   IMAGE_NUM_LAYERS: 101
@@ -85,7 +85,7 @@ NETWORK:
 TRAIN:
   SHUFFLE: true
   FLIP_PROB: 0.5
-  BATCH_IMAGES: 8
+  BATCH_IMAGES: 6
   ASPECT_GROUPING: false
   RESUME: false
   AUTO_RESUME: true
@@ -110,10 +110,10 @@ TRAIN:
 VAL:
   SHUFFLE: false
   FLIP_PROB: 0
-  BATCH_IMAGES: 8
+  BATCH_IMAGES: 6
 
 TEST:
   SHUFFLE: false
   FLIP_PROB: 0
   TEST_EPOCH: 0
-  BATCH_IMAGES: 8
+  BATCH_IMAGES: 6

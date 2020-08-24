@@ -8,8 +8,9 @@ import json
 import torch
 import operator 
 import sacrebleu
+import unidecode
 
-filepath = "/experiments/faidon/VL-BERT/checkpoints/002_MT_LR6_with_vision_last_token_MT_test2015.json"
+filepath = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/MT/006_MT_LR6_with_vision_startTaskC/006_MT_LR6_with_vision_startTaskC_MT_test2015.json"
 
 with open(filepath) as json_file:
     data = json.load(json_file)
@@ -32,10 +33,14 @@ with open(filepath) as json_file:
         # else:
         print('***********************')
         print('source: ', p['caption_en'])
-        print('reference: ', p['caption_de'])
-        print('generated: ', p['generated_sentence'])
-        references.append(p['caption_de'])
-        hypotheses.append(p['generated_sentence'])
+        # remove accents
+        reference = unidecode.unidecode(p['caption_de'])
+        # convert ß to ss (equivalent in german)
+        hypothesis = p['generated_sentence'].replace('ß','ss')
+        print('reference: ', reference)
+        print('generated: ', hypothesis)
+        references.append(reference)
+        hypotheses.append(hypothesis)
 
     
 

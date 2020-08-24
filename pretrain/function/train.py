@@ -71,7 +71,7 @@ def train_net(args, config):
         torch.cuda.set_device(local_rank)
         master_address = os.environ['MASTER_ADDR']
         # master_port = int(os.environ['MASTER_PORT'] or 23456)
-        master_port = int(9993)
+        master_port = int(9992)
         world_size = int(os.environ['WORLD_SIZE'] or 1)
         rank = int(os.environ['RANK'] or 0)
         if args.slurm:
@@ -223,30 +223,38 @@ def train_net(args, config):
         else:
             raise ValueError('Not support optimizer {}!'.format(config.TRAIN.OPTIMIZER))
 
+
     # partial load pretrain state dict
     if config.NETWORK.PARTIAL_PRETRAIN != "":
-        pretrain_state_dict = torch.load(config.NETWORK.PARTIAL_PRETRAIN, map_location=lambda storage, loc: storage)['state_dict']
-        prefix_change = [prefix_change.split('->') for prefix_change in config.NETWORK.PARTIAL_PRETRAIN_PREFIX_CHANGES]
-        if len(prefix_change) > 0:
-            pretrain_state_dict_parsed = {}
-            for k, v in pretrain_state_dict.items():
-                no_match = True
-                for pretrain_prefix, new_prefix in prefix_change:
-                    if k.startswith(pretrain_prefix):
-                        k = new_prefix + k[len(pretrain_prefix):]
-                        pretrain_state_dict_parsed[k] = v
-                        no_match = False
-                        break
-                if no_match:
-                    pretrain_state_dict_parsed[k] = v
-            pretrain_state_dict = pretrain_state_dict_parsed
-        # FM edit: introduce alternative initialisations
-        if config.NETWORK.INITIALISATION=='hybrid':
-            smart_hybrid_partial_load_model_state_dict(model, pretrain_state_dict)
-        elif config.NETWORK.INITIALISATION=='skip':
-            smart_skip_partial_load_model_state_dict(model, pretrain_state_dict)
+        # FM edit - to allow initialising multiple models
+        if isinstance(config.NETWORK.PARTIAL_PRETRAIN, list):
+            list_start_models = config.NETWORK.PARTIAL_PRETRAIN
         else:
-            smart_partial_load_model_state_dict(model, pretrain_state_dict)
+            list_start_models = [config.NETWORK.PARTIAL_PRETRAIN]
+
+        for start_model in list_start_models:    
+            pretrain_state_dict = torch.load(start_model, map_location=lambda storage, loc: storage)['state_dict']
+            prefix_change = [prefix_change.split('->') for prefix_change in config.NETWORK.PARTIAL_PRETRAIN_PREFIX_CHANGES]
+            if len(prefix_change) > 0:
+                pretrain_state_dict_parsed = {}
+                for k, v in pretrain_state_dict.items():
+                    no_match = True
+                    for pretrain_prefix, new_prefix in prefix_change:
+                        if k.startswith(pretrain_prefix):
+                            k = new_prefix + k[len(pretrain_prefix):]
+                            pretrain_state_dict_parsed[k] = v
+                            no_match = False
+                            break
+                    if no_match:
+                        pretrain_state_dict_parsed[k] = v
+                pretrain_state_dict = pretrain_state_dict_parsed
+            # FM edit: introduce alternative initialisations
+            if config.NETWORK.INITIALISATION=='hybrid':
+                smart_hybrid_partial_load_model_state_dict(model, pretrain_state_dict)
+            elif config.NETWORK.INITIALISATION=='skip':
+                smart_skip_partial_load_model_state_dict(model, pretrain_state_dict)
+            else:
+                smart_partial_load_model_state_dict(model, pretrain_state_dict)
 
     # metrics
     metric_kwargs = {'allreduce': args.dist,
