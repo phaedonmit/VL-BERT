@@ -14,11 +14,15 @@ import numpy as np
 # English captions 003:
 # filepath_en = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/pretrain_prec/003_prec_LR1e6_taskB_multi30k_5x/003_prec_LR1e6_taskB_multi30k_5x_cls_output_English_retrieval_translation_test2015.json"
 # English captions 005:
-filepath_en = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/pretrain_prec/005_pretrained_LR6_taskB_taskC_taskB/005_pretrained_LR6_taskB_taskC_taskB_English_retrieval_translation_test2015.json"
+# filepath_en = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/pretrain_prec/005_pretrained_LR6_taskB_taskC_taskB/005_pretrained_LR6_taskB_taskC_taskB_English_retrieval_translation_test2015.json"
 # English captions with vision 002:
 # filepath_en = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/pretrain_prec/002_prec_LR1e6_multi30k/distance_002_prec_LR1e6_multi30k_cls_out_with_vision_English_retrieval_translation_test2015.json"
 # English europarl 002:
 # filepath_en = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/pretrain_prec/002_prec_LR1e6_multi30k/002_prec_LR1e6_distance_europarl_English_retrieval_translation_test2015.json"
+# English europarl 003:
+filepath_en = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/pretrain_prec/003_prec_LR1e6_taskB_multi30k_5x/003_prec_LR1e6_taskB_multi30k_5x_distance_europarl_English_retrieval_translation_test2015.json"
+# English europarl 005:
+# filepath_en = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/pretrain_prec/005_pretrained_LR6_taskB_taskC_taskB/005_pretrained_LR6_taskB_taskC_taskB_distance_europarl_English_retrieval_translation_test2015.json"
 
 # Image only
 # filepath_en = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/pretrain_prec/002_prec_LR1e6_multi30k/002_prec_LR1e6_multi30k_vision_only_retrieval_translation_test2015.json"
@@ -28,11 +32,15 @@ filepath_en = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/pretrain_
 # German captions 003:
 # filepath_de = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/pretrain_prec/003_prec_LR1e6_taskB_multi30k_5x/003_prec_LR1e6_taskB_multi30k_5x_cls_output_German_retrieval_translation_test2015.json"
 # German captions 005:
-filepath_de = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/pretrain_prec/005_pretrained_LR6_taskB_taskC_taskB/005_pretrained_LR6_taskB_taskC_taskB_German_retrieval_translation_test2015.json"
+# filepath_de = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/pretrain_prec/005_pretrained_LR6_taskB_taskC_taskB/005_pretrained_LR6_taskB_taskC_taskB_German_retrieval_translation_test2015.json"
 # German Captions with image 002:
 # filepath_de = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/pretrain_prec/002_prec_LR1e6_multi30k/distance_002_prec_LR1e6_multi30k_cls_out_with_vision_German_retrieval_translation_test2015.json"
 # German Captions europarl 002:
 # filepath_de = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/pretrain_prec/002_prec_LR1e6_multi30k/002_prec_LR1e6_distance_europarl_German_retrieval_translation_test2015.json"
+# German Captions europarl 003:
+filepath_de = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/pretrain_prec/003_prec_LR1e6_taskB_multi30k_5x/003_prec_LR1e6_taskB_multi30k_5x_distance_europarl_German_retrieval_translation_test2015.json"
+# German Captions europarl 005:
+# filepath_de = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/pretrain_prec/005_pretrained_LR6_taskB_taskC_taskB/005_pretrained_LR6_taskB_taskC_taskB_distance_europarl_German_retrieval_translation_test2015.json"
 
 # Step 1 - Read json files with outputs
 with open(filepath_en) as json_file:

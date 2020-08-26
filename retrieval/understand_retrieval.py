@@ -7,10 +7,13 @@
 import json
 import torch
 import operator 
+import jsonlines
 
 # filepath = "/experiments/faidon/VL-BERT/checkpoints/itm_evaluation_retrieval_test2015.json"
 # filepath = "/experiments/faidon/VL-BERT/checkpoints/imt_model19_prec_5captions_LR1e6_all.json"
 filepath = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/itm_prec/015_prec_retrieval_mixed_5x_startTaskB/015_prec_retrieval_mixed_5x_startTaskB_English_retrieval_test2015.json"
+
+test_images = list(jsonlines.open("/experiments/faidon/VL-BERT/data/flickr30k/test.json"))
 
 with open(filepath) as json_file:
     data = json.load(json_file)
@@ -49,6 +52,14 @@ with open(filepath) as json_file:
             correct[1] += 1
         if index in dict(sorted(value.items(), key=operator.itemgetter(1),reverse=True)[:ranks[2]]).keys():
             correct[2] += 1  
+        # # TODO: REMOVE: get examples
+        # print("sentence: ", index)
+        # print("images: ", dict(sorted(value.items(), key=operator.itemgetter(1),reverse=True)[:ranks[1]]).keys())
+        # for image in dict(sorted(value.items(), key=operator.itemgetter(1),reverse=True)[:ranks[1]]).keys():
+        #     print('image line: ', image)
+        #     print('image id: ', test_images[image]['image'])
+        # if total==6:
+        #     exit()
         total += 1
     print('******************************')
     print('***** Image retrieval    *****')
@@ -80,7 +91,16 @@ with open(filepath) as json_file:
         if index in dict(sorted(value.items(), key=operator.itemgetter(1),reverse=True)[:ranks[1]]).keys():
             correct[1] += 1
         if index in dict(sorted(value.items(), key=operator.itemgetter(1),reverse=True)[:ranks[2]]).keys():
-            correct[2] += 1    
+            correct[2] += 1
+        # # TODO: REMOVE: get examples
+        print("image: ", index)
+        print("sentences: ", dict(sorted(value.items(), key=operator.itemgetter(1),reverse=True)[:ranks[1]]).keys())
+        print("image id: ", test_images[index]['image'])
+        for image in dict(sorted(value.items(), key=operator.itemgetter(1),reverse=True)[:ranks[1]]).keys():
+            print('image line: ', image)
+            print('caption en: ', test_images[image]['caption_en'])
+        if total==51:
+            exit()
         total += 1
     print('\n******************************')
     print('***** Caption retrieval  *****')
