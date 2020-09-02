@@ -52,6 +52,7 @@ See [ReadMe.txt](./conceptual-captions/ReadMe.txt).
 
 ### Multi30k
 * Multi30k dataset: [Github](https://github.com/multi30k/dataset)
+* See [README file](https://github.com/phaedonmit/VL-BERT/blob/master/data/flickr30k/README.md)
 
 ### WMT'14
 * WMT'14 dataset: [Stanford Natural Language Processing Group](https://nlp.stanford.edu/projects/nmt/)
