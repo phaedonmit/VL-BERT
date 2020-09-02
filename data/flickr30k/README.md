@@ -19,7 +19,8 @@
    python gen_test_image_json.py
 
 
-6. 1) zip (without compression) "train_image" by
+6. 
+   1) zip (without compression) "train_image" by
    
    cd ../train_image
    zip -0 ../train_image.zip ./*
