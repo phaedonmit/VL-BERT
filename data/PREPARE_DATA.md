@@ -37,8 +37,8 @@ code_root/
     │   └── val_MLT_frcnn.json
     │   ├── test_MLT_frcnn.json    
     ├── WMT14/    
-    │   ├── train.json
-    │   ├── test.json
+        ├── train.json
+        ├── test.json
         
  ```
 ## Training Data
