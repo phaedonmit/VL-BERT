@@ -16,11 +16,11 @@ The MM-BERT model takes advantage of large-scale training of VL-BERT but is also
 to learn representations for multiple languages. The pre-trained MM-BERT model can be fine-tuned for various downstream visual-linguistic tasks, 
 such as Image-Caption retrieval, Translation Retrieval, Multimodal Lexical Translation and Machine Translation.
 
-![](./figs/taskA_composite.png =600x)
+<img src="./figs/taskA_composite.png" alt="drawing" width="450"/>
+<img src="./figs/retrieval_examples_caption_3_de.png" alt="drawing" width="450"/>
 
-![](./figs/retrieval_examples_caption_3_de.png = 600x)
 
-Thanks to VL-BERT, PyTorch and its 3rd-party libraries, this codebase also contains following features:
+Special thanks to VL-BERT, PyTorch and its 3rd-party libraries and BERT. This codebase also uses the following features inherited from VL-BERT:
 * Distributed Training
 * FP16 Mixed-Precision Training
 * Various Optimizers and Learning Rate Schedulers
@@ -75,7 +75,7 @@ See [PREPARE_PRETRAINED_MODELS.md](model/pretrained_model/PREPARE_PRETRAINED_MOD
 ./scripts/dist_run_single.sh <num_gpus> <task>/train_end2end.py <path_to_cfg> <dir_to_store_checkpoint>
 ```
 * ```<num_gpus>```: number of gpus to use.
-* ```<task>```: pretrain/vcr/vqa/refcoco.
+* ```<task>```: pretrain/MT/MLT/retrieval.
 * ```<path_to_cfg>```: config yaml file under ```./cfgs/<task>```.
 * ```<dir_to_store_checkpoint>```: root directory to store checkpoints.
 
