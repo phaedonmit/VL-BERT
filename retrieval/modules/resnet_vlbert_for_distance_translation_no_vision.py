@@ -111,9 +111,9 @@ class ResNetVLBERTDistanceTranslationNoVision(Module):
                 relationship_label,
                 mlm_labels):
 
-  
-        ###########################################
 
+                
+        ###########################################
         # prepare text
         text_input_ids = text
         # creates a text_tags tensor of the same shape as text tensor

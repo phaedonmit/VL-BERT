@@ -100,25 +100,65 @@ class ResNetVLBERTForPretrainingTranslationNoVision(Module):
         return object_reps[row_id.view(-1), span_tags_fixed.view(-1)].view(*span_tags_fixed.shape, -1)
 
     def forward(self,
+                image,
+                boxes,
+                im_info,
                 text,
                 relationship_label,
                 mlm_labels,
+                mvrc_ops,
+                mvrc_labels,
                 caption_index,
                 image_index):
 
   
         ###########################################
 
+        # visual feature extraction
+        images = image
+        box_mask = (boxes[:, :, 0] > -1.5)
+        origin_len = boxes.shape[1]
+        max_len = int(box_mask.sum(1).max().item())
+        box_mask = box_mask[:, :max_len]
+        boxes = boxes[:, :max_len]
+        mvrc_ops = mvrc_ops[:, :max_len]
+        mvrc_labels = mvrc_labels[:, :max_len]
+
+        if self.config.NETWORK.IMAGE_FEAT_PRECOMPUTED:
+            box_features = boxes[:, :, 4:]
+            box_features[mvrc_ops == 1] = self.object_mask_visual_embedding.weight[0]
+            boxes[:, :, 4:] = box_features
+
+        obj_reps = self.image_feature_extractor(images=images,
+                                                boxes=boxes,
+                                                box_mask=box_mask,
+                                                im_info=im_info,
+                                                classes=None,
+                                                segms=None,
+                                                mvrc_ops=mvrc_ops,
+                                                mask_visual_embed=self.object_mask_visual_embedding.weight[0]
+                                                if (not self.config.NETWORK.IMAGE_FEAT_PRECOMPUTED)
+                                                   and (not self.config.NETWORK.MASK_RAW_PIXELS)
+                                                else None)
+
+        ############################################
+
         # prepare text
         text_input_ids = text
         # creates a text_tags tensor of the same shape as text tensor
         text_tags = text.new_zeros(text.shape)
+        text_visual_embeddings = self._collect_obj_reps(text_tags, obj_reps['obj_reps'])
         # ***** FM edit: blank out visual embeddings for translation retrieval task
-        text_visual_embeddings = text_input_ids.new_zeros((text_input_ids.shape[0], text_input_ids.shape[1], 768), dtype=torch.float)
         text_visual_embeddings[:] = self.aux_text_visual_embedding.weight[0]
 
-        # ****** FM edit: blank visual embeddings (use known dimensions)
-        object_vl_embeddings = text_input_ids.new_zeros((text_input_ids.shape[0], 1, 1536), dtype=torch.float)
+        object_linguistic_embeddings = self.object_linguistic_embeddings(
+            boxes.new_zeros((boxes.shape[0], boxes.shape[1])).long()
+        )
+        if self.config.NETWORK.WITH_MVRC_LOSS:
+            object_linguistic_embeddings[mvrc_ops == 1] = self.object_mask_word_embedding.weight[0]
+        object_vl_embeddings = torch.cat((obj_reps['obj_reps'], object_linguistic_embeddings), -1)
+        # ****** FM edit: blank out all visual embeddings
+        object_vl_embeddings = object_vl_embeddings.new_zeros(object_vl_embeddings.shape)
 
         # FM edit: No auxiliary text is used for text only
         # add auxiliary text - Concatenates the batches from the two dataloaders
@@ -126,9 +166,23 @@ class ResNetVLBERTForPretrainingTranslationNoVision(Module):
         max_text_len = text_input_ids.shape[1]
         text_token_type_ids = text_input_ids.new_zeros(text_input_ids.shape)
         text_mask = (text_input_ids > 0)
-        #FM: Edit: set to zero to ignore vision
-        box_mask = text_input_ids.new_zeros((text_input_ids.shape[0], 1), dtype=torch.uint8)
+        #FM: Edit: i have taken this out, not needed i think since defined above
+        # box_mask = box_mask.new_zeros((text_input_ids.shape[0], *box_mask.shape[1:]))
         
+        # # FM edit: Remove vision modality - cut short
+        # print('mvrc_ops: ', mvrc_ops)
+        # print('text input shape: ', text)
+        # print( 'text_input_ids shape: ', text_input_ids.shape)
+        # print( 'text_token_type_ids shape: ', text_token_type_ids.shape)
+        # print( 'text_visual_embeddings shape: ', text_visual_embeddings.shape)
+        # print( 'text_mask shape: ', text_mask.shape)
+        # print( 'object_vl_embeddings shape: ', object_vl_embeddings.shape)
+        # print( 'box_mask shape: ', box_mask.shape)
+
+        # print ('text_mask: ', text_mask)
+        # print ('object_mask: ', box_mask)
+
+        # exit()
         ###########################################
 
         # Visual Linguistic BERT
@@ -144,6 +198,9 @@ class ResNetVLBERTForPretrainingTranslationNoVision(Module):
         outputs = {}
 
         # loss
+        relationship_loss = im_info.new_zeros(())
+        mlm_loss = im_info.new_zeros(())
+        mvrc_loss = im_info.new_zeros(())
         if self.config.NETWORK.WITH_REL_LOSS:
             relationship_logits = relationship_logits_multi[:text_input_ids.shape[0]]
             # FM edit - change cross_entropy to bce/sigmoid

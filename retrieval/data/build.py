@@ -9,8 +9,6 @@ from copy import deepcopy
 
 # FM: Added mutli30k to available datasets
 DATASET_CATALOGS = {'conceptual_captions': ConceptualCaptionsDataset,
-                    'coco_captions': COCOCaptionsDataset,
-                    'general_corpus': GeneralCorpus, 
                     'multi30k': Multi30kDataset,
                     'multi30k_5x': Multi30kDataset_5x,
                     'multi30k_5x_mixed': Multi30kDataset_5x_Mixed,

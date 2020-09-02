@@ -8,9 +8,7 @@ import pprint
 from copy import deepcopy
 
 # FM: Added mutli30k to available datasets
-DATASET_CATALOGS = {'conceptual_captions': ConceptualCaptionsDataset,
-                    'coco_captions': COCOCaptionsDataset,
-                    'general_corpus': GeneralCorpus, 
+DATASET_CATALOGS = { 
                     'multi30k': Multi30kDataset,
                     'multi30k_decoder': Multi30kDatasetDecoder,
                     'multi30k_no_vision': Multi30kDatasetNoVision,
