@@ -5,6 +5,7 @@ from copy import deepcopy
 
 from MLT.function.config import config, update_config
 from MLT.function.test import test_net
+from MLT.function.test_2018 import test_net2018
 
 
 def parse_args():
@@ -36,9 +37,12 @@ def parse_args():
 
 def main():
     args, config = parse_args()
-
-    result_json_path = test_net(args, config,
-                                ckpt_path=args.ckpt, save_path=args.result_path, save_name=args.result_name)
+    if config.DATASET.DATASET=='multi30k2018':
+        result_json_path = test_net2018(args, config,
+                                    ckpt_path=args.ckpt, save_path=args.result_path, save_name=args.result_name)
+    else:
+        result_json_path = test_net(args, config,
+                                    ckpt_path=args.ckpt, save_path=args.result_path, save_name=args.result_name)
 
 
 if __name__ == '__main__':

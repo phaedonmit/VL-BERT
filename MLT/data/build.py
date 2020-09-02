@@ -12,6 +12,7 @@ DATASET_CATALOGS = {'conceptual_captions': ConceptualCaptionsDataset,
                     'coco_captions': COCOCaptionsDataset,
                     'general_corpus': GeneralCorpus, 
                     'multi30k': Multi30kDataset,
+                    'multi30k2018': Multi30kDataset2018,
                     }
 
 

@@ -23,8 +23,12 @@ import unidecode
 # filepath = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/MT/004_MT_LR6_with_vision_encdec/004_MT_LR6_enc_dec_019_MT_test2015.json"
 # model = "003_model"
 # filepath = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/MT/003_MT_LR6_no_vision_last_token/003_MT_LR6_no_vision_last_token_MT_test2015.json"
-model = "002_model"
-filepath = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/MT/002_MT_LR6_with_vision_last_token/002_MT_LR6_with_vision_last_token_NOSTOP_MT_test2015.json"
+# model = "002_model"
+# filepath = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/MT/002_MT_LR6_with_vision_last_token/002_MT_LR6_with_vision_last_token_NOSTOP_MT_test2015.json"
+# model = "007_model_test2018"
+# filepath = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/MT/007_MT_LR6_with_vision_no_pretraining/007_MT_LR6_with_vision_no_pretraining_MT_test2018.json"
+model = "002_model_test2018"
+filepath = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/MT/002_MT_LR6_with_vision_last_token/002_MT_LR6_with_vision_last_token_MT_test2018.json"
 
 with open(filepath) as json_file:
     data = json.load(json_file)

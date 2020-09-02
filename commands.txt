@@ -182,11 +182,16 @@ CUDA_VISIBLE_DEVICES=3 python MLT/test.py \
   --ckpt  /experiments/faidon/VL-BERT/checkpoints/output/pretrain/MLT/001_MTL_ende_with_vision/train_train/vl-bert_base_res101_pretrain_multitask-0019.model \
   --gpus 0 \
   --result-path /experiments/faidon/VL-BERT/checkpoints --result-name 001_MTL_ende_with_vision
-CUDA_VISIBLE_DEVICES=2 python MLT/test.py \
-  --cfg /experiments/faidon/VL-BERT/checkpoints/output/pretrain/MLT/001_MLT_ende_with_vision/train_train/base_prec_16x16G_fp16_MLT_LR6_startLR6.yaml \
-  --ckpt /experiments/faidon/VL-BERT/checkpoints/output/pretrain/MLT/001_MLT_ende_with_vision/train_train/vl-bert_base_res101_pretrain_multitask-0019.model \
+CUDA_VISIBLE_DEVICES=1 python MLT/test.py \
+  --cfg /experiments/faidon/VL-BERT/cfgs/MLT/base_prec_16x16G_fp16_MLT_LR6_startLR6_2018.yaml \
+  --ckpt /experiments/faidon/VL-BERT/checkpoints/output/pretrain/MLT/005_MLT_ende_with_vision_startTaskC/train_train/vl-bert_base_res101_pretrain_multitask-0019.model \
   --gpus 0 \
-  --result-path /experiments/faidon/VL-BERT/checkpoints --result-name 001_MTL_ende_with_vision_2018 --split test2018
+  --result-path /experiments/faidon/VL-BERT/checkpoints --result-name 005_MLT_ende_with_vision_startTaskC_2018
+CUDA_VISIBLE_DEVICES=1 python MLT/test.py \
+  --cfg /experiments/faidon/VL-BERT/cfgs/MLT/base_prec_16x16G_fp16_MLT_LR6_startLR6_2018_no_vision.yaml \
+  --ckpt /experiments/faidon/VL-BERT/checkpoints/output/pretrain/MLT/002_MLT_ende_no_vision/train_train/vl-bert_base_res101_pretrain_multitask-0019.model \
+  --gpus 0 \
+  --result-path /experiments/faidon/VL-BERT/checkpoints --result-name 002_MLT_ende_no_vision_2018
 
 CUDA_VISIBLE_DEVICES=3 python MLT/test.py \
   --cfg /experiments/faidon/VL-BERT/checkpoints/output/pretrain/MLT/002_MLT_ende_no_vision/train_train/base_prec_16x16G_fp16_MLT_LR6_startLR6_no_vision.yaml \
@@ -221,6 +226,12 @@ CUDA_VISIBLE_DEVICES=1 python MT/test.py \
   --ckpt  /experiments/faidon/VL-BERT/checkpoints/output/pretrain/MT/005_MT_LR6_with_vision_startTaskB/train_train/vl-bert_base_res101_pretrain_multitask-0019.model \
   --gpus 0 \
   --result-path /experiments/faidon/VL-BERT/checkpoints --result-name 005_MT_LR6_with_vision_startTaskB
+CUDA_VISIBLE_DEVICES=1 python MT/test.py \
+  --cfg /experiments/faidon/VL-BERT/cfgs/MT/base_prec_16x16G_fp16_MT_LR6_generate.yaml \
+  --ckpt  /experiments/faidon/VL-BERT/checkpoints/output/pretrain/MT/002_MT_LR6_with_vision_last_token/train_train/vl-bert_base_res101_pretrain_multitask-0019.model \
+  --gpus 0 \
+  --result-path /experiments/faidon/VL-BERT/checkpoints --result-name 002_MT_LR6_with_vision_last_token --split test2018
+
 
 CUDA_VISIBLE_DEVICES=3 python MT/test.py \
   --cfg /experiments/faidon/VL-BERT/cfgs/MT/base_prec_16x16G_fp16_MT_LR6_generate.yaml \
