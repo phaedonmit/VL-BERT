@@ -1,3 +1,5 @@
+For new Image-caption datasets the high level process should be as explained below. For existing datasets please follow the respective README files in the dataset directories.
+
 1. Download dataset
 2. Run Docker image: 
     - Need to have mapped to the data directory inside Docker container
