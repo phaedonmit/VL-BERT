@@ -50,15 +50,7 @@ class ResNetVLBERTForPretrainingEncDec(Module):
             with_mvrc_head=False,
         )
 
-        # FM: add decoder
-        # Initializing a BERT bert-base-uncased style configuration
-        # configuration = BertConfig()
-        # configuration.vocab_size = config.NETWORK.VLBERT.vocab_size
-        # configuration.is_decoder = True
-        # # Initializing a model from the bert-base-uncased style configuration
-        # self.decoder = BertModel(configuration)
-        # # Accessing the model configuration
-        # configuration = model.config        
+        # FM edit: add decoder
         self.decoder = VisualLinguisticBertForPretrainingDecoder(
             config.NETWORK.VLBERT,
             language_pretrained_model_path=None if config.NETWORK.VLBERT.from_scratch else language_pretrained_model_path,

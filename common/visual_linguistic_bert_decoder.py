@@ -68,7 +68,7 @@ class VisualLinguisticBertDecoder(BaseModelDecoder):
         #  Initializing a BERT bert-base-uncased style configuration
         configuration = BertConfig()
         configuration.vocab_size = config.vocab_size
-        # TODO: doesn't fit one GPU
+        # FM edit: reduce size - 12 layers doesn't fit in single 12GB GPU
         configuration.num_hidden_layers=6
         configuration.is_decoder = True
         # Initializing a model from the bert-base-uncased style configuration
@@ -150,11 +150,7 @@ class VisualLinguisticBertDecoder(BaseModelDecoder):
                                         output_attentions=output_all_encoded_layers,
                                         encoder_hidden_states=encoder_hidden_states)
             encoded_layers = [decoder_output[0]]
-            # print('*********')
-            # print('encoded layers shape: ',encoded_layers.shape )
-            # # # print('attention_mask shape: ',extended_attention_mask.shape )
-            # # # print('extended_attention_mask.view() shape: ',extended_attention_mask.view(embedding_output.shape[0], embedding_output.shape[1]).shape )
-            # exit()                                        
+                           
         sequence_output = encoded_layers[-1]
         pooled_output = self.pooler(sequence_output) if self.config.with_pooler else None
         if not output_all_encoded_layers:
@@ -195,13 +191,6 @@ class VisualLinguisticBertDecoder(BaseModelDecoder):
                   object_vl_embeddings,
                   object_mask):
 
-        # print( 'text_input_ids shape: ', text_input_ids.shape)
-        # print( 'text_token_type_ids shape: ', text_token_type_ids.shape)
-        # print( 'text_visual_embeddings shape: ', text_visual_embeddings.shape)
-        # print( 'text_mask shape: ', text_mask.shape)
-        # print( 'object_vl_embeddings shape: ', object_vl_embeddings.shape)
-        # print( 'object_mask shape: ', object_mask.shape)
-
         text_linguistic_embedding = self.word_embeddings_wrapper(text_input_ids)
         if self.visual_1x1_text is not None:
             text_visual_embeddings = self.visual_1x1_text(text_visual_embeddings)
@@ -229,12 +218,7 @@ class VisualLinguisticBertDecoder(BaseModelDecoder):
         text_end = text_mask.sum(1, keepdim=True)
         object_end = text_end + object_mask.sum(1, keepdim=True)
 
-        # print( 'bs: ', bs)
-        # print( 'vl_embed_size: ', vl_embed_size)
-        # print( 'text_visual_embeddings shape: ', text_visual_embeddings.shape)
-        # print( 'max_length: ', max_length)
-        # print( 'text_end: ',text_end)
-        # print( 'object_end: ', object_end)
+
         # seamlessly concatenate visual linguistic embeddings of text and object
         # FM note: everything that's masked is left as zeros, everything that is not masked
         #          is replaced by the actual embeddings. Max length is the maximum plus 1 
@@ -243,14 +227,9 @@ class VisualLinguisticBertDecoder(BaseModelDecoder):
         _zero_id = torch.zeros((bs, ), dtype=torch.long, device=text_vl_embeddings.device)
         vl_embeddings = text_vl_embeddings.new_zeros((bs, max_length, vl_embed_size))
         vl_embeddings[grid_pos < text_end] = text_vl_embeddings[text_mask]
-        # print('object_vl_embeddings[object_mask] shape: ', object_vl_embeddings[object_mask].shape)
-        # print('object mask: ', object_mask)
-        # print('object mask type: ', object_mask.dtype)
-        # print('vl_embeddings[(grid_pos >= text_end) & (grid_pos < object_end): ', vl_embeddings[(grid_pos >= text_end) & (grid_pos < object_end)].shape)
         vl_embeddings[(grid_pos >= text_end) & (grid_pos < object_end)]  = object_vl_embeddings[object_mask]
         vl_embeddings[grid_pos == object_end] = self.end_embedding(_zero_id)
-        # print('vl_embeddings shape: ', vl_embeddings.shape)
-        # exit()
+   
 
         # token type embeddings/ segment embeddings
         token_type_ids = text_token_type_ids.new_zeros((bs, max_length))

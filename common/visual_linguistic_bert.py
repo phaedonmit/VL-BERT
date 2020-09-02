@@ -178,12 +178,6 @@ class VisualLinguisticBert(BaseModel):
                   object_vl_embeddings,
                   object_mask):
 
-        # print( 'text_input_ids shape: ', text_input_ids.shape)
-        # print( 'text_token_type_ids shape: ', text_token_type_ids.shape)
-        # print( 'text_visual_embeddings shape: ', text_visual_embeddings.shape)
-        # print( 'text_mask shape: ', text_mask.shape)
-        # print( 'object_vl_embeddings shape: ', object_vl_embeddings.shape)
-        # print( 'object_mask shape: ', object_mask.shape)
 
         text_linguistic_embedding = self.word_embeddings_wrapper(text_input_ids)
         if self.visual_1x1_text is not None:
@@ -212,12 +206,6 @@ class VisualLinguisticBert(BaseModel):
         text_end = text_mask.sum(1, keepdim=True)
         object_end = text_end + object_mask.sum(1, keepdim=True)
 
-        # print( 'bs: ', bs)
-        # print( 'vl_embed_size: ', vl_embed_size)
-        # print( 'text_visual_embeddings shape: ', text_visual_embeddings.shape)
-        # print( 'max_length: ', max_length)
-        # print( 'text_end: ',text_end)
-        # print( 'object_end: ', object_end)
         # seamlessly concatenate visual linguistic embeddings of text and object
         # FM note: everything that's masked is left as zeros, everything that is not masked
         #          is replaced by the actual embeddings. Max length is the maximum plus 1 
@@ -226,14 +214,9 @@ class VisualLinguisticBert(BaseModel):
         _zero_id = torch.zeros((bs, ), dtype=torch.long, device=text_vl_embeddings.device)
         vl_embeddings = text_vl_embeddings.new_zeros((bs, max_length, vl_embed_size))
         vl_embeddings[grid_pos < text_end] = text_vl_embeddings[text_mask]
-        # print('object_vl_embeddings[object_mask] shape: ', object_vl_embeddings[object_mask].shape)
-        # print('object mask: ', object_mask)
-        # print('object mask type: ', object_mask.dtype)
-        # print('vl_embeddings[(grid_pos >= text_end) & (grid_pos < object_end): ', vl_embeddings[(grid_pos >= text_end) & (grid_pos < object_end)].shape)
         vl_embeddings[(grid_pos >= text_end) & (grid_pos < object_end)]  = object_vl_embeddings[object_mask]
         vl_embeddings[grid_pos == object_end] = self.end_embedding(_zero_id)
-        # print('vl_embeddings shape: ', vl_embeddings.shape)
-        # exit()
+
 
         # token type embeddings/ segment embeddings
         token_type_ids = text_token_type_ids.new_zeros((bs, max_length))

@@ -222,18 +222,9 @@ class Multi30kDataset(Dataset):
             mvrc_ops = mvrc_ops[:box_len_keep]
             mvrc_labels = mvrc_labels[:box_len_keep]
 
-        # TODO: convert word_de to class
+        # FM edit: convert word_de to class
         word_de_id = self.MLT_vocab.index(word_de)
 
-        # word_de_array = word_de.split(' ')
-        # word_de_id_array = []
-        # for word_de in word_de_array:
-        #     try:
-        #         word_de_id_array.append(self.MLT_vocab.index(word_de))
-        #     except:
-        #         print('****** Not found ********' )
-        #         print('word not found: ', word_de)
-        # word_de_id = word_de_id_array[0] # if len(word_de_id_array) else word_de_id_array
 
 
         return image, boxes, im_info, text, relationship_label, mlm_labels, mvrc_ops, mvrc_labels, word_de_id

@@ -137,13 +137,6 @@ class ResNetVLBERTForPretrainingGenerateNoVision(Module):
                                                                     box_mask)
             answers = torch.topk(mlm_logits[mlm_labels==103], k=1,  dim=1)
 
-            # print('mlm_labels shape:', mlm_labels.shape)
-            # print('text_input_ids shape:', text_input_ids.shape)            
-            # print('text_token_type_ids shape:', text_token_type_ids.shape)            
-            # print('text_visual_embeddings shape:', text_visual_embeddings.shape)            
-            # print('text_mask shape:', text_mask.shape)        
-            # print('answers shape: ', answers[1].shape)    
-            
             # Get size of each tensor
             position_tensor = torch.arange(mlm_labels.shape[1])
             position_tensor = position_tensor.repeat(mlm_labels.shape[0]).view(mlm_labels.shape[0],-1)
@@ -176,7 +169,7 @@ class ResNetVLBERTForPretrainingGenerateNoVision(Module):
             # 5. Update text_mask:
             text_mask = (text_input_ids > 0)
 
-            # TODO step 3
+            # 6. Add to generated
             for nid, row in enumerate(answers[1]):
                 if curr_len == 0:
                     generated.append([])
@@ -196,17 +189,13 @@ class ResNetVLBERTForPretrainingGenerateNoVision(Module):
         for sentence in generated:
             new_sentence = ' '.join(sentence)
             generated_sentences.append(new_sentence.replace(' ##', ''))
-        # print(generated_sentences)
-        # exit()
+
      
 
         ###########################################
         outputs = {}
 
-        # loss
-        # relationship_loss = im_info.new_zeros(())
-        # mlm_loss = im_info.new_zeros(())
-        # mvrc_loss = im_info.new_zeros(())
+
         if self.config.NETWORK.WITH_REL_LOSS:
             relationship_loss = F.cross_entropy(relationship_logits, relationship_label)
         if self.config.NETWORK.WITH_MLM_LOSS:
@@ -224,9 +213,7 @@ class ResNetVLBERTForPretrainingGenerateNoVision(Module):
                 mlm_loss = F.cross_entropy(mlm_logits.view((-1, mlm_logits.shape[-1])),
                                            mlm_labels.view(-1),
                                            ignore_index=-1)
-        # mvrc_loss = F.cross_entropy(mvrc_logits.contiguous().view(-1, mvrc_logits.shape[-1]),
-        #                             mvrc_labels.contiguous().view(-1),
-        #                             ignore_index=-1)
+
         if self.config.NETWORK.WITH_MVRC_LOSS:
             if self.config.NETWORK.MVRC_LOSS_NORM_IN_BATCH_FIRST:
                 mvrc_loss = soft_cross_entropy(

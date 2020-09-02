@@ -158,16 +158,6 @@ class ResNetVLBERTForPretrainingGenerate(Module):
                                                                     object_vl_embeddings,
                                                                     box_mask)
             answers = torch.topk(mlm_logits[mlm_labels==103], k=1,  dim=1)
-
-            # print('mlm_labels shape:', mlm_labels.shape)
-            # print('text_input_ids shape:', text_input_ids.shape)            
-            # print('text_token_type_ids shape:', text_token_type_ids.shape)            
-            # print('text_visual_embeddings shape:', text_visual_embeddings.shape)            
-            # print('text_mask shape:', text_mask.shape)        
-            # print('answers shape: ', answers[1].shape) 
-            # print('answers: ', answers[1]) 
-
-            # exit()
             
             # Get size of each tensor
             position_tensor = torch.arange(mlm_labels.shape[1])
@@ -201,7 +191,6 @@ class ResNetVLBERTForPretrainingGenerate(Module):
             # 5. Update text_mask:
             text_mask = (text_input_ids > 0)
 
-            # TODO step 3
             # 6. Append generated words from each sentence in the batch to list - terminate if all [STOP]
             for nid, row in enumerate(answers[1]):
                 if curr_len == 0:

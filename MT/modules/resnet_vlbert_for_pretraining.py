@@ -146,7 +146,6 @@ class ResNetVLBERTForPretraining(Module):
         ###########################################
         
         # Visual Linguistic BERT
-        # #loop here for test mode:
         relationship_logits, mlm_logits, mvrc_logits = self.vlbert(text_input_ids,
                                                                 text_token_type_ids,
                                                                 text_visual_embeddings,

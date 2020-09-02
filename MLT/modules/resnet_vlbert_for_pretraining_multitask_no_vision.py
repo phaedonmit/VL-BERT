@@ -261,7 +261,7 @@ class ResNetVLBERTForPretrainingMultitaskNoVision(Module):
             mvrc_labels_padded[:, :mvrc_labels.shape[1]] = mvrc_labels
             mvrc_labels = mvrc_labels_padded
 
-        # TODO: MLT loss check it's correct
+        # MLT loss applied
         if self.config.NETWORK.WITH_MLT_LOSS:
             MLT_loss = F.cross_entropy(MLT_logits, word_de_ids)
 

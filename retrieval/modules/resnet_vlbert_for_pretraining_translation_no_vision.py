@@ -129,17 +129,6 @@ class ResNetVLBERTForPretrainingTranslationNoVision(Module):
         #FM: Edit: set to zero to ignore vision
         box_mask = text_input_ids.new_zeros((text_input_ids.shape[0], 1), dtype=torch.uint8)
         
-        # # FM edit: Remove vision modality - cut short
-        # print('mvrc_ops: ', mvrc_ops)
-        # print('text input shape: ', text)
-        # print( 'text_input_ids shape: ', text_input_ids.shape)
-        # print( 'text_token_type_ids shape: ', text_token_type_ids.shape)
-        # print( 'text_visual_embeddings shape: ', text_visual_embeddings.shape)
-        # print( 'text_mask shape: ', text_mask.shape)
-        # print( 'object_vl_embeddings shape: ', object_vl_embeddings.shape)
-        # print( 'box_mask shape: ', box_mask.shape)
-
-
         ###########################################
 
         # Visual Linguistic BERT
@@ -155,9 +144,6 @@ class ResNetVLBERTForPretrainingTranslationNoVision(Module):
         outputs = {}
 
         # loss
-        # relationship_loss = im_info.new_zeros(())
-        # mlm_loss = im_info.new_zeros(())
-        # mvrc_loss = im_info.new_zeros(())
         if self.config.NETWORK.WITH_REL_LOSS:
             relationship_logits = relationship_logits_multi[:text_input_ids.shape[0]]
             # FM edit - change cross_entropy to bce/sigmoid

@@ -125,7 +125,6 @@ class ResNetVLBERTForPretrainingNoVision(Module):
         ###########################################
         
         # Visual Linguistic BERT
-        # #loop here for test mode:
         relationship_logits, mlm_logits, mvrc_logits = self.vlbert(text_input_ids,
                                                                 text_token_type_ids,
                                                                 text_visual_embeddings,
@@ -136,10 +135,7 @@ class ResNetVLBERTForPretrainingNoVision(Module):
         ###########################################
         outputs = {}
 
-        # loss
-        # relationship_loss = im_info.new_zeros(())
-        # mlm_loss = im_info.new_zeros(())
-        # mvrc_loss = im_info.new_zeros(())
+        # losses
         if self.config.NETWORK.WITH_REL_LOSS:
             relationship_loss = F.cross_entropy(relationship_logits, relationship_label)
         if self.config.NETWORK.WITH_MLM_LOSS:
@@ -157,9 +153,7 @@ class ResNetVLBERTForPretrainingNoVision(Module):
                 mlm_loss = F.cross_entropy(mlm_logits.view((-1, mlm_logits.shape[-1])),
                                            mlm_labels.view(-1),
                                            ignore_index=-1)
-        # mvrc_loss = F.cross_entropy(mvrc_logits.contiguous().view(-1, mvrc_logits.shape[-1]),
-        #                             mvrc_labels.contiguous().view(-1),
-        #                             ignore_index=-1)
+
         if self.config.NETWORK.WITH_MVRC_LOSS:
             if self.config.NETWORK.MVRC_LOSS_NORM_IN_BATCH_FIRST:
                 mvrc_loss = soft_cross_entropy(
