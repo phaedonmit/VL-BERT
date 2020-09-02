@@ -49,11 +49,11 @@
    2) Build Caffe and pycaffe
 
    cd $REPO_ROOT/caffe
-   # Now follow the Caffe installation instructions here:
-   #   http://caffe.berkeleyvision.org/installation.html
+    Now follow the Caffe installation instructions here:
+    http://caffe.berkeleyvision.org/installation.html
 
-   # If you're experienced with Caffe and have all of the requirements installed
-   # and your Makefile.config in place, then simply do:
+   If you're experienced with Caffe and have all of the requirements installed
+   and your Makefile.config in place, then simply do:
    make -j8 && make pycaffe
    
    3) Download pretrained model (https://www.dropbox.com/s/wqada4qiv1dz9dk/resnet101_faster_rcnn_final.caffemodel?dl=1), and put it under data/faster_rcnn_models.
