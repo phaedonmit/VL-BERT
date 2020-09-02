@@ -547,6 +547,7 @@ class VisualLinguisticBertRelationshipPredictionHead(BaseModel):
         return relationship_logits
 
 
+# FM added: Class is used to create the MLT head on top of MM-BERT model
 class VisualLinguisticBertMLTPredictionHead(BaseModel):
     def __init__(self, config):
         super(VisualLinguisticBertMLTPredictionHead, self).__init__(config)
@@ -562,7 +563,9 @@ class VisualLinguisticBertMLTPredictionHead(BaseModel):
 
 
 
-# FM edit: added for purely getting embeddings
+# FM added: Class created to get access to sentence embeddings
+#           for retrieval tasks
+#           (code is based on existing VL-BERT with changes where necessary)
 class VisualLinguisticBertForDistance(VisualLinguisticBert):
     def __init__(self, config, language_pretrained_model_path=None,
                  with_rel_head=True, with_mlm_head=True, with_mvrc_head=True, with_MLT_head=False):
@@ -734,11 +737,9 @@ class VisualLinguisticBertForDistance(VisualLinguisticBert):
 
 
 
-
-
-
 # FM added: Visual Linguistic Encoder that returns output hidden representations
-#              for all output tokens
+#           for all output tokens
+#           (code is based on VL-BERT implementation with modification where required)
 class VisualLinguisticBertEncoder(VisualLinguisticBert):
     def __init__(self, config, language_pretrained_model_path=None,
                  with_rel_head=True, with_mlm_head=True, with_mvrc_head=True, with_MLT_head=False):
