@@ -1,31 +1,20 @@
-# VL-BERT
+# MM-BERT
 
 By 
-[Weijie Su](https://www.weijiesu.com/), 
-[Xizhou Zhu](https://scholar.google.com/citations?user=02RXI00AAAAJ&hl=en), 
-[Yue Cao](http://yue-cao.me/), 
-[Bin Li](http://staff.ustc.edu.cn/~binli/), 
-[Lewei Lu](https://www.linkedin.com/in/lewei-lu-94015977/), 
-[Furu Wei](http://mindio.org/), 
-[Jifeng Dai](https://jifengdai.org/).
+[Faidon Mitzalis](https://github.com/phaedonmit/)
 
-This repository is an official implementation of the paper 
+This repository is the implementation for the MSc thesis "Learning multilingual, multimodal embeddings for language and vision tasks". This repository has been forked from the VL-BERT official repository (https://github.com/jackroos/VL-BERT) presented in the paper 
 [VL-BERT: Pre-training of Generic Visual-Linguistic Representations](https://arxiv.org/abs/1908.08530).
 
 
 
-*Update on 2020/01/16* Add code of visualization.
-
-
-
-*Update on 2019/12/20* Our VL-BERT got accepted by ICLR 2020.
-
 ## Introduction
 
-VL-BERT is a simple yet powerful pre-trainable generic representation for visual-linguistic tasks. 
-It is pre-trained on the massive-scale caption dataset and text-only corpus, 
-and can be fine-tuned for various down-stream visual-linguistic tasks, 
-such as Visual Commonsense Reasoning, Visual Question Answering and Referring Expression Comprehension.
+MM-BERT is a extends the VL-BERT model by making it multilingual. The MM-BERT model produces multilingual, multimodal embeddings
+that can be used for various visual-linguistic tasks. 
+The MM-BERT model takes advantage of large-scale training of VL-BERT but is also further trained on the [Multi30k dataset](https://github.com/multi30k/dataset)
+to learn representations for multiple languages. The pre-trained MM-BERT model can be fine-tuned for various downstream visual-linguistic tasks, 
+such as Image-Caption retrieval, Translation Retrieval, Multimodal Lexical Translation and Machine Translation.
 
 ![](./figs/pretrain.png)
 
