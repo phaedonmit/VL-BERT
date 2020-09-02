@@ -12,14 +12,6 @@ code_root/
         │   ├── vocab.txt
         │   ├── bert_config.json
         │   └── pytorch_model.bin        
-        ├── bert-base-uncased/
-        │   ├── vocab.txt
-        │   ├── bert_config.json
-        │   └── pytorch_model.bin
-        ├── bert-large-uncased/
-        │   ├── vocab.txt
-        │   ├── bert_config.json
-        │   └── pytorch_model.bin
         └── resnet101-pt-vgbua-0000.model     
 ```
 
