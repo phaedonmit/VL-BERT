@@ -10,7 +10,7 @@ is initiliased with MM-BERT and the Decoder is again a Transformer with Cross-At
 Custom evaluation scripts have also been developed to obtain BLEU statistics after
 the testing. These are:
 
-1. evaluate_trasnlation.py
+1. evaluate_translation.py
 
 
 Note: According to the options selected in the yaml file, the MT task can be performed with or without the visual modality.
@@ -26,9 +26,8 @@ generate the translated sequence the different options can be selected on the ya
         - without vision, set:  "MODULE: ResNetVLBERTForPretrainingGenerateNoVision"
 2) Method 2: Encoder-Decoder architecture
     - Training:
-        - with vision, set:  "MODULE: ResNetVLBERTForPretraining"
-    - Inference:
         - with vision, set:  "MODULE: ResNetVLBERTForPretrainingEncDec"
-        - without vision, set:  "MODULE: ResNetVLBERTForPretrainingEncDecGenerate"
+    - Inference:
+        - with vision, set:  "MODULE: ResNetVLBERTForPretrainingEncDecGenerate"
 
 
