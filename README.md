@@ -17,9 +17,11 @@ to learn representations for multiple languages. The pre-trained MM-BERT model c
 such as Image-Caption retrieval, Translation Retrieval, Multimodal Lexical Translation and Machine Translation.
 
 <img src="./figs/taskA_composite.png" alt="drawing" width="450"/>
+
 **Figure 1:** Overview of the MM-BERT pre-training configuration for Task A
 
 <img src="./figs/retrieval_examples_caption_3_de.png" alt="drawing" width="450"/>
+
 **Figure 2:** Example of using MM-BERT for caption retrieval in German on the 2016 Multi30k Test dataset
 
 Special thanks to VL-BERT, PyTorch and its 3rd-party libraries and BERT. This codebase also uses the following features inherited from VL-BERT:
