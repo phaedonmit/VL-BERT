@@ -4,9 +4,7 @@
 The code in this directory is used to train and test for the various retrieval tasks. Part of the code builds upon the VL-BERT implementation 
 but significant changes have been made specifically for the Retrieval tasks and the MM-BERT model. These are marked appropriately
 with comments in the code marked as "FM edit" or "FM added". The Retrieval task can be used for training or testing as explained
-in the README file of MM-BERT. There are two proposed architectures for the MT task, the simpler architecture has a single
-Linear layer that acts as a decoder. The other architecture has uses the Encoder-Decoder architecture that where the Encoder
-is initiliased with MM-BERT and the Decoder is again a Transformer with Cross-Attention with the Encoder output embeddings.
+in the README file of MM-BERT.
 
 Custom evaluation scripts have also been developed to recall at position k R@k for standard retrieval ranking statistics.
 These are the following:
