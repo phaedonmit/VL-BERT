@@ -153,7 +153,7 @@ increase the gradient accumulation steps accordingly to keep 'actual' batch size
 
 ## Acknowledgements
 
-Many thanks to following codebases that help us a lot in building this codebase:
+Many thanks to following codebases that have been essential while building this codebase:
 * [VL-BERT](https://github.com/jackroos/VL-BERT)
 * [M-BERT](https://github.com/google-research/bert/blob/master/multilingual.md)
 * [transformers (pytorch-pretrained-bert)](https://github.com/huggingface/transformers) 
