@@ -1,7 +1,7 @@
 ######
 # Author: Faidon Mitzalis
 # Date: June 2020
-# Comments: Use results of testing to evaluate performance of image retrieval task
+# Comments: Use results of testing from two experiments to compare incorrect results
 ######
 
 import json

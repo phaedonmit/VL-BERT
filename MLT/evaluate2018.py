@@ -1,7 +1,7 @@
 ######
 # Author: Faidon Mitzalis
 # Date: August 2020
-# Comments: Use results of testing to evaluate performance of image retrieval task
+# Comments: Use results of testing to evaluate performance of image retrieval task on the 2018 dataset (set of correct answers)
 ######
 
 import json
