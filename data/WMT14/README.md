@@ -1,5 +1,5 @@
-1. download from WMT'14 dataset: [Stanford Natural Language Processing Group](https://nlp.stanford.edu/projects/nmt/) the WMT'14
-   English-German dataset and place train.en, train.de, newstest2015.en and newstest2015.de under
+1. download the WMT'14 dataset from  [Stanford Natural Language Processing Group](https://nlp.stanford.edu/projects/nmt/). The dataset used in MM-BERT is WMT'14
+   English-German dataset. Place train.en, train.de, newstest2015.en and newstest2015.de under
    /WMT14
    
 2. cd to /WMT14/utils
