@@ -10,11 +10,12 @@ This repository is the implementation for the MSc thesis "Learning multilingual,
 
 ## Introduction
 
-MM-BERT is a extends the VL-BERT model by making it multilingual. The MM-BERT model produces multilingual, multimodal embeddings
-that can be used for various visual-linguistic tasks. 
+MM-BERT (Multilingual Multimodal - Bidirectional Encoder Representations) extends the VL-BERT model by making it multilingual. The MM-BERT model produces
+multilingual, multimodal embeddings that can be used for various visual-linguistic tasks. 
+
 The MM-BERT model takes advantage of large-scale training of VL-BERT but is also further trained on the [Multi30k dataset](https://github.com/multi30k/dataset)
-to learn representations for multiple languages. The pre-trained MM-BERT model can be fine-tuned for various downstream visual-linguistic tasks, 
-such as Image-Caption retrieval, Translation Retrieval, Multimodal Lexical Translation and Machine Translation.
+to learn representations for multiple languages. The pre-trained MM-BERT model can be fine-tuned for various downstream visual-linguistic tasks, such as 
+Image-Caption retrieval, Translation Retrieval, Multimodal Lexical Translation and Machine Translation.
 
 <img src="./figs/taskA_composite.png" alt="drawing" width="450"/>
 
