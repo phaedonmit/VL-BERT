@@ -8,6 +8,10 @@ code_root/
         ├── vl-bert-large-e2e.model
         ├── vl-bert-base-prec.model
         ├── vl-bert-large-prec.model
+        ├── bert-base-multilingual-cased/
+        │   ├── vocab.txt
+        │   ├── bert_config.json
+        │   └── pytorch_model.bin        
         ├── bert-base-uncased/
         │   ├── vocab.txt
         │   ├── bert_config.json
@@ -37,7 +41,7 @@ while "prec" means Fast-RCNN is fixed during pre-training and for effeciency the
 
 Download following pre-trained BERT and ResNet and place them under this folder.
 
-* BERT: [GoogleDrive](https://drive.google.com/file/d/14VceZht89V5i54-_xWiw58Rosa5NDL2H/view?usp=sharing) / [BaiduPan](https://pan.baidu.com/s/1dyYcw50eZznL02ilG676Yw)
+* M-BERT: Files can be downloaded from [HuggingFace](https://huggingface.co/bert-base-multilingual-cased#)
 * ResNet101 pretrained on Visual Genome: 
 [GoogleDrive](https://drive.google.com/file/d/1qJYtsGw1SfAyvknDZeRBnp2cF4VNjiDE/view?usp=sharing) / [BaiduPan](https://pan.baidu.com/s/1_yfZG8VqbWmp5Kr9w2DKGQ) 
 (converted from [caffe model](https://www.dropbox.com/s/wqada4qiv1dz9dk/resnet101_faster_rcnn_final.caffemodel?dl=1))
