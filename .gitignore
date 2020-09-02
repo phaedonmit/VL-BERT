@@ -151,6 +151,8 @@ cache
 !data/flickr30k
 data/flickr30k/*
 !data/flickr30k/utils
+!data/flicker30k/README.md
+!data/flickr30k/split_flickr.sh
 
 !retrieval/data
 !retrieval/data/datasets
