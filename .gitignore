@@ -154,6 +154,11 @@ data/flickr30k/*
 !data/flickr30k/README.md
 !data/flickr30k/split_flickr.sh
 
+!data/WMT14
+data/WMT14/*
+!data/WMT14/utils
+!data/WMT14/README.md
+
 !retrieval/data
 !retrieval/data/datasets
 !MLT/data
