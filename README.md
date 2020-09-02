@@ -16,11 +16,15 @@ The MM-BERT model takes advantage of large-scale training of VL-BERT but is also
 to learn representations for multiple languages. The pre-trained MM-BERT model can be fine-tuned for various downstream visual-linguistic tasks, 
 such as Image-Caption retrieval, Translation Retrieval, Multimodal Lexical Translation and Machine Translation.
 
-![](./figs/taskA_composite.png)
+<img src="./figs/taskA_composite.png" alt="drawing" width="450"/>
 
-![](./figs/retrieval_examples_caption_3_de.png)
+**Figure 1:** Overview of the MM-BERT pre-training configuration for Task A
 
-Thanks to VL-BERT, PyTorch and its 3rd-party libraries, this codebase also contains following features:
+<img src="./figs/retrieval_examples_caption_3_de.png" alt="drawing" width="450"/>
+
+**Figure 2:** Example of using MM-BERT for caption retrieval in German on the 2016 Multi30k Test dataset
+
+Special thanks to VL-BERT, PyTorch and its 3rd-party libraries and BERT. This codebase also uses the following features inherited from VL-BERT:
 * Distributed Training
 * FP16 Mixed-Precision Training
 * Various Optimizers and Learning Rate Schedulers
@@ -75,14 +79,14 @@ See [PREPARE_PRETRAINED_MODELS.md](model/pretrained_model/PREPARE_PRETRAINED_MOD
 ./scripts/dist_run_single.sh <num_gpus> <task>/train_end2end.py <path_to_cfg> <dir_to_store_checkpoint>
 ```
 * ```<num_gpus>```: number of gpus to use.
-* ```<task>```: pretrain/vcr/vqa/refcoco.
+* ```<task>```: pretrain/MT/MLT/retrieval.
 * ```<path_to_cfg>```: config yaml file under ```./cfgs/<task>```.
 * ```<dir_to_store_checkpoint>```: root directory to store checkpoints.
 
 
 Following is a more concrete example:
 ```
-./scripts/dist_run_single.sh 4 vcr/train_end2end.py ./cfgs/vcr/base_q2a_4x16G_fp32.yaml ./
+./scripts/dist_run_single.sh 4 MT/train_end2end.py ./cfgs/MT/base_prec_16x16G_fp16_MT_LR6.yaml ./
 ```
 
 ### Distributed Training on Multi-Machine
@@ -107,71 +111,51 @@ run following command on machine B:
 
 ***Note***:
 
-1. In yaml files under ```./cfgs```, we set batch size for GPUs with at least 16G memory, you may need to adapt the batch size and 
+1. In yaml files under ```./cfgs```, we set batch size for GPUs with at least 12G memory, you may need to adapt the batch size and 
 gradient accumulation steps according to your actual case, e.g., if you decrease the batch size, you should also 
 increase the gradient accumulation steps accordingly to keep 'actual' batch size for SGD unchanged.
 
-2. For efficiency, we recommend you to use distributed training even on single-machine. But for RefCOCO+, you may meet deadlock
-using distributed training due to unknown reason (it may be related to [PyTorch dataloader deadloack](https://github.com/pytorch/pytorch/issues/1355)), you can simply use
-non-distributed training to solve this problem.
+2. For efficiency, we recommend you to use distributed training even on single-machine.
 
 ## Evaluation
 
-### VCR
-* Local evaluation on val set:
-  ```
-  python vcr/val.py \
-    --a-cfg <cfg_of_q2a> --r-cfg <cfg_of_qa2r> \
-    --a-ckpt <checkpoint_of_q2a> --r-ckpt <checkpoint_of_qa2r> \
-    --gpus <indexes_of_gpus_to_use> \
-    --result-path <dir_to_save_result> --result-name <result_file_name>
-  ```
-  ***Note***: ```<indexes_of_gpus_to_use>``` is gpu indexes, e.g., ```0 1 2 3```.
+### Retrieval
 
-* Generate prediction results on test set for [leaderboard submission](https://visualcommonsense.com/leaderboard/):
+* Generate prediction results on selected test dataset (specified in yaml):
   ```
-  python vcr/test.py \
-    --a-cfg <cfg_of_q2a> --r-cfg <cfg_of_qa2r> \
-    --a-ckpt <checkpoint_of_q2a> --r-ckpt <checkpoint_of_qa2r> \
+  python retrieval/test.py \
+    --cfg <cfg_of_downstream_retrieval> \
+    --ckpt <checkpoint_of_finetuned_model> \
     --gpus <indexes_of_gpus_to_use> \
     --result-path <dir_to_save_result> --result-name <result_file_name>
   ```
 
-### VQA
-* Generate prediction results on test set for [EvalAI submission](https://evalai.cloudcv.org/web/challenges/challenge-page/163/overview):
+### MLT
+* Generate prediction results on selected test dataset (specified on yaml):
   ```
-  python vqa/test.py \
+  python MLT/test.py \
     --cfg <cfg_file> \
     --ckpt <checkpoint> \
     --gpus <indexes_of_gpus_to_use> \
     --result-path <dir_to_save_result> --result-name <result_file_name>
   ```
 
-### RefCOCO+
-
-* Local evaluation on val/testA/testB set:
+### MT
+* Generate prediction results on selected test dataset (specified on yaml):
   ```
-  python refcoco/test.py \
-    --split <val|testA|testB> \
+  python MT/test.py \
     --cfg <cfg_file> \
     --ckpt <checkpoint> \
     --gpus <indexes_of_gpus_to_use> \
     --result-path <dir_to_save_result> --result-name <result_file_name>
   ```
 
-## Visualization
-See [VISUALIZATION.md](./viz/VISUALIZATION.md).
 
 ## Acknowledgements
 
-Many thanks to following codes that help us a lot in building this codebase:
+Many thanks to following codebases that have been essential while building this codebase:
+* [VL-BERT](https://github.com/jackroos/VL-BERT)
+* [M-BERT](https://github.com/google-research/bert/blob/master/multilingual.md)
 * [transformers (pytorch-pretrained-bert)](https://github.com/huggingface/transformers) 
-* [Deformable-ConvNets](https://github.com/msracver/Deformable-ConvNets/)
-* [maskrcnn-benchmark](https://github.com/facebookresearch/maskrcnn-benchmark)
-* [mmdetection](https://github.com/open-mmlab/mmdetection)
-* [r2c](https://github.com/rowanz/r2c)
-* [allennlp](https://github.com/allenai/allennlp)
 * [bottom-up-attention](https://github.com/peteanderson80/bottom-up-attention)
-* [pythia](https://github.com/facebookresearch/pythia)
-* [MAttNet](https://github.com/lichengunc/MAttNet)
-* [bertviz](https://github.com/jessevig/bertviz)
+
