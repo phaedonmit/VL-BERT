@@ -86,7 +86,7 @@ See [PREPARE_PRETRAINED_MODELS.md](model/pretrained_model/PREPARE_PRETRAINED_MOD
 
 Following is a more concrete example:
 ```
-./scripts/dist_run_single.sh 4 vcr/train_end2end.py ./cfgs/vcr/base_q2a_4x16G_fp32.yaml ./
+./scripts/dist_run_single.sh 4 MT/train_end2end.py ./cfgs/MT/base_prec_16x16G_fp16_MT_LR6.yaml ./
 ```
 
 ### Distributed Training on Multi-Machine
@@ -111,71 +111,51 @@ run following command on machine B:
 
 ***Note***:
 
-1. In yaml files under ```./cfgs```, we set batch size for GPUs with at least 16G memory, you may need to adapt the batch size and 
+1. In yaml files under ```./cfgs```, we set batch size for GPUs with at least 12G memory, you may need to adapt the batch size and 
 gradient accumulation steps according to your actual case, e.g., if you decrease the batch size, you should also 
 increase the gradient accumulation steps accordingly to keep 'actual' batch size for SGD unchanged.
 
-2. For efficiency, we recommend you to use distributed training even on single-machine. But for RefCOCO+, you may meet deadlock
-using distributed training due to unknown reason (it may be related to [PyTorch dataloader deadloack](https://github.com/pytorch/pytorch/issues/1355)), you can simply use
-non-distributed training to solve this problem.
+2. For efficiency, we recommend you to use distributed training even on single-machine.
 
 ## Evaluation
 
-### VCR
-* Local evaluation on val set:
-  ```
-  python vcr/val.py \
-    --a-cfg <cfg_of_q2a> --r-cfg <cfg_of_qa2r> \
-    --a-ckpt <checkpoint_of_q2a> --r-ckpt <checkpoint_of_qa2r> \
-    --gpus <indexes_of_gpus_to_use> \
-    --result-path <dir_to_save_result> --result-name <result_file_name>
-  ```
-  ***Note***: ```<indexes_of_gpus_to_use>``` is gpu indexes, e.g., ```0 1 2 3```.
+### Retrieval
 
-* Generate prediction results on test set for [leaderboard submission](https://visualcommonsense.com/leaderboard/):
+* Generate prediction results on selected test dataset (specified in yaml):
   ```
-  python vcr/test.py \
-    --a-cfg <cfg_of_q2a> --r-cfg <cfg_of_qa2r> \
-    --a-ckpt <checkpoint_of_q2a> --r-ckpt <checkpoint_of_qa2r> \
+  python retrieval/test.py \
+    --cfg <cfg_of_downstream_retrieval> \
+    --ckpt <checkpoint_of_finetuned_model> \
     --gpus <indexes_of_gpus_to_use> \
     --result-path <dir_to_save_result> --result-name <result_file_name>
   ```
 
-### VQA
-* Generate prediction results on test set for [EvalAI submission](https://evalai.cloudcv.org/web/challenges/challenge-page/163/overview):
+### MLT
+* Generate prediction results on selected test dataset (specified on yaml):
   ```
-  python vqa/test.py \
+  python MLT/test.py \
     --cfg <cfg_file> \
     --ckpt <checkpoint> \
     --gpus <indexes_of_gpus_to_use> \
     --result-path <dir_to_save_result> --result-name <result_file_name>
   ```
 
-### RefCOCO+
-
-* Local evaluation on val/testA/testB set:
+### MT
+* Generate prediction results on selected test dataset (specified on yaml):
   ```
-  python refcoco/test.py \
-    --split <val|testA|testB> \
+  python MT/test.py \
     --cfg <cfg_file> \
     --ckpt <checkpoint> \
     --gpus <indexes_of_gpus_to_use> \
     --result-path <dir_to_save_result> --result-name <result_file_name>
   ```
 
-## Visualization
-See [VISUALIZATION.md](./viz/VISUALIZATION.md).
 
 ## Acknowledgements
 
-Many thanks to following codes that help us a lot in building this codebase:
+Many thanks to following codebases that help us a lot in building this codebase:
+* [VL-BERT](https://github.com/jackroos/VL-BERT)
+* [M-BERT](https://github.com/google-research/bert/blob/master/multilingual.md)
 * [transformers (pytorch-pretrained-bert)](https://github.com/huggingface/transformers) 
-* [Deformable-ConvNets](https://github.com/msracver/Deformable-ConvNets/)
-* [maskrcnn-benchmark](https://github.com/facebookresearch/maskrcnn-benchmark)
-* [mmdetection](https://github.com/open-mmlab/mmdetection)
-* [r2c](https://github.com/rowanz/r2c)
-* [allennlp](https://github.com/allenai/allennlp)
 * [bottom-up-attention](https://github.com/peteanderson80/bottom-up-attention)
-* [pythia](https://github.com/facebookresearch/pythia)
-* [MAttNet](https://github.com/lichengunc/MAttNet)
-* [bertviz](https://github.com/jessevig/bertviz)
+
