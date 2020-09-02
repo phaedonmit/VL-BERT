@@ -16,9 +16,9 @@ The MM-BERT model takes advantage of large-scale training of VL-BERT but is also
 to learn representations for multiple languages. The pre-trained MM-BERT model can be fine-tuned for various downstream visual-linguistic tasks, 
 such as Image-Caption retrieval, Translation Retrieval, Multimodal Lexical Translation and Machine Translation.
 
-![](./figs/taskA_composite.png)
+![](./figs/taskA_composite.png =600x)
 
-![](./figs/retrieval_examples_caption_3_de.png)
+![](./figs/retrieval_examples_caption_3_de.png = 600x)
 
 Thanks to VL-BERT, PyTorch and its 3rd-party libraries, this codebase also contains following features:
 * Distributed Training
