@@ -1,6 +1,6 @@
 # MM-BERT additions
 
-The code in this directory is primarily sources from the VL-BERT parent repository. A number of 
+The code in this directory is primarily sourced from the VL-BERT parent repository. A number of 
 additions and adaptations have been made as part of the MM-BERT work. These are marked appropriately
 with comments in the code marked as "FM edit" or "FM added". The files where new code has been 
 introduced are the following:
