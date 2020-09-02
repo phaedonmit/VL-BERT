@@ -43,9 +43,6 @@ code_root/
  ```
 ## Training Data
 
-### Conceptual Captions
-See [ReadMe.txt](./conceptual-captions/ReadMe.txt).
-
 ### English Wikipedia & BooksCorpus
 * Wikipedia: [GoogleDrive](https://drive.google.com/file/d/1rZJ-Nj_SSqwu85tME3wbN8tfGhljfAsf/view?usp=sharing) / [BaiduPan](https://pan.baidu.com/s/1HSgUZXRESxVnx9ATOHwSrQ)
 * BooksCorpus: [GoogleDrive](https://drive.google.com/file/d/16T5EYqIjO-tAj1OFxz6bnnzEABCusCcv/view?usp=sharing) / [BaiduPan](https://pan.baidu.com/s/1797WFFUTnRJakgGxefSrBg)
@@ -56,4 +53,7 @@ See [ReadMe.txt](./conceptual-captions/ReadMe.txt).
 
 ### WMT'14
 * WMT'14 dataset: [Stanford Natural Language Processing Group](https://nlp.stanford.edu/projects/nmt/)
+* See [README file](https://github.com/phaedonmit/VL-BERT/blob/master/data/WMT14/README.md)
 
+### Conceptual Captions
+See [ReadMe.txt](./conceptual-captions/ReadMe.txt).
