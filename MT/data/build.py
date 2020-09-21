@@ -10,6 +10,8 @@ from copy import deepcopy
 # FM: Added mutli30k to available datasets
 DATASET_CATALOGS = { 
                     'multi30k': Multi30kDataset,
+                    'multi30k_image_only': Multi30kDatasetImageOnly,
+                    'multi30k_image_only5x': Multi30kDatasetImageOnly5x,
                     'multi30k_decoder': Multi30kDatasetDecoder,
                     'multi30k_no_vision': Multi30kDatasetNoVision,
                     'multi30k_taskB': Multi30kTaskBDataset,
