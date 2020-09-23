@@ -108,9 +108,14 @@ class ResNetVLBERTForPretrainingMultitask(Module):
                 mlm_labels,
                 mvrc_ops,
                 mvrc_labels,
+                image2,
+                boxes2,
+                im_info2,
                 text2,
                 relationship_label2,
                 mlm_labels2,
+                mvrc_ops2,
+                mvrc_labels2,
                 image3,
                 boxes3,
                 im_info3,
@@ -144,11 +149,15 @@ class ResNetVLBERTForPretrainingMultitask(Module):
         box_mask = (boxes[:, :, 0] > -1.5)
         origin_len = boxes.shape[1]
 
+        images2 = image2
+        box_mask2 = (boxes2[:, :, 0] > -1.5)
+        origin_len2 = boxes2.shape[1]
+
         images3 = image3
         box_mask3 = (boxes3[:, :, 0] > -1.5)
         origin_len3 = boxes3.shape[1]
         
-        max_len = max([int(box_mask.sum(1).max().item()), int(box_mask3.sum(1).max().item())])
+        max_len = max([int(box_mask.sum(1).max().item()), int(box_mask2.sum(1).max().item()), int(box_mask3.sum(1).max().item())])
 
         # Dataset 1: Visual feature extraction
         box_mask = box_mask[:, :max_len]
@@ -173,7 +182,29 @@ class ResNetVLBERTForPretrainingMultitask(Module):
                                                    and (not self.config.NETWORK.MASK_RAW_PIXELS)
                                                 else None)
 
-        # Dataset 2: Visual feature extraction - NOT EXISTS
+        # Dataset 2: Visual feature extraction
+
+        box_mask2 = box_mask2[:, :max_len]
+        boxes2 = boxes2[:, :max_len]
+        mvrc_ops2 = mvrc_ops2[:, :max_len]
+        mvrc_labels2 = mvrc_labels2[:, :max_len]
+
+        if self.config.NETWORK.IMAGE_FEAT_PRECOMPUTED:
+            box_features2 = boxes2[:, :, 4:]
+            box_features2[mvrc_ops == 1] = self.object_mask_visual_embedding.weight[0]
+            boxes2[:, :, 4:] = box_features2
+
+        obj_reps2 = self.image_feature_extractor(images=images2,
+                                                boxes=boxes2,
+                                                box_mask=box_mask2,
+                                                im_info=im_info2,
+                                                classes=None,
+                                                segms=None,
+                                                mvrc_ops=mvrc_ops2,
+                                                mask_visual_embed=self.object_mask_visual_embedding.weight[0]
+                                                if (not self.config.NETWORK.IMAGE_FEAT_PRECOMPUTED)
+                                                   and (not self.config.NETWORK.MASK_RAW_PIXELS)
+                                                else None)
 
         # Dataset 3: Visual feature extraction
 
@@ -184,7 +215,7 @@ class ResNetVLBERTForPretrainingMultitask(Module):
 
         if self.config.NETWORK.IMAGE_FEAT_PRECOMPUTED:
             box_features3 = boxes3[:, :, 4:]
-            box_features3[mvrc_ops3 == 1] = self.object_mask_visual_embedding.weight[0]
+            box_features3[mvrc_ops == 1] = self.object_mask_visual_embedding.weight[0]
             boxes3[:, :, 4:] = box_features3
 
         obj_reps3 = self.image_feature_extractor(images=images3,
@@ -232,12 +263,16 @@ class ResNetVLBERTForPretrainingMultitask(Module):
         text_input_ids2 = text2
         # creates a text_tags tensor of the same shape as text tensor
         text_tags2 = text2.new_zeros(text2.shape)
-        # text_visual_embeddings2 = self._collect_obj_reps(text_tags2, obj_reps2['obj_reps'])
-        # no visual features
-        text_visual_embeddings2 = text_input_ids2.new_zeros((text_input_ids2.shape[0], text_input_ids2.shape[1], 768), dtype=torch.float)
+        text_visual_embeddings2 = self._collect_obj_reps(text_tags2, obj_reps2['obj_reps'])
 
-        # no visual features - use shape of dataset 1
-        object_vl_embeddings2 = text_input_ids2.new_zeros((text_input_ids2.shape[0], 1, 1536), dtype=torch.float)
+        # linguistic embedding for visual uses [IMG] embedding for all (apart from masked visual)
+        object_linguistic_embeddings2 = self.object_linguistic_embeddings(
+            boxes2.new_zeros((boxes2.shape[0], boxes2.shape[1])).long()
+        )
+        if self.config.NETWORK.WITH_MVRC_LOSS:
+            object_linguistic_embeddings2[mvrc_ops2 == 1] = self.object_mask_word_embedding.weight[0]
+
+        object_vl_embeddings2 = torch.cat((obj_reps2['obj_reps'], object_linguistic_embeddings2), -1)
 
         # Dataset 3: Prepare text and combine [IMG] with visual 
 
@@ -252,7 +287,7 @@ class ResNetVLBERTForPretrainingMultitask(Module):
             boxes3.new_zeros((boxes3.shape[0], boxes3.shape[1])).long()
         )
         if self.config.NETWORK.WITH_MVRC_LOSS:
-            object_linguistic_embeddings3[mvrc_ops3 == 1] = self.object_mask_word_embedding.weight[0]
+            object_linguistic_embeddings3[mvrc_ops == 1] = self.object_mask_word_embedding.weight[0]
         object_vl_embeddings3 = torch.cat((obj_reps3['obj_reps'], object_linguistic_embeddings3), -1)
 
         # print('********')
@@ -300,18 +335,17 @@ class ResNetVLBERTForPretrainingMultitask(Module):
         text_visual_embeddings_multi[sep_batch:, :text_visual_embeddings3.shape[1]] \
             = text_visual_embeddings3
 
-        max_vl_len = max([object_vl_embeddings.shape[1], object_vl_embeddings3.shape[1]])
-        object_vl_embeddings_multi = object_vl_embeddings.new_zeros((total_batch, max_vl_len,
-                                                                     object_vl_embeddings.shape[-1]))
-        object_vl_embeddings_multi[:object_vl_embeddings.shape[0], :object_vl_embeddings.shape[1], :] = object_vl_embeddings
-        object_vl_embeddings_multi[object_vl_embeddings.shape[0]:sep_batch,  :object_vl_embeddings2.shape[1],:] = object_vl_embeddings2
-        object_vl_embeddings_multi[sep_batch:,  :object_vl_embeddings3.shape[1],:] = object_vl_embeddings3
+        object_vl_embeddings_multi = object_vl_embeddings.new_zeros((total_batch,
+                                                                     *object_vl_embeddings.shape[1:]))
+        object_vl_embeddings_multi[:object_vl_embeddings.shape[0]] = object_vl_embeddings
+        object_vl_embeddings_multi[object_vl_embeddings.shape[0]:sep_batch] = object_vl_embeddings2
+        object_vl_embeddings_multi[sep_batch:] = object_vl_embeddings3
 
 
-        box_mask_multi = box_mask.new_zeros((total_batch, max_vl_len))
-        box_mask_multi[:box_mask.shape[0], :box_mask.shape[1]] = box_mask
-        # box_mask_multi[box_mask.shape[0]:sep_batch] = box_mask2
-        box_mask_multi[sep_batch:, :box_mask3.shape[1]] = box_mask3
+        box_mask_multi = box_mask.new_zeros((total_batch, *box_mask.shape[1:]))
+        box_mask_multi[:box_mask.shape[0]] = box_mask
+        box_mask_multi[box_mask.shape[0]:sep_batch] = box_mask2
+        box_mask_multi[sep_batch:] = box_mask3
 
         ###########################################
 

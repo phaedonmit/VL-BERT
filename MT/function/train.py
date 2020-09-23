@@ -71,7 +71,7 @@ def train_net(args, config):
         torch.cuda.set_device(local_rank)
         master_address = os.environ['MASTER_ADDR']
         # master_port = int(os.environ['MASTER_PORT'] or 23456)
-        master_port = int(9995)
+        master_port = int(9997)
         world_size = int(os.environ['WORLD_SIZE'] or 1)
         rank = int(os.environ['RANK'] or 0)
         if args.slurm:
@@ -258,10 +258,12 @@ def train_net(args, config):
         val_metrics_list.append(pretrain_metrics.RelationshipAccuracy(**metric_kwargs))
     if config.NETWORK.WITH_MLM_LOSS:
         if config.MODULE == 'ResNetVLBERTForPretrainingMultitask':
-            train_metrics_list.append(pretrain_metrics.MLMAccuracyWVC(**metric_kwargs))
-            train_metrics_list.append(pretrain_metrics.MLMAccuracyAUX(**metric_kwargs))
-            val_metrics_list.append(pretrain_metrics.MLMAccuracyWVC(**metric_kwargs))
-            val_metrics_list.append(pretrain_metrics.MLMAccuracyAUX(**metric_kwargs))
+            train_metrics_list.append(pretrain_metrics.MLMAccuracyDataset1(**metric_kwargs))
+            train_metrics_list.append(pretrain_metrics.MLMAccuracyDataset2(**metric_kwargs))
+            train_metrics_list.append(pretrain_metrics.MLMAccuracyDataset3(**metric_kwargs))
+            val_metrics_list.append(pretrain_metrics.MLMAccuracyDataset1(**metric_kwargs))
+            val_metrics_list.append(pretrain_metrics.MLMAccuracyDataset2(**metric_kwargs))
+            val_metrics_list.append(pretrain_metrics.MLMAccuracyDataset3(**metric_kwargs))
         else:
             train_metrics_list.append(pretrain_metrics.MLMAccuracy(**metric_kwargs))
             val_metrics_list.append(pretrain_metrics.MLMAccuracy(**metric_kwargs))

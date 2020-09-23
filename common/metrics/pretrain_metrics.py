@@ -73,6 +73,47 @@ class MLMAccuracyAUX(EvalMetric):
                 self.num_inst += keep.sum().item()
 
 
+class MLMAccuracyDataset1(EvalMetric):
+    def __init__(self, allreduce=False, num_replicas=1):
+        super(MLMAccuracyDataset1, self).__init__('MLMAccDataset1', allreduce, num_replicas)
+
+    def update(self, outputs):
+        with torch.no_grad():
+            logits = outputs['mlm_logits_dataset1']
+            label = outputs['mlm_label_dataset1']
+            keep = (label != -1)
+            if keep.sum() > 0:
+                self.sum_metric += float((logits[keep].argmax(dim=1) == label[keep]).sum().item())
+                self.num_inst += keep.sum().item()
+
+class MLMAccuracyDataset2(EvalMetric):
+    def __init__(self, allreduce=False, num_replicas=1):
+        super(MLMAccuracyDataset2, self).__init__('MLMAccDataset2', allreduce, num_replicas)
+
+    def update(self, outputs):
+        with torch.no_grad():
+            logits = outputs['mlm_logits_dataset2']
+            label = outputs['mlm_label_dataset2']
+            keep = (label != -1)
+            if keep.sum() > 0:
+                self.sum_metric += float((logits[keep].argmax(dim=1) == label[keep]).sum().item())
+                self.num_inst += keep.sum().item()
+
+class MLMAccuracyDataset3(EvalMetric):
+    def __init__(self, allreduce=False, num_replicas=1):
+        super(MLMAccuracyDataset3, self).__init__('MLMAccDataset3', allreduce, num_replicas)
+
+    def update(self, outputs):
+        with torch.no_grad():
+            logits = outputs['mlm_logits_dataset3']
+            label = outputs['mlm_label_dataset3']
+            keep = (label != -1)
+            if keep.sum() > 0:
+                self.sum_metric += float((logits[keep].argmax(dim=1) == label[keep]).sum().item())
+                self.num_inst += keep.sum().item()
+
+            
+
 class MVRCAccuracy(EvalMetric):
     def __init__(self, allreduce=False, num_replicas=1):
         super(MVRCAccuracy, self).__init__('MVRCAccuracy', allreduce, num_replicas)

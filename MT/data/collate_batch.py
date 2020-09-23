@@ -49,7 +49,6 @@ class BatchCollator(object):
             if 'mlm_labels' in self.data_names:
                 mlm_labels = ibatch[self.data_names.index('mlm_labels')]
                 out['mlm_labels'] = clip_pad_1d(mlm_labels, max_text_length, pad=-1)
-            
             #****************
             # FM edit: added for MT decoder encoder
             if 'text_en' in self.data_names:

@@ -10,8 +10,8 @@ import operator
 import sacrebleu
 import unidecode
 
-model = "010_model_test2016"
-filepath = "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/MT/010_MT_LR6_only_image_startMT1/010_MT_LR6_only_image_startMT1_MT_test2015.json"
+model = "IC009_5x_model_test2016"
+filepath = "/experiments/faidon/VL-BERT/checkpoints/IC009_5x_MT_LR6_MT_test2015.json"
 
 with open(filepath) as json_file:
     data = json.load(json_file)
@@ -35,8 +35,8 @@ with open(filepath) as json_file:
         print('***********************')
         print('source: ', p['caption_en'])
         # remove accents
-        # reference = unidecode.unidecode(p['caption_de'])
-        reference = (p['caption_de'])
+        reference = unidecode.unidecode(p['caption_de'])
+        # reference = (p['caption_de'])
         # convert ß to ss (equivalent in german)
         hypothesis = p['generated_sentence'].replace('ß','ss')
         print('reference: ', reference)
