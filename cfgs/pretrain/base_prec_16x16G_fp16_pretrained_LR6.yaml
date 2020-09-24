@@ -35,7 +35,7 @@ DATASET:
   MIN_SEQ_LEN: 96
 
 NETWORK:
-  PARTIAL_PRETRAIN: "/experiments/faidon/VL-BERT/model/pretrained_model/vl-bert-base-prec.model"
+  PARTIAL_PRETRAIN: "/data/faidon/VL-BERT/model/pretrained_model/vl-bert-base-prec.model"
   PARTIAL_PRETRAIN_PREFIX_CHANGES: []
   INITIALISATION: 'hybrid'
   IMAGE_NUM_LAYERS: 101

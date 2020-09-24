@@ -54,7 +54,7 @@ DATASET:
   MASK_SIZE: 14
 
 NETWORK:
-  PARTIAL_PRETRAIN: "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/pretrain_prec/002_prec_LR1e6_multi30k/train_train/vl-bert_base_res101_pretrain_multitask-0019.model"
+  PARTIAL_PRETRAIN: "/data/faidon/VL-BERT/checkpoints/output/pretrain/pretrain_prec/002_prec_LR1e6_multi30k/train_train/vl-bert_base_res101_pretrain_multitask-0019.model"
   PARTIAL_PRETRAIN_PREFIX_CHANGES: []
   INITIALISATION: ''
   IMAGE_NUM_LAYERS: 101
