@@ -270,12 +270,23 @@ def train_net(args, config):
             train_metrics_list.append(pretrain_metrics.MLMAccuracyAUX(**metric_kwargs))
             val_metrics_list.append(pretrain_metrics.MLMAccuracyWVC(**metric_kwargs))
             val_metrics_list.append(pretrain_metrics.MLMAccuracyAUX(**metric_kwargs))
+        #STOPPED HERE!!!!!!
+        elif config.MODULE=='ResNetVLBERTForPretrainingGlobal':
+            for i in range(len(config.DATASET)):                                
+                train_metrics_list.append(pretrain_metrics.MLMAccuracyGlobal(**metric_kwargs, eval_name=str(i)))
+                val_metrics_list.append(pretrain_metrics.MLMAccuracyGlobal(**metric_kwargs, eval_name=str(i)))
         else:
             train_metrics_list.append(pretrain_metrics.MLMAccuracy(**metric_kwargs))
             val_metrics_list.append(pretrain_metrics.MLMAccuracy(**metric_kwargs))
-    if config.NETWORK.WITH_MVRC_LOSS:
-        train_metrics_list.append(pretrain_metrics.MVRCAccuracy(**metric_kwargs))
-        val_metrics_list.append(pretrain_metrics.MVRCAccuracy(**metric_kwargs))
+    if config.NETWORK.WITH_MVRC_LOSS:        
+        if config.MODULE=='ResNetVLBERTForPretrainingGlobal':
+            for i in range(len(config.DATASET)):                
+                train_metrics_list.append(pretrain_metrics.MVRCAccuracyGlobal(**metric_kwargs, eval_name=str(i)))
+                val_metrics_list.append(pretrain_metrics.MVRCAccuracyGlobal(**metric_kwargs, eval_name=str(i)))
+        else:
+            train_metrics_list.append(pretrain_metrics.MVRCAccuracy(**metric_kwargs))
+            val_metrics_list.append(pretrain_metrics.MVRCAccuracy(**metric_kwargs))
+
     for output_name, display_name in config.TRAIN.LOSS_LOGGERS:
         train_metrics_list.append(pretrain_metrics.LossLogger(output_name, display_name=display_name, **metric_kwargs))
         val_metrics_list.append(pretrain_metrics.LossLogger(output_name, display_name=display_name, **metric_kwargs))
@@ -291,7 +302,7 @@ def train_net(args, config):
     epoch_end_callbacks = []
     if (rank is None) or (rank == 0):
         epoch_end_callbacks = [Checkpoint(model_prefix, config.CHECKPOINT_FREQUENT)]
-    host_metric_name = 'MLMAcc' if not config.MODULE == 'ResNetVLBERTForPretrainingMultitask' else 'MLMAccWVC'
+    host_metric_name = 'MLMAcc' if not (config.MODULE == 'ResNetVLBERTForPretrainingMultitask' or config.MODULE == 'ResNetVLBERTForPretrainingGlobal') else 'MLMAccWVC'
     validation_monitor = ValidationMonitor(do_validation, val_loader, val_metrics,
                                            host_metric_name=host_metric_name)
 

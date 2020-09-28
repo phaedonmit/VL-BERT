@@ -72,6 +72,7 @@ def train(net,
           gradient_accumulate_steps=1):
 
     assert isinstance(gradient_accumulate_steps, int) and gradient_accumulate_steps >= 1
+    # torch.autograd.set_detect_anomaly(True) 
 
     for epoch in range(begin_epoch, end_epoch):
         print('PROGRESS: %.2f%%' % (100.0 * epoch / end_epoch))

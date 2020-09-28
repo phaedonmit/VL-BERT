@@ -72,6 +72,20 @@ class MLMAccuracyAUX(EvalMetric):
                 self.sum_metric += float((logits[keep].argmax(dim=1) == label[keep]).sum().item())
                 self.num_inst += keep.sum().item()
 
+class MLMAccuracyGlobal(EvalMetric):
+    def __init__(self, allreduce=False, num_replicas=1, eval_name='default_name'):
+        super(MLMAccuracyGlobal, self).__init__('MLMAccuracy'+eval_name, allreduce, num_replicas)
+        self.eval_name = eval_name
+
+    def update(self, outputs):
+        with torch.no_grad():
+            logits = outputs['mlm_logits_'+self.eval_name]
+            label = outputs['mlm_label_'+self.eval_name]
+            keep = (label != -1)
+            if keep.sum() > 0:
+                self.sum_metric += float((logits[keep].argmax(dim=1) == label[keep]).sum().item())
+                self.num_inst += keep.sum().item()
+
 
 class MLMAccuracyDataset1(EvalMetric):
     def __init__(self, allreduce=False, num_replicas=1):
@@ -122,6 +136,22 @@ class MVRCAccuracy(EvalMetric):
         with torch.no_grad():
             logits = outputs['mvrc_logits']
             label = outputs['mvrc_label']
+            keep = (label.sum(2) - 1.0).abs() < 0.1
+            if keep.sum() > 0:
+                #FM note: when [keep] is applied it collapsees logits(batch,#RoI,#classes)
+                #to logits(#relevant_RoI, #classes)
+                self.sum_metric += float((logits[keep].argmax(dim=1) == label[keep].argmax(dim=1)).sum().item())
+                self.num_inst += keep.sum().item()
+
+class MVRCAccuracyGlobal(EvalMetric):
+    def __init__(self, allreduce=False, num_replicas=1, eval_name='default_name'):
+        super(MVRCAccuracyGlobal, self).__init__('MVRCAccuracy'+eval_name, allreduce, num_replicas)
+        self.eval_name = eval_name
+
+    def update(self, outputs):
+        with torch.no_grad():
+            logits = outputs['mvrc_logits_'+self.eval_name]
+            label = outputs['mvrc_label_'+self.eval_name]
             keep = (label.sum(2) - 1.0).abs() < 0.1
             if keep.sum() > 0:
                 #FM note: when [keep] is applied it collapsees logits(batch,#RoI,#classes)

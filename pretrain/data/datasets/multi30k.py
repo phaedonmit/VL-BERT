@@ -49,7 +49,10 @@ class Multi30kDataset(Dataset):
 
         annot = {'train': 'train_frcnn.json',
                  'val': 'val_frcnn.json',
-                 'test': 'test_frcnn.json'}
+                 'test': 'test_frcnn.json',
+                 'train_fr': 'train_fr_frcnn.json',
+                 'val_fr': 'val_fr_frcnn.json',
+                 'test_fr': 'test_fr_frcnn.json'}
 
         self.seq_len = seq_len
         self.with_rel_task = with_rel_task
@@ -75,7 +78,7 @@ class Multi30kDataset(Dataset):
         self.tokenizer = tokenizer if tokenizer is not None \
             else BertTokenizer.from_pretrained(
             'bert-base-uncased' if pretrained_model_name is None else pretrained_model_name,
-            cache_dir=self.cache_dir)
+            cache_dir=self.cache_dir, do_lower_case=False)
 
         self.zipreader = ZipReader()
 
