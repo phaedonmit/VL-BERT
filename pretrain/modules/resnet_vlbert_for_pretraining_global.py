@@ -223,6 +223,11 @@ class ResNetVLBERTForPretrainingGlobal(Module):
                 = text_visual_embeddings_list[i]
             object_vl_embeddings_multi[cur_start:cur_stop, :object_vl_embeddings_list[i].shape[1], :] = object_vl_embeddings_list[i]
             box_mask_multi[cur_start:cur_stop, :boxes_mask_list[i].shape[1]] = boxes_mask_list[i]
+            print("*************")
+            print('Dataset ', i, ': ')
+            print('Start: ', cur_start)
+            print('Stop: ', cur_stop)
+
 
             cur_start = cur_stop
 
