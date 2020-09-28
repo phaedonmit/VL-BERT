@@ -223,6 +223,11 @@ class ResNetVLBERTForPretrainingGlobal(Module):
                 = text_visual_embeddings_list[i]
             object_vl_embeddings_multi[cur_start:cur_stop, :object_vl_embeddings_list[i].shape[1], :] = object_vl_embeddings_list[i]
             box_mask_multi[cur_start:cur_stop, :boxes_mask_list[i].shape[1]] = boxes_mask_list[i]
+            print("*************")
+            print('Dataset ', i, ': ')
+            print('Start: ', cur_start)
+            print('Stop: ', cur_stop)
+
 
             cur_start = cur_stop
 
@@ -274,7 +279,7 @@ class ResNetVLBERTForPretrainingGlobal(Module):
         if self.config.NETWORK.WITH_REL_LOSS:
             relationship_logits = relationship_logits_multi[:text_input_ids.shape[0]]
             relationship_loss = F.cross_entropy(relationship_logits, relationship_label)
-        if self.config.NETWORK.WITH_MLM_LOSS and self.config.NETWORK.WITH_MVRC_LOSS:
+        if self.config.NETWORK.WITH_MLM_LOSS:
             mlm_labels_multi = mlm_labels_list[0].new_zeros((total_examples, max_global_text_len)).fill_(
                 -1)
             mvrc_labels_multi = mvrc_labels_list[0].new_zeros((total_examples, max_global_len, mvrc_labels_list[-1].shape[2])).fill_(
@@ -286,33 +291,105 @@ class ResNetVLBERTForPretrainingGlobal(Module):
                 cur_stop += mlm_labels_list[i].shape[0]
 
                 mlm_labels_multi[cur_start:cur_stop, :mlm_labels_list[i].shape[1]] = mlm_labels_list[i]
+                # print('Size mvrc_labels_multi:', mvrc_labels_multi.shape)
+                # print('Size mvrc_labels_list[i]:', mvrc_labels_list[i].shape)
+                # exit()
+                # print("*************")
+                # print('Dataset ', i, ': ')
+                # print('Start: ', cur_start)
+                # print('Stop: ', cur_stop)
+
                 mvrc_labels_multi[cur_start:cur_stop, :mvrc_labels_list[i].shape[1]] = mvrc_labels_list[i]
+
+                # initialise in first pass
+                if i==0: 
+                    mlm_logits_multi_padded = \
+                        mlm_logits_multi.new_zeros((*mlm_labels_multi.shape, mlm_logits_multi.shape[-1])).fill_(-10000.0)
+                # TODO: FIX THIS!!!
+                mlm_logits_multi_padded[cur_start:cur_stop, :mlm_logits_multi.shape[1]] = mlm_logits_multi[cur_start:cur_stop]
+                # mlm_logits_multi = mlm_logits_multi_padded
+            
+                mlm_logits_list.append(mlm_logits_multi_padded[cur_start:cur_stop])
+                mlm_labels_dataset_list.append(mlm_labels_multi[cur_start:cur_stop])
+
+
+                if self.config.NETWORK.MLM_LOSS_NORM_IN_BATCH_FIRST:
+                    mlm_loss_wvc = F.cross_entropy(mlm_logits_wvc.transpose(1, 2),
+                                                mlm_labels_wvc,
+                                                ignore_index=-1, reduction='none')
+                    num_mlm_wvc = (mlm_labels_wvc != -1).sum(1, keepdim=True).to(dtype=mlm_loss_wvc.dtype)
+                    num_has_mlm_wvc = (num_mlm_wvc != 0).sum().to(dtype=mlm_loss_wvc.dtype)
+                    mlm_loss_wvc = (mlm_loss_wvc / (num_mlm_wvc + 1e-4)).sum() / (num_has_mlm_wvc + 1e-4)
+                    mlm_loss_aux = F.cross_entropy(mlm_logits_aux.transpose(1, 2),
+                                                mlm_labels_aux,
+                                                ignore_index=-1, reduction='none')
+                    num_mlm_aux = (mlm_labels_aux != -1).sum(1, keepdim=True).to(dtype=mlm_loss_aux.dtype)
+                    num_has_mlm_aux = (num_mlm_aux != 0).sum().to(dtype=mlm_loss_aux.dtype)
+                    mlm_loss_aux = (mlm_loss_aux / (num_mlm_aux + 1e-4)).sum() / (num_has_mlm_aux + 1e-4)
+                else:
+                    mlm_loss_list.append(F.cross_entropy(
+                        mlm_logits_list[i].view((-1, mlm_logits_list[i].shape[-1])),
+                        mlm_labels_dataset_list[i].view(-1),
+                        ignore_index=-1
+                    ))
+                    # TODO: check this!!!!
+                    # mlm_loss_list.append(F.cross_entropy(
+                    #     mlm_logits_list[i].view((-1, mlm_logits_multi_padded.shape[-1])),
+                    #     mlm_labels_list[i].view(-1),
+                    #     ignore_index=-1
+                    # ))
+
+                ########################################################
+                # ########### MVRC loss
+
+                if self.config.NETWORK.WITH_MVRC_LOSS:
+                     # mvrc_logits_multi = mvrc_logits_multi_padded
+                    
+                    mvrc_logits_list.append(mvrc_logits_multi[cur_start:cur_stop, :mvrc_labels_list[i].shape[1]])
+                    # mvrc_labels_list.append(mvrc_labels_multi[cur_start:cur_stop])     
+
+                    
+                    if self.config.NETWORK.MVRC_LOSS_NORM_IN_BATCH_FIRST:
+                        mvrc_loss = soft_cross_entropy(
+                            mvrc_logits.contiguous().view(-1, mvrc_logits.shape[-1]),
+                            mvrc_labels.contiguous().view(-1, mvrc_logits.shape[-1]),
+                            reduction='none').view(mvrc_logits.shape[:-1])
+                        valid = (mvrc_labels.sum(-1) - 1).abs() < 1.0e-1
+                        mvrc_loss = (mvrc_loss / (valid.sum(1, keepdim=True).to(dtype=mvrc_loss.dtype) + 1e-4)) \
+                                        .sum() / ((valid.sum(1) != 0).sum().to(dtype=mvrc_loss.dtype) + 1e-4)
+                    else:
+                        mvrc_loss_list.append(soft_cross_entropy(mvrc_logits_list[i].contiguous().view(-1, mvrc_logits_list[i].shape[-1]),
+                                                    mvrc_labels_list[i].contiguous().view(-1, mvrc_logits_list[i].shape[-1])))
+                    
+                    if i==0:
+                        mvrc_logits_multi_padded = \
+                        mvrc_logits_multi.new_zeros((*mvrc_labels_multi.shape)).fill_(-10000.0)
+                    mvrc_logits_multi_padded[cur_start:cur_stop, :mvrc_logits_multi.shape[1]] = mvrc_logits_multi[cur_start:cur_stop]
+
+                    # mvrc_logits_padded[:, :mvrc_logits.shape[1]] = mvrc_logits
+                    # mvrc_logits = mvrc_logits_padded
+                    # mvrc_labels_padded = mvrc_labels.new_zeros((mvrc_labels.shape[0], origin_len, mvrc_labels.shape[2])).fill_(
+                    #     0.0)
+                    # mvrc_labels_padded[:, :mvrc_labels.shape[1]] = mvrc_labels_list
+                    # mvrc_labels = mvrc_labels_padded                    
+
+                    # add to list
+                    # mvrc_logits_list.append(mvrc_logits)
+                    # mvrc_loss_list.append(mvrc_loss)
+                    # mvrc_labels_list[i] = mvrc_labels
+
+                    #STOPPED HERE!!!!!! DICTIONARY OF ALL LOGITS
+                    outputs_dict['mlm_logits_'+str(i)]=mlm_logits_list[i]
+                    outputs_dict['mlm_label_'+str(i)]=mlm_labels_dataset_list[i]
+                    outputs_dict['mlm_loss_'+str(i)]=mlm_loss_list[i]
+                    outputs_dict['mvrc_logits_'+str(i)]=mvrc_logits_list[i]
+                    outputs_dict['mvrc_label_'+str(i)]=mvrc_labels_list[i]
+                    outputs_dict['mvrc_loss_'+str(i)]=mvrc_loss_list[i]
                 
+                # calculate total loss
+                loss += mlm_loss_list[i].mean() + mvrc_loss_list[i].mean()
                 cur_start = cur_stop
 
-            mlm_loss = (F.cross_entropy(
-                mlm_logits_multi.view((-1, mlm_logits_multi.shape[-1])),
-                mlm_labels_multi.view(-1),
-                ignore_index=-1
-            ))
-
-            mvrc_loss = (soft_cross_entropy(mvrc_logits_multi.contiguous().view(-1, mvrc_logits_multi.shape[-1]),
-                                        mvrc_labels_multi.contiguous().view(-1, mvrc_logits_multi.shape[-1])))
-                
-
-            # calculate total loss
-            loss = mlm_loss.mean() + mvrc_loss.mean()
-
-            for i in range(num_datasets):
-
-                #STOPPED HERE!!!!!! DICTIONARY OF ALL LOGITS
-                outputs_dict['mlm_logits_'+str(i)]=mlm_logits_multi
-                outputs_dict['mlm_label_'+str(i)]=mlm_labels_multi
-                outputs_dict['mlm_loss_'+str(i)]=mlm_loss
-                outputs_dict['mvrc_logits_'+str(i)]=mvrc_logits_multi
-                outputs_dict['mvrc_label_'+str(i)]=mvrc_labels_multi
-                outputs_dict['mvrc_loss_'+str(i)]=mvrc_loss
-                
         outputs.update(outputs_dict)
         # outputs.update({
         #     'relationship_logits': relationship_logits if self.config.NETWORK.WITH_REL_LOSS else None,
