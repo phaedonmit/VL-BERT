@@ -10,8 +10,8 @@ import operator
 import sacrebleu
 import unidecode
 
-model = "IC009_5x_model_test2016"
-filepath = "/experiments/faidon/VL-BERT/checkpoints/IC009_5x_MT_LR6_MT_test2015.json"
+model = "GLOBAL002_IC_test2016_epoch007"
+filepath = "/experiments/faidon/test/VL-BERT/checkpoints/output/pretrain/vl-bert/base_prec_16x16G_fp16_MT_LR6_global/GLOBAL_001_IC_start_taskA_epoch007_MT_test2015.json"
 
 with open(filepath) as json_file:
     data = json.load(json_file)

@@ -15,8 +15,8 @@ SCALES:
 DATASET:
   DATASET: multi30k_image_only
   APPEND_INDEX: false
-  DATASET_PATH: './data/flickr30k'
-  ROOT_PATH: './'
+  DATASET_PATH: '/experiments/faidon/VL-BERT/data/flickr30k'
+  ROOT_PATH: '/experiments/faidon/VL-BERT/'
   TRAIN_IMAGE_SET: 'train'
   VAL_IMAGE_SET: 'val'
   TEST_IMAGE_SET: 'val'
@@ -52,7 +52,7 @@ NETWORK:
   IMAGE_FINAL_DIM: 768
   IMAGE_SEMANTIC: false
   OUTPUT_CONV5: false
-  BERT_MODEL_NAME: './model/pretrained_model/bert-base-multilingual-cased'
+  BERT_MODEL_NAME: '/experiments/faidon/VL-BERT/model/pretrained_model/bert-base-multilingual-cased'
   BERT_PRETRAINED: ''
   BERT_PRETRAINED_EPOCH: 0
   BERT_FROZEN: false
