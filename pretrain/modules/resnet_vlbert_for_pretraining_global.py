@@ -278,7 +278,7 @@ class ResNetVLBERTForPretrainingGlobal(Module):
             mlm_labels_multi = mlm_labels_list[0].new_zeros((total_examples, max_global_text_len)).fill_(
                 -1)
             mvrc_labels_multi = mvrc_labels_list[0].new_zeros((total_examples, max_global_len, mvrc_labels_list[-1].shape[2])).fill_(
-                -1)    
+                0)    
 
             cur_start = 0
             cur_stop = 0                 
@@ -288,30 +288,28 @@ class ResNetVLBERTForPretrainingGlobal(Module):
                 mlm_labels_multi[cur_start:cur_stop, :mlm_labels_list[i].shape[1]] = mlm_labels_list[i]
                 mvrc_labels_multi[cur_start:cur_stop, :mvrc_labels_list[i].shape[1]] = mvrc_labels_list[i]
                 
+                mlm_loss_list.append(F.cross_entropy(
+                    mlm_logits_multi[cur_start:cur_stop].view((-1, mlm_logits_multi[cur_start:cur_stop].shape[-1])),
+                    mlm_labels_multi[cur_start:cur_stop].view(-1),
+                    ignore_index=-1
+                ))
+
+                mvrc_loss_list.append(soft_cross_entropy(mvrc_logits_multi[cur_start:cur_stop].contiguous().view(-1, mvrc_logits_multi[cur_start:cur_stop].shape[-1]),
+                                            mvrc_labels_multi[cur_start:cur_stop].contiguous().view(-1, mvrc_logits_multi[cur_start:cur_stop].shape[-1])))
+                
+                 #STOPPED HERE!!!!!! DICTIONARY OF ALL LOGITS
+                outputs_dict['mlm_logits_'+str(i)]=mlm_logits_multi[cur_start:cur_stop]
+                outputs_dict['mlm_label_'+str(i)]=mlm_labels_multi[cur_start:cur_stop]
+                outputs_dict['mlm_loss_'+str(i)]=mlm_loss_list[i]
+                outputs_dict['mvrc_logits_'+str(i)]=mvrc_logits_multi[cur_start:cur_stop]
+                outputs_dict['mvrc_label_'+str(i)]=mvrc_labels_multi[cur_start:cur_stop]
+                outputs_dict['mvrc_loss_'+str(i)]=mvrc_loss_list[i]
+                
+                # calculate total loss
+                loss = mlm_loss_list[i].mean() + mvrc_loss_list[i].mean()
+                
                 cur_start = cur_stop
 
-            mlm_loss = (F.cross_entropy(
-                mlm_logits_multi.view((-1, mlm_logits_multi.shape[-1])),
-                mlm_labels_multi.view(-1),
-                ignore_index=-1
-            ))
-
-            mvrc_loss = (soft_cross_entropy(mvrc_logits_multi.contiguous().view(-1, mvrc_logits_multi.shape[-1]),
-                                        mvrc_labels_multi.contiguous().view(-1, mvrc_logits_multi.shape[-1])))
-                
-
-            # calculate total loss
-            loss = mlm_loss.mean() + mvrc_loss.mean()
-
-            for i in range(num_datasets):
-
-                #STOPPED HERE!!!!!! DICTIONARY OF ALL LOGITS
-                outputs_dict['mlm_logits_'+str(i)]=mlm_logits_multi
-                outputs_dict['mlm_label_'+str(i)]=mlm_labels_multi
-                outputs_dict['mlm_loss_'+str(i)]=mlm_loss
-                outputs_dict['mvrc_logits_'+str(i)]=mvrc_logits_multi
-                outputs_dict['mvrc_label_'+str(i)]=mvrc_labels_multi
-                outputs_dict['mvrc_loss_'+str(i)]=mvrc_loss
                 
         outputs.update(outputs_dict)
         # outputs.update({

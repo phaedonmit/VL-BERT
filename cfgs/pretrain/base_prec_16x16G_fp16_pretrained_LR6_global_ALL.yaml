@@ -56,6 +56,76 @@ DATASET:
   MASK_SIZE: 14
   LANG: 'both'
 
+- DATASET: multi30k_single
+  APPEND_INDEX: false
+  DATASET_PATH: './data/flickr30k'
+  ROOT_PATH: './'
+  TRAIN_IMAGE_SET: 'train'
+  VAL_IMAGE_SET: 'val'
+  TEST_IMAGE_SET: 'val'
+  ADD_IMAGE_AS_A_BOX: true
+  ZIP_MODE: false
+  CACHE_MODE: false
+  IGNORE_DB_CACHE: false
+  MASK_SIZE: 14
+  LANG: 'first'
+
+- DATASET: multi30k_single
+  APPEND_INDEX: false
+  DATASET_PATH: './data/flickr30k'
+  ROOT_PATH: './'
+  TRAIN_IMAGE_SET: 'train'
+  VAL_IMAGE_SET: 'val'
+  TEST_IMAGE_SET: 'val'
+  ADD_IMAGE_AS_A_BOX: true
+  ZIP_MODE: false
+  CACHE_MODE: false
+  IGNORE_DB_CACHE: false
+  MASK_SIZE: 14
+  LANG: 'second'
+
+- DATASET: multi30k_single
+  APPEND_INDEX: false
+  DATASET_PATH: './data/flickr30k'
+  ROOT_PATH: './'
+  TRAIN_IMAGE_SET: 'train_fr'
+  VAL_IMAGE_SET: 'val_fr'
+  TEST_IMAGE_SET: 'val_fr'
+  ADD_IMAGE_AS_A_BOX: true
+  ZIP_MODE: false
+  CACHE_MODE: false
+  IGNORE_DB_CACHE: false
+  MASK_SIZE: 14
+  LANG: 'second'
+
+- DATASET: multi30k_single
+  APPEND_INDEX: false
+  DATASET_PATH: './data/flickr30k'
+  ROOT_PATH: './'
+  TRAIN_IMAGE_SET: 'train_cs'
+  VAL_IMAGE_SET: 'val_cs'
+  TEST_IMAGE_SET: 'val_cs'
+  ADD_IMAGE_AS_A_BOX: true
+  ZIP_MODE: false
+  CACHE_MODE: false
+  IGNORE_DB_CACHE: false
+  MASK_SIZE: 14
+  LANG: 'second'
+
+- DATASET: multi30k_single
+  APPEND_INDEX: false
+  DATASET_PATH: './data/flickr30k'
+  ROOT_PATH: './'
+  TRAIN_IMAGE_SET: 'train_tu'
+  VAL_IMAGE_SET: 'val_tu'
+  TEST_IMAGE_SET: 'val_tu'
+  ADD_IMAGE_AS_A_BOX: true
+  ZIP_MODE: false
+  CACHE_MODE: false
+  IGNORE_DB_CACHE: false
+  MASK_SIZE: 14
+  LANG: 'second'
+
 NETWORK:
   PARTIAL_PRETRAIN: "/data/faidon/VL-BERT/model/pretrained_model/vl-bert-base-prec.model"
   PARTIAL_PRETRAIN_PREFIX_CHANGES: []
@@ -116,9 +186,14 @@ TRAIN:
   SHUFFLE: true
   FLIP_PROB: 0.5
   BATCH_IMAGES:
-  - 4
-  - 4
-  - 4 
+  - 2
+  - 2
+  - 2
+  - 2
+  - 2
+  - 2
+  - 2
+  - 2  
   ASPECT_GROUPING: false
   RESUME: false
   AUTO_RESUME: true
@@ -147,6 +222,11 @@ VAL:
   - 2
   - 2
   - 2
+  - 2
+  - 2
+  - 2
+  - 2
+  - 2 
 
 TEST:
   SHUFFLE: false
@@ -156,3 +236,8 @@ TEST:
   - 2
   - 2
   - 2
+  - 2
+  - 2
+  - 2
+  - 2
+  - 2 

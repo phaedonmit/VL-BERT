@@ -12,6 +12,7 @@ DATASET_CATALOGS = {'conceptual_captions': ConceptualCaptionsDataset,
                     # 'coco_captions': COCOCaptionsDataset,
                     'general_corpus': GeneralCorpus, 
                     'multi30k': Multi30kDataset,
+                    'multi30k_single': Multi30kDatasetSingle,
                     'multi30k_taskB': Multi30kTaskBDataset,
                     'parallel_text': ParallelTextDataset
                     }
@@ -93,7 +94,8 @@ def make_dataloader(cfg, dataset=None, mode='train', distributed=False, num_repl
                                 add_image_as_a_box=cfg.DATASET.ADD_IMAGE_AS_A_BOX,
                                 aspect_grouping=aspect_grouping,
                                 mask_size=(cfg.DATASET.MASK_SIZE, cfg.DATASET.MASK_SIZE),
-                                pretrained_model_name=cfg.NETWORK.BERT_MODEL_NAME)
+                                pretrained_model_name=cfg.NETWORK.BERT_MODEL_NAME,
+                                lang=cfg.DATASET.LANG)
 
     sampler = make_data_sampler(dataset, shuffle, distributed, num_replicas, rank)
     batch_sampler = make_batch_data_sampler(dataset, sampler, aspect_grouping, batch_size)

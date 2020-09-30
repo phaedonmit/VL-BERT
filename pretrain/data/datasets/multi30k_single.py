@@ -16,7 +16,7 @@ from common.utils.zipreader import ZipReader
 from common.utils.create_logger import makedirsExist
 
 
-class Multi30kDataset(Dataset):
+class Multi30kDatasetSingle(Dataset):
     def __init__(self, ann_file, image_set, root_path, data_path, seq_len=64,
                  with_precomputed_visual_feat=False, mask_raw_pixels=True,
                  with_rel_task=True, with_mlm_task=True, with_mvrc_task=True,
@@ -24,7 +24,7 @@ class Multi30kDataset(Dataset):
                  zip_mode=False, cache_mode=False, cache_db=False, ignore_db_cache=True,
                  tokenizer=None, pretrained_model_name=None,
                  add_image_as_a_box=False,
-                 aspect_grouping=False, lang='both', **kwargs):
+                 aspect_grouping=False, lang='second', **kwargs):
         """
         Conceptual Captions Dataset
 
@@ -42,7 +42,7 @@ class Multi30kDataset(Dataset):
         :param aspect_grouping: whether to group images via their aspect
         :param kwargs:
         """
-        super(Multi30kDataset, self).__init__()
+        super(Multi30kDatasetSingle, self).__init__()
 
         assert not cache_mode, 'currently not support cache mode!'
         assert not test_mode
@@ -55,7 +55,10 @@ class Multi30kDataset(Dataset):
                  'test_fr': 'test_fr_frcnn.json',
                  'train_cs': 'train_cs_frcnn.json',
                  'val_cs': 'val_cs_frcnn.json',
-                 'test_cs': 'test_cs_frcnn.json'
+                 'test_cs': 'test_cs_frcnn.json',
+                 'train_tu': 'train_turkish_frcnn.json',
+                 'val_tu': 'val_turkish_frcnn.json',
+                 'test_tu': 'test_turkish_frcnn.json',
                  }
 
         self.seq_len = seq_len
@@ -85,6 +88,7 @@ class Multi30kDataset(Dataset):
             cache_dir=self.cache_dir, do_lower_case=False)
 
         self.zipreader = ZipReader()
+        self.lang = lang
 
         # FM: Customise for multi30k dataset
         self.database = list(jsonlines.open(self.ann_file))
@@ -166,32 +170,45 @@ class Multi30kDataset(Dataset):
         _p = random.random()
         if _p < 0.5 or (not self.with_rel_task):
             relationship_label = 1
-            caption_en = idb['caption_en']
-            caption_de = idb['caption_de']
+            if self.lang=='first':
+                caption_en = idb['caption_en']
+            else:
+                caption_de = idb['caption_de']
         else:
             relationship_label = 0
             rand_index = random.randrange(0, len(self.database))
             while rand_index == index:
                 rand_index = random.randrange(0, len(self.database))
-            caption_en =self.database[rand_index]['caption_en']
-            caption_de =self.database[rand_index]['caption_de']
+            if self.lang=='first':
+                caption_en =self.database[rand_index]['caption_en']
+            else:
+                caption_de =self.database[rand_index]['caption_de']
 
         # Task #2: Masked Language Modeling - Adapted for two languages
 
         if self.with_mlm_task:
             # FM: removing joining of caption - split into two languages
-            caption_tokens_en = self.tokenizer.basic_tokenizer.tokenize(caption_en)
-            caption_tokens_en, mlm_labels_en = self.random_word_wwm(caption_tokens_en)
-            caption_tokens_de = self.tokenizer.basic_tokenizer.tokenize(caption_de)
-            caption_tokens_de, mlm_labels_de = self.random_word_wwm(caption_tokens_de)
+            if self.lang=='first':            
+                caption_tokens_en = self.tokenizer.basic_tokenizer.tokenize(caption_en)
+                caption_tokens_en, mlm_labels_en = self.random_word_wwm(caption_tokens_en)
+            else:
+                caption_tokens_de = self.tokenizer.basic_tokenizer.tokenize(caption_de)
+                caption_tokens_de, mlm_labels_de = self.random_word_wwm(caption_tokens_de)
         else:
-            caption_tokens_en = self.tokenizer.tokenize(caption_en)
-            caption_tokens_de = self.tokenizer.tokenize(caption_de)
-            mlm_labels_en = [-1] * len(caption_tokens_en)
-            mlm_labels_de = [-1] * len(caption_tokens_de)
+            if self.lang=='first':            
+                caption_tokens_en = self.tokenizer.tokenize(caption_en)
+                mlm_labels_en = [-1] * len(caption_tokens_en)
+            else:
+                caption_tokens_de = self.tokenizer.tokenize(caption_de)
+                mlm_labels_de = [-1] * len(caption_tokens_de)
         
-        text_tokens = ['[CLS]'] + caption_tokens_en + ['[SEP]'] + caption_tokens_de + ['[SEP]']
-        mlm_labels = [-1] + mlm_labels_en + [-1] + mlm_labels_de + [-1]
+        # FM edit: only use one language at a time for single language
+        if self.lang == 'first':
+            text_tokens = ['[CLS]'] + caption_tokens_en + ['[SEP]']
+            mlm_labels = [-1] + mlm_labels_en + [-1]
+        else:
+            text_tokens = ['[CLS]'] + caption_tokens_de + ['[SEP]']
+            mlm_labels = [-1] + mlm_labels_de + [-1]
 
         # Task #3: Masked Visual Region Classification
         if self.with_mvrc_task:
