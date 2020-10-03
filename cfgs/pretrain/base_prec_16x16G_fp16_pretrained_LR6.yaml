@@ -26,6 +26,7 @@ DATASET:
   CACHE_MODE: false
   IGNORE_DB_CACHE: false
   MASK_SIZE: 14
+  LANG: 'both'
 
 - DATASET: general_corpus
   TRAIN_ANNOTATION_FILE: './data/en_corpus/bc1g.doc+./data/en_corpus/wiki.doc'
@@ -33,6 +34,7 @@ DATASET:
   TEST_ANNOTATION_FILE: './data/en_corpus/bc1g.doc'
   SEQ_LEN: 96
   MIN_SEQ_LEN: 96
+  LANG: 'both'  
 
 NETWORK:
   PARTIAL_PRETRAIN: "/data/faidon/VL-BERT/model/pretrained_model/vl-bert-base-prec.model"

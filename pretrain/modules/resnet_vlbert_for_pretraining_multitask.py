@@ -229,15 +229,21 @@ class ResNetVLBERTForPretrainingMultitask(Module):
                 -1)
             mlm_labels_multi[:text_input_ids.shape[0], :mlm_labels.shape[1]] = mlm_labels
             mlm_labels_multi[text_input_ids.shape[0]:, :aux_text_mlm_labels.shape[1]] = aux_text_mlm_labels
-
+            # print('****************')
+            # print('shape mlm_labels_multi: ', mlm_labels_multi.shape)
+            # print('shape mlm_logits_multi: ', mlm_logits_multi.shape)
             mlm_logits_multi_padded = \
                 mlm_logits_multi.new_zeros((*mlm_labels_multi.shape, mlm_logits_multi.shape[-1])).fill_(-10000.0)
             mlm_logits_multi_padded[:, :mlm_logits_multi.shape[1]] = mlm_logits_multi
+            # print('shape mlm_logits_multi_padded: ', mlm_logits_multi_padded.shape)
             mlm_logits_multi = mlm_logits_multi_padded
-            mlm_logits_wvc = mlm_logits_multi_padded[:text_input_ids.shape[0]]
-            mlm_labels_wvc = mlm_labels_multi[:text_input_ids.shape[0]]
-            mlm_logits_aux = mlm_logits_multi_padded[text_input_ids.shape[0]:]
-            mlm_labels_aux = mlm_labels_multi[text_input_ids.shape[0]:]
+            # print('shape mlm_logits_multi: ', mlm_logits_multi.shape)
+            # exit()
+
+            # mlm_logits_wvc = mlm_logits_multi_padded[:text_input_ids.shape[0]]
+            # mlm_labels_wvc = mlm_labels_multi[:text_input_ids.shape[0]]
+            # mlm_logits_aux = mlm_logits_multi_padded[text_input_ids.shape[0]:]
+            # mlm_labels_aux = mlm_labels_multi[text_input_ids.shape[0]:]
             if self.config.NETWORK.MLM_LOSS_NORM_IN_BATCH_FIRST:
                 mlm_loss_wvc = F.cross_entropy(mlm_logits_wvc.transpose(1, 2),
                                                mlm_labels_wvc,
@@ -255,6 +261,7 @@ class ResNetVLBERTForPretrainingMultitask(Module):
                 # mlm_loss = F.cross_entropy(mlm_logits_multi_padded.view((-1, mlm_logits_multi_padded.shape[-1])),
                 #                            mlm_labels_multi.view(-1),
                 #                            ignore_index=-1)
+
                 mlm_loss_wvc = F.cross_entropy(
                     mlm_logits_wvc.view((-1, mlm_logits_multi_padded.shape[-1])),
                     mlm_labels_wvc.view(-1),

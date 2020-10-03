@@ -262,14 +262,13 @@ class ResNetVLBERTForPretrainingGlobal(Module):
         # relationship_loss = im_info_list.new_zeros(())
         # mlm_loss = im_info_list.new_zeros(())
         # mvrc_loss = im_info.new_zeros(())
-        # TODO: loss lists need to be defined as torch??
         mlm_logits_list = []
         mlm_loss_list = []
         mvrc_logits_list = []
         mvrc_loss_list = []
         outputs_dict = {}
         mlm_labels_dataset_list = []
-        loss = 0 
+        loss = im_info_list[-1].new_zeros(())
 
         if self.config.NETWORK.WITH_REL_LOSS:
             relationship_logits = relationship_logits_multi[:text_input_ids.shape[0]]

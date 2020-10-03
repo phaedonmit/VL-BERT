@@ -2,7 +2,7 @@
 RNG_SEED: 12345
 OUTPUT_PATH: './output/pretrain/vl-bert'
 MODULE: ResNetVLBERTForPretrainingGlobal
-GPUS: '6'
+GPUS: '5'
 LOG_FREQUENT: 100
 VAL_FREQUENT: 1
 CHECKPOINT_FREQUENT: 1
