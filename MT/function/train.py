@@ -264,6 +264,10 @@ def train_net(args, config):
             val_metrics_list.append(pretrain_metrics.MLMAccuracyDataset1(**metric_kwargs))
             val_metrics_list.append(pretrain_metrics.MLMAccuracyDataset2(**metric_kwargs))
             val_metrics_list.append(pretrain_metrics.MLMAccuracyDataset3(**metric_kwargs))
+        elif config.MODULE=='ResNetVLBERTForPretrainingGlobal':
+            for i in range(len(config.DATASET)):                                
+                train_metrics_list.append(pretrain_metrics.MLMAccuracyGlobal(**metric_kwargs, eval_name=str(i)))
+                val_metrics_list.append(pretrain_metrics.MLMAccuracyGlobal(**metric_kwargs, eval_name=str(i)))            
         else:
             train_metrics_list.append(pretrain_metrics.MLMAccuracy(**metric_kwargs))
             val_metrics_list.append(pretrain_metrics.MLMAccuracy(**metric_kwargs))

@@ -211,10 +211,15 @@ TRAIN:
   FP16: false
   FP16_LOSS_SCALE: 128.0
   LOSS_LOGGERS:
-  - "mlm_loss_wvc,MLMLossWVC"
-  - "mlm_loss_aux,MLMLossAUX"
-  - "mvrc_loss,MVRCLoss"
-
+  - "mlm_loss_0,MLMLoss0"
+  - "mlm_loss_1,MLMLoss1"
+  - "mlm_loss_2,MLMLoss2"
+  - "mlm_loss_3,MLMLoss3"
+  - "mlm_loss_4,MLMLoss4"
+  - "mlm_loss_5,MLMLoss5"
+  - "mlm_loss_6,MLMLoss6"
+  - "mlm_loss_7,MLMLoss7"
+  
 VAL:
   SHUFFLE: false
   FLIP_PROB: 0

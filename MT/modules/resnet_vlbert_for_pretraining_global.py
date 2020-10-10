@@ -30,7 +30,8 @@ class ResNetVLBERTForPretrainingGlobal(Module):
         self.aux_text_visual_embedding = nn.Embedding(1, config.NETWORK.VLBERT.hidden_size)
         self.image_feature_bn_eval = config.NETWORK.IMAGE_FROZEN_BN
         self.tokenizer = BertTokenizer.from_pretrained(config.NETWORK.BERT_MODEL_NAME)
-        
+        self.num_datasets = len(config.DATASET)
+
         # Can specify pre-trained model or use the downloaded pretrained model specific in .yaml file
         language_pretrained_model_path = None        
         if config.NETWORK.BERT_PRETRAINED != '':
@@ -112,9 +113,9 @@ class ResNetVLBERTForPretrainingGlobal(Module):
                 # *aux):
 
         # concat aux texts from different dataset
-        assert len(args) % 8 == 0
-        num_datasets = int(len(args)/8)
-        # num_datasets = 1
+        # assert len(args) % 8 == 0
+        # num_datasets = int(len(args)/8)
+        num_datasets = self.num_datasets
         image_list = []
         boxes_list = []
         boxes_mask_list = []
@@ -125,6 +126,8 @@ class ResNetVLBERTForPretrainingGlobal(Module):
         mvrc_ops_list = []
         mvrc_labels_list = []
 
+        has_visual = []
+
         max_global_len = 0
         max_global_text_len = 0
 
@@ -132,32 +135,48 @@ class ResNetVLBERTForPretrainingGlobal(Module):
 
         ###########################################
         ## Step 1 - Loop through all to get sizes
-
+        ref = 0
+        vis_i = 0
         for i in range(num_datasets):
-            ref = i*8
-            image_list.append(args[ref])
-            boxes_list.append(args[ref+1])
-            boxes_mask_list.append((args[ref+1])[:, :, 0] > -1.5)
-            im_info_list.append(args[ref+2])
-            text_list.append(args[ref+3])
-            relationship_label_list.append(args[ref+4])
-            mlm_labels_list.append(args[ref+5])
-            mvrc_ops_list.append(args[ref+6])
-            mvrc_labels_list.append(args[ref+7])
-            
-            vis_len = int(boxes_mask_list[i].sum(1).max().item())
-            if vis_len > max_global_len:
-                max_global_len = vis_len
-            text_len = text_list[i].shape[1]
-            if text_len > max_global_text_len:
-                max_global_text_len = text_len 
-            
+            if args[ref] is None:
+                has_visual.append(True)
+            else:
+                has_visual.append(False)
+            if has_visual[i]:
+                image_list.append(args[ref])
+                boxes_list.append(args[ref+1])
+                boxes_mask_list.append((args[ref+1])[:, :, 0] > -1.5)
+                im_info_list.append(args[ref+2])
+                text_list.append(args[ref+3])
+                relationship_label_list.append(args[ref+4])
+                mlm_labels_list.append(args[ref+5])
+                mvrc_ops_list.append(args[ref+6])
+                mvrc_labels_list.append(args[ref+7])
+                
+                vis_len = int(boxes_mask_list[vis_i].sum(1).max().item())
+                if vis_len > max_global_len:
+                    max_global_len = vis_len
+                text_len = text_list[i].shape[1]
+                if text_len > max_global_text_len:
+                    max_global_text_len = text_len 
+                ref += 8
+                vis_i += 1
+            else:              
+                text_list.append(args[ref])
+                relationship_label_list.append(args[ref+1])
+                mlm_labels_list.append(args[ref+2])
+                
+                text_len = text_list[i].shape[1]
+                if text_len > max_global_text_len:
+                    max_global_text_len = text_len                 
+                ref += 3            
             total_examples += text_list[i].shape[0]
             
         ################################################
         # Step 2 - Loop through datasets
         cur_start = 0
         cur_stop = 0 
+        vis_i = 0
         box_features_list = []
         obj_reps_list = []
         text_tags_list = []
@@ -166,27 +185,28 @@ class ResNetVLBERTForPretrainingGlobal(Module):
         object_vl_embeddings_list = []
 
         for i in range(num_datasets):
-            boxes_mask_list[i] = boxes_mask_list[i][:, :max_global_len]
-            boxes_list[i] = boxes_list[i][:, :max_global_len]
-            mvrc_ops_list[i] = mvrc_ops_list[i][:, :max_global_len]
-            mvrc_labels_list[i] = mvrc_labels_list[i][:, :max_global_len]
+            if has_visual[i]:
+                boxes_mask_list[vis_i] = boxes_mask_list[vis_i][:, :max_global_len]
+                boxes_list[vis_i] = boxes_list[vis_i][:, :max_global_len]
+                mvrc_ops_list[vis_i] = mvrc_ops_list[vis_i][:, :max_global_len]
+                mvrc_labels_list[vis_i] = mvrc_labels_list[vis_i][:, :max_global_len]
 
-            if self.config.NETWORK.IMAGE_FEAT_PRECOMPUTED:
-                box_features_list.append(boxes_list[i][:, :, 4:])
-                box_features_list[i][mvrc_ops_list[i] == 1] = self.object_mask_visual_embedding.weight[0]
-                boxes_list[i][:, :, 4:] = box_features_list[i]
+                if self.config.NETWORK.IMAGE_FEAT_PRECOMPUTED:
+                    box_features_list.append(boxes_list[vis_i][:, :, 4:])
+                    box_features_list[vis_i][mvrc_ops_list[vis_i] == 1] = self.object_mask_visual_embedding.weight[0]
+                    boxes_list[vis_i][:, :, 4:] = box_features_list[vis_i]
 
-            obj_reps_list.append(self.image_feature_extractor(images=image_list[i],
-                                                    boxes=boxes_list[i],
-                                                    box_mask=boxes_mask_list[i],
-                                                    im_info=im_info_list[i],
-                                                    classes=None,
-                                                    segms=None,
-                                                    mvrc_ops=mvrc_ops_list[i],
-                                                    mask_visual_embed=self.object_mask_visual_embedding.weight[0]
-                                                    if (not self.config.NETWORK.IMAGE_FEAT_PRECOMPUTED)
-                                                    and (not self.config.NETWORK.MASK_RAW_PIXELS)
-                                                    else None))
+                obj_reps_list.append(self.image_feature_extractor(images=image_list[vis_i],
+                                                        boxes=boxes_list[vis_i],
+                                                        box_mask=boxes_mask_list[vis_i],
+                                                        im_info=im_info_list[vis_i],
+                                                        classes=None,
+                                                        segms=None,
+                                                        mvrc_ops=mvrc_ops_list[vis_i],
+                                                        mask_visual_embed=self.object_mask_visual_embedding.weight[0]
+                                                        if (not self.config.NETWORK.IMAGE_FEAT_PRECOMPUTED)
+                                                        and (not self.config.NETWORK.MASK_RAW_PIXELS)
+                                                        else None))
 
             ############################################
 
@@ -196,35 +216,45 @@ class ResNetVLBERTForPretrainingGlobal(Module):
             cur_stop += text_list[i].shape[0]            
             # creates a text_tags tensor of the same shape as text tensor
             text_tags_list.append(text_list[i].new_zeros(text_list[i].shape))
-            text_visual_embeddings_list.append(self._collect_obj_reps(text_tags_list[i], obj_reps_list[i]['obj_reps']))
+            
+            if has_visual[i]:
+                text_visual_embeddings_list.append(self._collect_obj_reps(text_tags_list[vis_i], obj_reps_list[vis_i]['obj_reps']))
 
-            # linguistic embedding for visual uses [IMG] embedding for all (apart from masked visual)
-            object_linguistic_embeddings_list.append(self.object_linguistic_embeddings(
-                boxes_list[i].new_zeros((boxes_list[i].shape[0], boxes_list[i].shape[1])).long()
-            ))
-            if self.config.NETWORK.WITH_MVRC_LOSS:
-                object_linguistic_embeddings_list[i][mvrc_ops_list[i] == 1] = self.object_mask_word_embedding.weight[0]
-            object_vl_embeddings_list.append(torch.cat((obj_reps_list[i]['obj_reps'], object_linguistic_embeddings_list[i]), -1))
+                # linguistic embedding for visual uses [IMG] embedding for all (apart from masked visual)
+                object_linguistic_embeddings_list.append(self.object_linguistic_embeddings(
+                    boxes_list[vis_i].new_zeros((boxes_list[vis_i].shape[0], boxes_list[vis_i].shape[1])).long()
+                ))
+                if self.config.NETWORK.WITH_MVRC_LOSS:
+                    object_linguistic_embeddings_list[vis_i][mvrc_ops_list[vis_i] == 1] = self.object_mask_word_embedding.weight[0]
+                object_vl_embeddings_list.append(torch.cat((obj_reps_list[vis_i]['obj_reps'], object_linguistic_embeddings_list[vis_i]), -1))
 
             # Initiliase in first pass
             if i==0:
                 text_input_ids_multi = text_list[i].new_zeros((total_examples, max_global_text_len))
-                text_visual_embeddings_multi = text_visual_embeddings_list[i].new_zeros((total_examples,
+                text_visual_embeddings_multi = text_visual_embeddings_list[vis_i].new_zeros((total_examples,
                                                                     max_global_text_len,
-                                                                    text_visual_embeddings_list[i].shape[-1]))
-                object_vl_embeddings_multi = object_vl_embeddings_list[i].new_zeros((total_examples, max_global_len,
-                                                                     object_vl_embeddings_list[i].shape[-1]))
-                box_mask_multi = boxes_mask_list[i].new_zeros((total_examples, max_global_len))
+                                                                    text_visual_embeddings_list[vis_i].shape[-1]))
+                object_vl_embeddings_multi = object_vl_embeddings_list[vis_i].new_zeros((total_examples, max_global_len,
+                                                                     object_vl_embeddings_list[vis_i].shape[-1]))
+                box_mask_multi = boxes_mask_list[vis_i].new_zeros((total_examples, max_global_len))
 
 
             # Concatenates the sub-batches from all dataloaders
-            text_input_ids_multi[cur_start:cur_stop, :text_list[i].shape[1]] = text_list[i]            
-            text_visual_embeddings_multi[cur_start:cur_stop, :text_visual_embeddings_list[i].shape[1]] \
-                = text_visual_embeddings_list[i]
-            object_vl_embeddings_multi[cur_start:cur_stop, :object_vl_embeddings_list[i].shape[1], :] = object_vl_embeddings_list[i]
-            box_mask_multi[cur_start:cur_stop, :boxes_mask_list[i].shape[1]] = boxes_mask_list[i]
+            # print("*************")
+            # print("list shape: ", text_list[i].shape)
+            # print("text_input_ids_multi[cur_start:cur_stop, :text_list[i].shape[1]] shape: ", text_input_ids_multi[cur_start:cur_stop, :text_list[i].shape[1]].shape)
+            # print("text_list[i] shape: ", text_list[i].shape)
+            text_input_ids_multi[cur_start:cur_stop, :text_list[i].shape[1]] = text_list[i]
+            if has_visual[i]:            
+                text_visual_embeddings_multi[cur_start:cur_stop, :text_visual_embeddings_list[vis_i].shape[1]] \
+                    = text_visual_embeddings_list[vis_i]
+                object_vl_embeddings_multi[cur_start:cur_stop, :object_vl_embeddings_list[vis_i].shape[1], :] = object_vl_embeddings_list[vis_i]
+                box_mask_multi[cur_start:cur_stop, :boxes_mask_list[vis_i].shape[1]] = boxes_mask_list[vis_i]
 
             cur_start = cur_stop
+            # TODO: fix to increment if non_visual
+            if has_visual[i]:
+                vis_i+=1
 
         # add final 
         text_token_type_ids_multi = text_input_ids_multi.new_zeros(text_input_ids_multi.shape)
@@ -254,7 +284,12 @@ class ResNetVLBERTForPretrainingGlobal(Module):
                                                                                      object_vl_embeddings_multi,
                                                                                      box_mask_multi)
 
+        # print('Logits: ')
+        # print('logits shape: ', mlm_logits_multi.shape)
+        # exit()
+
         ###########################################
+         ###########################################
         outputs = {}
         
 
@@ -264,8 +299,7 @@ class ResNetVLBERTForPretrainingGlobal(Module):
         # mvrc_loss = im_info.new_zeros(())
         mlm_logits_list = []
         mlm_loss_list = []
-        mvrc_logits_list = []
-        mvrc_loss_list = []
+
         outputs_dict = {}
         mlm_labels_dataset_list = []
         loss = im_info_list[-1].new_zeros(())
@@ -273,11 +307,9 @@ class ResNetVLBERTForPretrainingGlobal(Module):
         if self.config.NETWORK.WITH_REL_LOSS:
             relationship_logits = relationship_logits_multi[:text_input_ids.shape[0]]
             relationship_loss = F.cross_entropy(relationship_logits, relationship_label)
-        if self.config.NETWORK.WITH_MLM_LOSS and self.config.NETWORK.WITH_MVRC_LOSS:
+        if self.config.NETWORK.WITH_MLM_LOSS:
             mlm_labels_multi = mlm_labels_list[0].new_zeros((total_examples, max_global_text_len)).fill_(
                 -1)
-            mvrc_labels_multi = mvrc_labels_list[0].new_zeros((total_examples, max_global_len, mvrc_labels_list[-1].shape[2])).fill_(
-                0)    
 
             cur_start = 0
             cur_stop = 0                 
@@ -285,7 +317,6 @@ class ResNetVLBERTForPretrainingGlobal(Module):
                 cur_stop += mlm_labels_list[i].shape[0]
 
                 mlm_labels_multi[cur_start:cur_stop, :mlm_labels_list[i].shape[1]] = mlm_labels_list[i]
-                mvrc_labels_multi[cur_start:cur_stop, :mvrc_labels_list[i].shape[1]] = mvrc_labels_list[i]
 
                 # compute individual losses for reporting metrics
                 mlm_loss_list.append(F.cross_entropy(
@@ -294,17 +325,11 @@ class ResNetVLBERTForPretrainingGlobal(Module):
                     ignore_index=-1
                 ))
 
-                mvrc_loss_list.append(soft_cross_entropy(mvrc_logits_multi[cur_start:cur_stop].contiguous().view(-1, mvrc_logits_multi[cur_start:cur_stop].shape[-1]),
-                                            mvrc_labels_multi[cur_start:cur_stop].contiguous().view(-1, mvrc_logits_multi[cur_start:cur_stop].shape[-1])))
-                
                 # collect data for metrics
                 outputs_dict['mlm_logits_'+str(i)]=mlm_logits_multi[cur_start:cur_stop]
                 outputs_dict['mlm_label_'+str(i)]=mlm_labels_multi[cur_start:cur_stop]
                 outputs_dict['mlm_loss_'+str(i)]=mlm_loss_list[i]
-                outputs_dict['mvrc_logits_'+str(i)]=mvrc_logits_multi[cur_start:cur_stop]
-                outputs_dict['mvrc_label_'+str(i)]=mvrc_labels_multi[cur_start:cur_stop]
-                outputs_dict['mvrc_loss_'+str(i)]=mvrc_loss_list[i]
-                
+
                 cur_start = cur_stop
 
 
@@ -315,12 +340,7 @@ class ResNetVLBERTForPretrainingGlobal(Module):
                     ignore_index=-1
                 ))
 
-            mvrc_loss = soft_cross_entropy(mvrc_logits_multi.contiguous().view(-1, mvrc_logits_multi.shape[-1]),
-                                            mvrc_labels_multi.contiguous().view(-1, mvrc_logits_multi.shape[-1]))
-
             # # calculate total loss
-            loss = mlm_loss.mean() + mvrc_loss.mean()
-
 
         outputs.update(outputs_dict)
         # outputs.update({
@@ -338,6 +358,6 @@ class ResNetVLBERTForPretrainingGlobal(Module):
         #     'mvrc_loss': mvrc_loss,
         # })
 
-        # loss = relationship_loss.mean() + mlm_loss_wvc.mean() + mlm_loss_aux.mean() + mvrc_loss.mean()
+        loss = mlm_loss.mean() 
 
         return outputs, loss

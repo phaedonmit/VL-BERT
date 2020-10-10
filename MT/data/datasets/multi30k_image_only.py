@@ -25,7 +25,7 @@ class Multi30kDatasetImageOnly(Dataset):
                  zip_mode=False, cache_mode=False, cache_db=False, ignore_db_cache=True,
                  tokenizer=None, pretrained_model_name=None,
                  add_image_as_a_box=False,
-                 aspect_grouping=False, **kwargs):
+                 aspect_grouping=False, task_name="None", lang="second", **kwargs):
         """
         Conceptual Captions Dataset
 
@@ -53,7 +53,14 @@ class Multi30kDatasetImageOnly(Dataset):
                  'val': 'val_frcnn.json',
                  'test2015': 'test_frcnn.json', 
                  'test2018': 'test_frcnn2018.json', 
-                 'test2018MLT': 'test_MLT_2018_renamed_frcnn.json',}
+                 'test2018MLT': 'test_MLT_2018_renamed_frcnn.json',
+                 'train_fr': 'train_fr_frcnn.json',
+                 'val_fr': 'val_fr_frcnn.json',
+                 'test_fr': 'test_fr_frcnn.json',
+                 'train_cs': 'train_cs_frcnn.json',
+                 'val_cs': 'val_cs_frcnn.json',
+                 'test_cs': 'test_cs_frcnn.json'
+                 }
 
         self.seq_len = seq_len
         self.with_rel_task = with_rel_task
@@ -79,10 +86,14 @@ class Multi30kDatasetImageOnly(Dataset):
         self.tokenizer = tokenizer if tokenizer is not None \
             else BertTokenizer.from_pretrained(
             'bert-base-uncased' if pretrained_model_name is None else pretrained_model_name,
-            cache_dir=self.cache_dir)
+            cache_dir=self.cache_dir, do_lower_case=False)
 
         self.zipreader = ZipReader()
-
+        
+        # FM: define task name to add prefix
+        self.task_name = task_name
+        self.lang = lang
+        
         # FM: Customise for multi30k dataset
         self.simple_database = list(jsonlines.open(self.ann_file))
         if not self.zip_mode:
@@ -96,16 +107,28 @@ class Multi30kDatasetImageOnly(Dataset):
             db_pos = 0
             # create [MASK] every time
             for entry in self.simple_database:
-                caption_tokens_de = self.tokenizer.tokenize(entry['caption_de'])
-                # repeat each entry multiple times - MASK the last word in each case
-                for pos, item in enumerate(caption_tokens_de):
-                    self.database.append(deepcopy(entry))
-                    self.database[db_pos]['caption_de'] = deepcopy(caption_tokens_de[:pos+1])
+                if self.lang=="second":
+                    caption_tokens_de = self.tokenizer.tokenize(entry['caption_de'])
+                    # repeat each entry multiple times - MASK the last word in each case
+                    for pos, item in enumerate(caption_tokens_de):
+                        self.database.append(deepcopy(entry))
+                        self.database[db_pos]['caption_de'] = deepcopy(caption_tokens_de[:pos+1])
+                        db_pos += 1
+                    # add one last entry with last token [STOP]
+                    self.database.append(deepcopy(self.database[db_pos-1]))
+                    self.database[db_pos]['caption_de'] = self.database[db_pos]['caption_de'] + ['[STOP]']
                     db_pos += 1
-                # add one last entry with last token [STOP]
-                self.database.append(deepcopy(self.database[db_pos-1]))
-                self.database[db_pos]['caption_de'] = self.database[db_pos]['caption_de'] + ['[STOP]']
-                db_pos += 1
+                else:
+                    caption_tokens_en = self.tokenizer.tokenize(entry['caption_en'])
+                    # repeat each entry multiple times - MASK the last word in each case
+                    for pos, item in enumerate(caption_tokens_en):
+                        self.database.append(deepcopy(entry))
+                        self.database[db_pos]['caption_en'] = deepcopy(caption_tokens_en[:pos+1])
+                        db_pos += 1
+                    # add one last entry with last token [STOP]
+                    self.database.append(deepcopy(self.database[db_pos-1]))
+                    self.database[db_pos]['caption_en'] = self.database[db_pos]['caption_en'] + ['[STOP]']
+                    db_pos += 1
         else:
             self.database = self.simple_database
 
@@ -181,53 +204,75 @@ class Multi30kDatasetImageOnly(Dataset):
         _p = random.random()
         if _p < 0.5 or (not self.with_rel_task):
             relationship_label = 1
-            caption_en = idb['caption_en']
-            caption_de = idb['caption_de']
+            if self.lang == "second":
+                caption_de = idb['caption_de']
+            else:
+                caption_en = idb['caption_en']
         else:
             relationship_label = 0
             rand_index = random.randrange(0, len(self.database))
             while rand_index == index:
                 rand_index = random.randrange(0, len(self.database))
-            caption_en =self.database[rand_index]['caption_en']
-            caption_de =self.database[rand_index]['caption_de']
+            if self.lang == "second":
+                caption_de =self.database[rand_index]['caption_de']
+            else:
+                caption_en =self.database[rand_index]['caption_en']
+            
 
         # Task #2: Masked Language Modeling - Adapted for two languages
 
         if self.with_mlm_task:
             if not self.test_mode:
-                # FM: removing joining of caption - split into two languages
-                caption_tokens_en = self.tokenizer.tokenize(caption_en)
-                mlm_labels_en = [-1] * len(caption_tokens_en)
-                # FM edit: Mask always the last token
-                caption_tokens_de = caption_de               
-                mlm_labels_de = [-1] * (len(caption_tokens_de)-1)
-                try:
-                    mlm_labels_de.append(self.tokenizer.vocab[caption_tokens_de[-1]])
-                except KeyError:
-                    # For unknown words (should not occur with BPE vocab)
-                    mlm_labels_de.append(self.tokenizer.vocab["[UNK]"])
-                    logging.warning("Cannot find sub_token '{}' in vocab. Using [UNK] insetad".format(sub_token))  
-                caption_tokens_de[-1] = '[MASK]'
+                if self.lang=="second":
+                    # FM edit: Mask always the last token
+                    caption_tokens_de = caption_de               
+                    mlm_labels_de = [-1] * (len(caption_tokens_de)-1)
+                    try:
+                        mlm_labels_de.append(self.tokenizer.vocab[caption_tokens_de[-1]])
+                    except KeyError:
+                        # For unknown words (should not occur with BPE vocab)
+                        mlm_labels_de.append(self.tokenizer.vocab["[UNK]"])
+                        logging.warning("Cannot find sub_token '{}' in vocab. Using [UNK] insetad".format(sub_token))  
+                    caption_tokens_de[-1] = '[MASK]'
+                else:
+                    # FM edit: Mask always the last token
+                    caption_tokens_en = caption_en               
+                    mlm_labels_en = [-1] * (len(caption_tokens_en)-1)
+                    try:
+                        mlm_labels_en.append(self.tokenizer.vocab[caption_tokens_en[-1]])
+                    except KeyError:
+                        # For unknown words (should not occur with BPE vocab)
+                        mlm_labels_en.append(self.tokenizer.vocab["[UNK]"])
+                        logging.warning("Cannot find sub_token '{}' in vocab. Using [UNK] insetad".format(sub_token))  
+                    caption_tokens_en[-1] = '[MASK]'                    
             else:
-                # FM TODO: fix inference
+                if self.lang=="second":
+                    # FM edit: add [MASK] to start guessing caption
+                    caption_tokens_de = self.tokenizer.tokenize(caption_de)
+                    # FM edit: add label from vocabulary                
+                    mlm_labels_de = [103] + [-1]
+                    caption_tokens_de = ['[MASK]'] + ['[PAD]']
+                else:
+                    # FM edit: add [MASK] to start guessing caption
+                    caption_tokens_en = self.tokenizer.tokenize(caption_en)
+                    # FM edit: add label from vocabulary                
+                    mlm_labels_en = [103] + [-1]
+                    caption_tokens_en = ['[MASK]'] + ['[PAD]']
+        else:
+            if self.lang=="second":
+                caption_tokens_de = self.tokenizer.tokenize(caption_de)
+                mlm_labels_de = [-1] * len(caption_tokens_de)
+            else:
                 caption_tokens_en = self.tokenizer.tokenize(caption_en)
                 mlm_labels_en = [-1] * len(caption_tokens_en)
-                # FM edit: add [MASK] to start guessing caption
-                caption_tokens_de = self.tokenizer.tokenize(caption_de)
-                # FM edit: add label from vocabulary                
-                # mlm_labels_de = [103] + [-1]
-                # caption_tokens_de = ['[MASK]'] + ['[STOP]']
-                mlm_labels_de = [103] + [-1]
-                caption_tokens_de = ['[MASK]'] + ['[PAD]']
-        else:
-            caption_tokens_en = self.tokenizer.tokenize(caption_en)
-            caption_tokens_de = self.tokenizer.tokenize(caption_de)
-            mlm_labels_en = [-1] * len(caption_tokens_en)
-            mlm_labels_de = [-1] * len(caption_tokens_de)
         
-        # remove english caption altogether - image captioning task
-        text_tokens = ['[CLS]'] + ['[SEP]'] + caption_tokens_de + ['[SEP]']
-        mlm_labels = [-1] + [-1] + mlm_labels_de + [-1]
+        if self.lang=="second":
+            text_tokens = [self.task_name] + ['[CLS]'] + ['[SEP]'] + caption_tokens_de + ['[SEP]']
+            mlm_labels = [-1] + [-1] + [-1] + mlm_labels_de + [-1]
+        else:    
+            text_tokens = [self.task_name] + ['[CLS]'] + ['[SEP]'] + caption_tokens_en + ['[SEP]']
+            mlm_labels = [-1] + [-1] + [-1] + mlm_labels_en + [-1]
+        
 
         # Task #3: Masked Visual Region Classification
         if self.with_mvrc_task:
