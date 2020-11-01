@@ -54,10 +54,13 @@ class Multi30kDatasetNoVision(Dataset):
                  'test2015': 'test_frcnn.json',
                  'train_fr': 'train_fr_frcnn.json',
                  'val_fr': 'val_fr_frcnn.json',
-                 'test_fr': 'test_fr_frcnn.json',
+                 'test_2016_fr': 'test_2016_flickr_fr_frcnn.json',
                  'train_cs': 'train_cs_frcnn.json',
                  'val_cs': 'val_cs_frcnn.json',
-                 'test_cs': 'test_cs_frcnn.json'
+                 'test_2016_cs': 'test_2016_flickr_cs_frcnn.json',
+                 'train_tu': 'train_SETimes_turkish_frcnn.json',
+                 'val_tu': 'val_SETimes_turkish_frcnn.json',
+                 'test_tu': 'test_SETimes_turkish_frcnn.json'
                  }
 
         self.seq_len = seq_len

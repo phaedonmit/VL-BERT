@@ -1,7 +1,7 @@
 ---
 RNG_SEED: 12345
 OUTPUT_PATH: './output/pretrain/vl-bert'
-MODULE: ResNetVLBERTForPretrainingGlobalGenerateNoVision
+MODULE: ResNetVLBERTForPretrainingGlobalGenerate
 GPUS: '2'
 LOG_FREQUENT: 100
 VAL_FREQUENT: 1
@@ -13,21 +13,21 @@ SCALES:
 - 1000
 
 DATASET:
-  DATASET: multi30k_no_vision
+  DATASET: multi30k
   APPEND_INDEX: false
   DATASET_PATH: '/experiments/faidon/VL-BERT/data/flickr30k'
   ROOT_PATH: '/experiments/faidon/VL-BERT/'
-  TRAIN_IMAGE_SET: 'train_fr'
-  VAL_IMAGE_SET: 'val_fr'
-  TEST_IMAGE_SET: 'val_fr'
+  TRAIN_IMAGE_SET: 'train'
+  VAL_IMAGE_SET: 'val'
+  TEST_IMAGE_SET: 'val'
   ADD_IMAGE_AS_A_BOX: true
   ZIP_MODE: false
   CACHE_MODE: false
   IGNORE_DB_CACHE: false
   MASK_SIZE: 14
-  SEQ_LEN: 96
-  TASK_NAME: '[EN_FR]'  
-  LANG: 'second'  
+  SEQ_LEN: 150
+  TASK_NAME: '[EN_DE_IMG]'  
+  LANG: 'second' 
 
 NETWORK:
   PARTIAL_PRETRAIN: "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/pretrain_prec/002_prec_LR1e6_multi30k/train_train/vl-bert_base_res101_pretrain_multitask-0019.model"

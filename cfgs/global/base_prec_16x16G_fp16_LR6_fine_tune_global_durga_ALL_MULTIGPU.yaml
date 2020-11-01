@@ -2,7 +2,7 @@
 RNG_SEED: 12345
 OUTPUT_PATH: './output/pretrain/vl-bert'
 MODULE: ResNetVLBERTForPretrainingGlobal
-GPUS: '6'
+GPUS: '1,2'
 LOG_FREQUENT: 100
 VAL_FREQUENT: 1
 CHECKPOINT_FREQUENT: 1
@@ -25,38 +25,11 @@ DATASET:
   ZIP_MODE: false
   CACHE_MODE: false
   IGNORE_DB_CACHE: false
-  MASK_SIZE: 14
-  LANG: 'both'
+  MASK_SIZE: 14  
+  TASK_NAME: '[EN_DE_IMG]'
+  LANG: 'second'
 
-- DATASET: multi30k
-  APPEND_INDEX: false
-  DATASET_PATH: '/experiments/faidon/VL-BERT/data/flickr30k'
-  ROOT_PATH: '/experiments/faidon/VL-BERT/'
-  TRAIN_IMAGE_SET: 'train_fr'
-  VAL_IMAGE_SET: 'val_fr'
-  TEST_IMAGE_SET: 'val_fr'
-  ADD_IMAGE_AS_A_BOX: true
-  ZIP_MODE: false
-  CACHE_MODE: false
-  IGNORE_DB_CACHE: false
-  MASK_SIZE: 14
-  LANG: 'both'
-
-- DATASET: multi30k
-  APPEND_INDEX: false
-  DATASET_PATH: '/experiments/faidon/VL-BERT/data/flickr30k'
-  ROOT_PATH: '/experiments/faidon/VL-BERT/'
-  TRAIN_IMAGE_SET: 'train_cs'
-  VAL_IMAGE_SET: 'val_cs'
-  TEST_IMAGE_SET: 'val_cs'
-  ADD_IMAGE_AS_A_BOX: true
-  ZIP_MODE: false
-  CACHE_MODE: false
-  IGNORE_DB_CACHE: false
-  MASK_SIZE: 14
-  LANG: 'both'
-
-- DATASET: multi30k_single
+- DATASET: multi30k_no_vision
   APPEND_INDEX: false
   DATASET_PATH: '/experiments/faidon/VL-BERT/data/flickr30k'
   ROOT_PATH: '/experiments/faidon/VL-BERT/'
@@ -68,23 +41,85 @@ DATASET:
   CACHE_MODE: false
   IGNORE_DB_CACHE: false
   MASK_SIZE: 14
+  TASK_NAME: '[EN_DE]'  
+  LANG: 'second'
+
+- DATASET: multi30k_image_only
+  APPEND_INDEX: false
+  DATASET_PATH: '/experiments/faidon/VL-BERT/data/flickr30k'
+  ROOT_PATH: './'
+  TRAIN_IMAGE_SET: 'train'
+  VAL_IMAGE_SET: 'val'
+  TEST_IMAGE_SET: 'val'
+  ADD_IMAGE_AS_A_BOX: true
+  ZIP_MODE: false
+  CACHE_MODE: false
+  IGNORE_DB_CACHE: false
+  MASK_SIZE: 14
+  TASK_NAME: '[DE_IMG]'  
+  LANG: 'second'
+
+- DATASET: multi30k
+  APPEND_INDEX: false
+  DATASET_PATH: '/experiments/faidon/VL-BERT/data/flickr30k'
+  ROOT_PATH: '/experiments/faidon/VL-BERT/'
+  TRAIN_IMAGE_SET: 'train'
+  VAL_IMAGE_SET: 'val'
+  TEST_IMAGE_SET: 'val'
+  ADD_IMAGE_AS_A_BOX: true
+  ZIP_MODE: false
+  CACHE_MODE: false
+  IGNORE_DB_CACHE: false
+  MASK_SIZE: 14  
+  TASK_NAME: '[DE_EN_IMG]'
+  LANG: 'first'  
+
+- DATASET: multi30k_no_vision
+  APPEND_INDEX: false
+  DATASET_PATH: '/experiments/faidon/VL-BERT/data/flickr30k'
+  ROOT_PATH: '/experiments/faidon/VL-BERT/'
+  TRAIN_IMAGE_SET: 'train'
+  VAL_IMAGE_SET: 'val'
+  TEST_IMAGE_SET: 'val'
+  ADD_IMAGE_AS_A_BOX: true
+  ZIP_MODE: false
+  CACHE_MODE: false
+  IGNORE_DB_CACHE: false
+  MASK_SIZE: 14  
+  TASK_NAME: '[DE_EN]'
+  LANG: 'first' 
+
+- DATASET: multi30k_image_only
+  APPEND_INDEX: false
+  DATASET_PATH: '/experiments/faidon/VL-BERT/data/flickr30k'
+  ROOT_PATH: './'
+  TRAIN_IMAGE_SET: 'train'
+  VAL_IMAGE_SET: 'val'
+  TEST_IMAGE_SET: 'val'
+  ADD_IMAGE_AS_A_BOX: true
+  ZIP_MODE: false
+  CACHE_MODE: false
+  IGNORE_DB_CACHE: false
+  MASK_SIZE: 14
+  TASK_NAME: '[EN_IMG]'  
   LANG: 'first'
 
-- DATASET: multi30k_single
+- DATASET: multi30k
   APPEND_INDEX: false
   DATASET_PATH: '/experiments/faidon/VL-BERT/data/flickr30k'
   ROOT_PATH: '/experiments/faidon/VL-BERT/'
-  TRAIN_IMAGE_SET: 'train'
-  VAL_IMAGE_SET: 'val'
-  TEST_IMAGE_SET: 'val'
+  TRAIN_IMAGE_SET: 'train_fr'
+  VAL_IMAGE_SET: 'val_fr'
+  TEST_IMAGE_SET: 'val_fr'
   ADD_IMAGE_AS_A_BOX: true
   ZIP_MODE: false
   CACHE_MODE: false
   IGNORE_DB_CACHE: false
-  MASK_SIZE: 14
+  MASK_SIZE: 14  
+  TASK_NAME: '[EN_FR_IMG]'
   LANG: 'second'
 
-- DATASET: multi30k_single
+- DATASET: multi30k_no_vision
   APPEND_INDEX: false
   DATASET_PATH: '/experiments/faidon/VL-BERT/data/flickr30k'
   ROOT_PATH: '/experiments/faidon/VL-BERT/'
@@ -96,23 +131,86 @@ DATASET:
   CACHE_MODE: false
   IGNORE_DB_CACHE: false
   MASK_SIZE: 14
+  TASK_NAME: '[EN_FR]'  
   LANG: 'second'
 
-- DATASET: multi30k_single
+- DATASET: multi30k_image_only
   APPEND_INDEX: false
   DATASET_PATH: '/experiments/faidon/VL-BERT/data/flickr30k'
   ROOT_PATH: '/experiments/faidon/VL-BERT/'
-  TRAIN_IMAGE_SET: 'train_cs'
-  VAL_IMAGE_SET: 'val_cs'
-  TEST_IMAGE_SET: 'val_cs'
+  TRAIN_IMAGE_SET: 'train_fr'
+  VAL_IMAGE_SET: 'val_fr'
+  TEST_IMAGE_SET: 'val_fr'
   ADD_IMAGE_AS_A_BOX: true
   ZIP_MODE: false
   CACHE_MODE: false
   IGNORE_DB_CACHE: false
   MASK_SIZE: 14
+  TASK_NAME: '[FR_IMG]'  
   LANG: 'second'
 
-- DATASET: multi30k_single
+- DATASET: multi30k
+  APPEND_INDEX: false
+  DATASET_PATH: '/experiments/faidon/VL-BERT/data/flickr30k'
+  ROOT_PATH: '/experiments/faidon/VL-BERT/'
+  TRAIN_IMAGE_SET: 'train_fr'
+  VAL_IMAGE_SET: 'val_fr'
+  TEST_IMAGE_SET: 'val_fr'
+  ADD_IMAGE_AS_A_BOX: true
+  ZIP_MODE: false
+  CACHE_MODE: false
+  IGNORE_DB_CACHE: false
+  MASK_SIZE: 14  
+  TASK_NAME: '[FR_EN_IMG]'
+  LANG: 'first'  
+
+- DATASET: multi30k_no_vision
+  APPEND_INDEX: false
+  DATASET_PATH: '/experiments/faidon/VL-BERT/data/flickr30k'
+  ROOT_PATH: '/experiments/faidon/VL-BERT/'
+  TRAIN_IMAGE_SET: 'train_fr'
+  VAL_IMAGE_SET: 'val_fr'
+  TEST_IMAGE_SET: 'val_fr'
+  ADD_IMAGE_AS_A_BOX: true
+  ZIP_MODE: false
+  CACHE_MODE: false
+  IGNORE_DB_CACHE: false
+  MASK_SIZE: 14
+  TASK_NAME: '[FR_EN]'  
+  LANG: 'first'
+
+- DATASET: multi30k_no_vision
+  APPEND_INDEX: false
+  DATASET_PATH: '/experiments/faidon/VL-BERT/data/flickr30k'
+  ROOT_PATH: '/experiments/faidon/VL-BERT/'
+  TRAIN_IMAGE_SET: 'train_tu'
+  VAL_IMAGE_SET: 'val_tu'
+  TEST_IMAGE_SET: 'val_tu'
+  ADD_IMAGE_AS_A_BOX: true
+  ZIP_MODE: false
+  CACHE_MODE: false
+  IGNORE_DB_CACHE: false
+  MASK_SIZE: 14
+  TASK_NAME: '[EN_TU]'  
+  LANG: 'second'
+
+- DATASET: multi30k_no_vision
+  APPEND_INDEX: false
+  DATASET_PATH: '/experiments/faidon/VL-BERT/data/flickr30k'
+  ROOT_PATH: '/experiments/faidon/VL-BERT/'
+  TRAIN_IMAGE_SET: 'train_tu'
+  VAL_IMAGE_SET: 'val_tu'
+  TEST_IMAGE_SET: 'val_tu'
+  ADD_IMAGE_AS_A_BOX: true
+  ZIP_MODE: false
+  CACHE_MODE: false
+  IGNORE_DB_CACHE: false
+  MASK_SIZE: 14
+  TASK_NAME: '[TU_EN]'  
+  LANG: 'first'
+
+
+- DATASET: multi30k_image_only
   APPEND_INDEX: false
   DATASET_PATH: '/experiments/faidon/VL-BERT/data/flickr8k'
   ROOT_PATH: '/experiments/faidon/VL-BERT/'
@@ -124,12 +222,14 @@ DATASET:
   CACHE_MODE: false
   IGNORE_DB_CACHE: false
   MASK_SIZE: 14
+  TASK_NAME: '[TU_IMG]'  
   LANG: 'second'
 
+
 NETWORK:
-  PARTIAL_PRETRAIN: "/experiments/faidon/VL-BERT/model/pretrained_model/vl-bert-base-prec.model"
+  PARTIAL_PRETRAIN: "/experiments/faidon/test/VL-BERT/checkpoints/output/pretrain/pretrain_global/PREGLOBAL002_LR6_with_turkish/train_train/vl-bert_base_res101_pretrain_multitask-0019.model"
   PARTIAL_PRETRAIN_PREFIX_CHANGES: []
-  INITIALISATION: 'hybrid'
+  INITIALISATION: ''
   IMAGE_NUM_LAYERS: 101
   IMAGE_C5_DILATED: true
   IMAGE_STRIDE_IN_1x1: true
@@ -160,7 +260,7 @@ NETWORK:
   MVRC_LOSS_NORM_IN_BATCH_FIRST: false
   WITH_REL_LOSS: false
   WITH_MLM_LOSS: true
-  WITH_MVRC_LOSS: true
+  WITH_MVRC_LOSS: false
 
   VLBERT:
     with_pooler: false
@@ -185,15 +285,21 @@ NETWORK:
 TRAIN:
   SHUFFLE: true
   FLIP_PROB: 0.5
-  BATCH_IMAGES:
-  - 2
-  - 2
-  - 2
-  - 2
-  - 2
-  - 2
-  - 2
-  - 2  
+  BATCH_IMAGES: 
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1 
+  - 1
+  - 1
+  - 1 
   ASPECT_GROUPING: false
   RESUME: false
   AUTO_RESUME: true
@@ -211,38 +317,45 @@ TRAIN:
   FP16: false
   FP16_LOSS_SCALE: 128.0
   LOSS_LOGGERS:
-  - "mlm_loss_0,MLMLoss0"
-  - "mlm_loss_1,MLMLoss1"
-  - "mlm_loss_2,MLMLoss2"
-  - "mlm_loss_3,MLMLoss3"
-  - "mlm_loss_4,MLMLoss4"
-  - "mlm_loss_5,MLMLoss5"
-  - "mlm_loss_6,MLMLoss6"
-  - "mlm_loss_7,MLMLoss7"
-  
+  - "mlm_loss_wvc,MLMLossWVC"
+  - "mlm_loss_aux,MLMLossAUX"
+  - "mvrc_loss,MVRCLoss"
+
 VAL:
   SHUFFLE: false
   FLIP_PROB: 0
-  BATCH_IMAGES:
-  - 2
-  - 2
-  - 2
-  - 2
-  - 2
-  - 2
-  - 2
-  - 2 
+  BATCH_IMAGES: 
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1    
 
 TEST:
   SHUFFLE: false
   FLIP_PROB: 0
   TEST_EPOCH: 0
-  BATCH_IMAGES:
-  - 2
-  - 2
-  - 2
-  - 2
-  - 2
-  - 2
-  - 2
-  - 2 
+  BATCH_IMAGES: 
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1 
+  - 1
+  - 1
+  - 1 

@@ -56,10 +56,10 @@ class Multi30kDataset(Dataset):
                  'test2018MLT': 'test_MLT_2018_renamed_frcnn.json',
                  'train_fr': 'train_fr_frcnn.json',
                  'val_fr': 'val_fr_frcnn.json',
-                 'test_fr': 'test_fr_frcnn.json',
+                 'test_2016_fr': 'test_2016_flickr_fr_frcnn.json',
                  'train_cs': 'train_cs_frcnn.json',
                  'val_cs': 'val_cs_frcnn.json',
-                 'test_cs': 'test_cs_frcnn.json'
+                 'test_2016_cs': 'test_2016_flickr_cs_frcnn.json',
                  }
 
         self.seq_len = seq_len

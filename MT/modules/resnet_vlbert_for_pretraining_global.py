@@ -218,7 +218,7 @@ class ResNetVLBERTForPretrainingGlobal(Module):
             text_tags_list.append(text_list[i].new_zeros(text_list[i].shape))
             
             if has_visual[i]:
-                text_visual_embeddings_list.append(self._collect_obj_reps(text_tags_list[vis_i], obj_reps_list[vis_i]['obj_reps']))
+                text_visual_embeddings_list.append(self._collect_obj_reps(text_tags_list[i], obj_reps_list[vis_i]['obj_reps']))
 
                 # linguistic embedding for visual uses [IMG] embedding for all (apart from masked visual)
                 object_linguistic_embeddings_list.append(self.object_linguistic_embeddings(

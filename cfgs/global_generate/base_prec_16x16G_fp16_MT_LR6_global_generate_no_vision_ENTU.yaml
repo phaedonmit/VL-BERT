@@ -17,16 +17,16 @@ DATASET:
   APPEND_INDEX: false
   DATASET_PATH: '/experiments/faidon/VL-BERT/data/flickr30k'
   ROOT_PATH: '/experiments/faidon/VL-BERT/'
-  TRAIN_IMAGE_SET: 'train_fr'
-  VAL_IMAGE_SET: 'val_fr'
-  TEST_IMAGE_SET: 'val_fr'
+  TRAIN_IMAGE_SET: 'train_tu'
+  VAL_IMAGE_SET: 'val_tu'
+  TEST_IMAGE_SET: 'val_tu'
   ADD_IMAGE_AS_A_BOX: true
   ZIP_MODE: false
   CACHE_MODE: false
   IGNORE_DB_CACHE: false
   MASK_SIZE: 14
-  SEQ_LEN: 96
-  TASK_NAME: '[EN_FR]'  
+  SEQ_LEN: 512
+  TASK_NAME: '[EN_TU]'  
   LANG: 'second'  
 
 NETWORK:

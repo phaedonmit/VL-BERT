@@ -47,6 +47,8 @@ _C.DATASET.QA2R_NOQ = False
 _C.DATASET.QA2R_AUG = False
 _C.DATASET.SEQ_LEN = 64
 _C.DATASET.MIN_SEQ_LEN = 0
+_C.DATASET.TASK_NAME = '[EN_DE_IMG]'
+_C.DATASET.LANG = 'second'
 
 # ------------------------------------------------------------------------------------- #
 # Common network options

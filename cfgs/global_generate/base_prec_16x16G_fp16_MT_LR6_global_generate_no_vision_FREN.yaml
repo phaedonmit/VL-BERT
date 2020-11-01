@@ -26,8 +26,8 @@ DATASET:
   IGNORE_DB_CACHE: false
   MASK_SIZE: 14
   SEQ_LEN: 96
-  TASK_NAME: '[EN_FR]'  
-  LANG: 'second'  
+  TASK_NAME: '[FR_EN]'  
+  LANG: 'first'  
 
 NETWORK:
   PARTIAL_PRETRAIN: "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/pretrain_prec/002_prec_LR1e6_multi30k/train_train/vl-bert_base_res101_pretrain_multitask-0019.model"

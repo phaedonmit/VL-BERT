@@ -17,17 +17,17 @@ DATASET:
   APPEND_INDEX: false
   DATASET_PATH: '/experiments/faidon/VL-BERT/data/flickr30k'
   ROOT_PATH: '/experiments/faidon/VL-BERT/'
-  TRAIN_IMAGE_SET: 'train_fr'
-  VAL_IMAGE_SET: 'val_fr'
-  TEST_IMAGE_SET: 'val_fr'
+  TRAIN_IMAGE_SET: 'train_tu'
+  VAL_IMAGE_SET: 'val_tu'
+  TEST_IMAGE_SET: 'val_tu'
   ADD_IMAGE_AS_A_BOX: true
   ZIP_MODE: false
   CACHE_MODE: false
   IGNORE_DB_CACHE: false
   MASK_SIZE: 14
-  SEQ_LEN: 96
-  TASK_NAME: '[EN_FR]'  
-  LANG: 'second'  
+  SEQ_LEN: 512
+  TASK_NAME: '[TU_EN]'  
+  LANG: 'first'  
 
 NETWORK:
   PARTIAL_PRETRAIN: "/experiments/faidon/VL-BERT/checkpoints/output/pretrain/pretrain_prec/002_prec_LR1e6_multi30k/train_train/vl-bert_base_res101_pretrain_multitask-0019.model"
