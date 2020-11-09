@@ -26,7 +26,7 @@ DATASET:
   IGNORE_DB_CACHE: false
   MASK_SIZE: 14
   SEQ_LEN: 96
-  TASK_NAME: '[EN_FR]'  
+  TASK_NAME: '[TO_FR]'  
   LANG: 'second'  
 
 NETWORK:

@@ -75,7 +75,7 @@ def test_net(args, config, ckpt_path=None, save_path=None, save_name=None):
     for nbatch, batch in zip(trange(len(test_loader)), test_loader):
         bs = test_loader.batch_sampler.batch_size if test_loader.batch_sampler is not None else test_loader.batch_size
         # image_ids.extend([test_database[id]['image_index'] for id in range(cur_id, min(cur_id + bs, len(test_database)))])
-        if args.split!='test_tu' or True:
+        if 'flickr8k' not in config.DATASET.DATASET_PATH:
             captions_en.extend([test_database[id]['caption_en'] for id in range(cur_id, min(cur_id + bs, len(test_database)))])
         captions_de.extend([test_database[id]['caption_de'] for id in range(cur_id, min(cur_id + bs, len(test_database)))])
         batch = to_cuda(batch)
@@ -90,7 +90,7 @@ def test_net(args, config, ckpt_path=None, save_path=None, save_name=None):
    
     # ************
     # Step 3: Store all logit results in file for later evalution    
-    if args.split!='test_tu' or True:   
+    if 'flickr8k' not in config.DATASET.DATASET_PATH:   
         result = [{'generated_sentence': c_id, 'caption_en': caption_en, 'caption_de': caption_de} 
                     for c_id, caption_en, caption_de in zip(generated_sentences, captions_en, captions_de)]
     else:

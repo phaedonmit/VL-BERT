@@ -1,6 +1,6 @@
 import subprocess
 
-model = "/experiments/faidon/test/VL-BERT/checkpoints/output/pretrain/vl-bert/base_prec_16x16G_fp16_LR6_fine_tune_global_durga_ALL/train_train/vl-bert_base_res101_pretrain_multitask-0000.model"
+model = "/data/faidon/VL-BERT/checkpoints/output/pretrain/vl-bert/base_prec_16x16G_fp16_LR6_fine_tune_global_durga_ALL_lorikeet/train_train/vl-bert_base_res101_pretrain_multitask-0002.model"
 
 cfgs = [
         "/experiments/faidon/test/VL-BERT/cfgs/global_generate/base_prec_16x16G_fp16_MT_LR6_global_generate_image_only_DEIMG.yaml",
@@ -36,6 +36,24 @@ splits = [
         "test_tu"
 ]
 
+cfgs = [
+        "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_image_only_DEIMG.yaml",
+        "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_image_only_ENIMG.yaml", 
+        "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_image_only_FRIMG.yaml",
+        "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_image_only_TUIMG.yaml",
+        "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_MMT_DEENIMG.yaml",
+        "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_MMT_ENDEIMG.yaml",
+        "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_MMT_ENFRIMG.yaml",
+        "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_MMT_FRENIMG.yaml",
+        "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_no_vision_DEEN.yaml",
+        "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_no_vision_ENDE.yaml",
+        "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_no_vision_ENFR.yaml",
+        "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_no_vision_ENTU.yaml",
+        "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_no_vision_FREN.yaml",
+        "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_no_vision_TUEN.yaml"
+        ]
+
+
 lang = [
         'second', 
         "first", 
@@ -55,13 +73,14 @@ lang = [
 
 
 
-# cfgs = [
-#         "/experiments/faidon/test/VL-BERT/cfgs/global_generate/base_prec_16x16G_fp16_MT_LR6_global_generate_image_only_TUIMG.yaml",
+cfgs = [
+        "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_image_only_TUIMG.yaml", 
 
-#         ]
-# splits = ['test_tu']
 
-# lang = ['second']
+        ]
+splits = ['test_tu']
+
+lang = ['second']
 # cfgs = [
 #         "/experiments/faidon/test/VL-BERT/cfgs/global_generate/base_prec_16x16G_fp16_MT_LR6_global_generate_image_only_FRIMG.yaml",
 
@@ -77,7 +96,7 @@ for i in range(len(cfgs)):
     print('***************')
     print(name)
     list_files = subprocess.run(["python", "MT/evaluate_translation.py", name, 
-                                "/experiments/faidon/test/VL-BERT/checkpoints/generated/"+name+".json",
+                                "/data/faidon/VL-BERT/checkpoints/generated/"+name+".json",
                                 lang[i]
                                 ])
     print("The exit code was: %d" % list_files.returncode)

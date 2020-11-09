@@ -26,11 +26,11 @@ with open(dataset+'.txt') as fp:
             image_id = '0'+image_id
         frcnns.append(dataset+'_frcnn.zip@/'+ image_id +'.json')
 
-with open('../train.'+lng1) as fp:
+with open('../'+ dataset +'.'+lng1) as fp:
     for cnt, line in enumerate(fp):
         captions_en.append(line.strip())
 
-with open('../train.'+lng2) as fp:
+with open('../'+ dataset +'.'+lng2) as fp:
     for cnt, line in enumerate(fp):
         captions_de.append(line.strip())      
 
