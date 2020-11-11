@@ -98,6 +98,14 @@ class Multi30kDatasetSingle(Dataset):
                     .replace('.0', '').replace('.1', '').replace('.2', '').replace('.3', '')
                 self.database[i]['image'] = idb['image'].replace('.zip@', '')
 
+        # FM: TODO correct this
+        for i, idb in enumerate(self.database):
+            old_id = idb['frcnn'].split('/')[1].split('.')[0]
+            image_id = old_id
+            while len(image_id)<8:
+                image_id = '0'+image_id
+            self.database[i]['frcnn'] = idb['frcnn'].replace(old_id, image_id)
+
         if self.aspect_grouping:
             assert False, "not support aspect grouping currently!"
             self.group_ids = self.group_aspect(self.database)

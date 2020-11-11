@@ -101,7 +101,15 @@ class Multi30kDataset(Dataset):
                 self.simple_database[i]['frcnn'] = idb['frcnn'].replace('.zip@', '')\
                     .replace('.0', '').replace('.1', '').replace('.2', '').replace('.3', '')
                 self.simple_database[i]['image'] = idb['image'].replace('.zip@', '')
-        
+
+        # FM: TODO correct this
+        for i, idb in enumerate(self.simple_database):
+            old_id = idb['frcnn'].split('/')[1].split('.')[0]
+            image_id = old_id
+            while len(image_id)<8:
+                image_id = '0'+image_id
+            self.simple_database[i]['frcnn'] = idb['frcnn'].replace(old_id, image_id)
+
         if not self.test_mode:
             self.database = []
             db_pos = 0
