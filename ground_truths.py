@@ -60,18 +60,16 @@ for filename, source_file, caption in zip(filenames,source_files, captions):
     if filename=="TUIMG":
         for start in range(2):
             result_path = os.path.join(base_dir, '{}_{}.txt'.format(filename, str(start)))
-            for i in range(start, len(database), 2):
-                with open(result_path, 'w') as f:
-                    for line in database:
-                        f.write('%s\n' % line[caption])
+            with open(result_path, 'w') as f:
+                for i in range(start, len(database), 2):
+                    f.write('%s\n' % database[i][caption])
 
     elif filename=="DEIMG" or filename=="ENIMG":
         for start in range(5):
             result_path = os.path.join(base_dir, '{}_{}.txt'.format(filename, str(start)))
-            for i in range(start, len(database), 5):
-                with open(result_path, 'w') as f:
-                    for line in database:
-                        f.write('%s\n' % line[caption])    
+            with open(result_path, 'w') as f:
+                for i in range(start, len(database), 5):
+                    f.write('%s\n' % database[i][caption])   
     else:
         with open(result_path, 'w') as f:
             for line in database:
