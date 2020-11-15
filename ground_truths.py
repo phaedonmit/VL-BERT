@@ -58,10 +58,21 @@ for filename, source_file, caption in zip(filenames,source_files, captions):
 
     database = list(jsonlines.open(source_file))
     if filename=="TUIMG":
-        database = database[::2]
-    elif filename=="DEIMG" or filename=="ENIMG":
-        database = database[::5]
+        for start in range(2):
+            result_path = os.path.join(base_dir, '{}_{}.txt'.format(filename, str(start)))
+            for i in range(start, len(database), 2)
+                with open(result_path, 'w') as f:
+                    for line in database:
+                        f.write('%s\n' % line[caption])
 
-    with open(result_path, 'w') as f:
-        for line in database:
-            f.write('%s\n' % line[caption])
+    elif filename=="DEIMG" or filename=="ENIMG":
+        for start in range(5):
+            result_path = os.path.join(base_dir, '{}_{}.txt'.format(filename, str(start)))
+            for i in range(start, len(database), 5)
+                with open(result_path, 'w') as f:
+                    for line in database:
+                        f.write('%s\n' % line[caption])    
+    else:
+        with open(result_path, 'w') as f:
+            for line in database:
+                f.write('%s\n' % line[caption])
