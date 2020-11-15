@@ -142,7 +142,7 @@ class Multi30kDatasetImageOnly(Dataset):
                     db_pos += 1
         else:
             # ignore multiple in turkish (2xcaption), english/german(5xcaption)
-            if self.task_name=='[TO_TU]'
+            if self.task_name=='[TO_TU]':
                 self.database = self.simple_database[::2]
             else:
                 self.database = self.simple_database[::5]
