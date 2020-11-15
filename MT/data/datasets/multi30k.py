@@ -104,6 +104,8 @@ class Multi30kDataset(Dataset):
 
         # FM: TODO correct this
         for i, idb in enumerate(self.simple_database):
+            # correct address:
+            idb['frcnn'] = idb['frcnn'].replace("test_2016_flickr_frcnn.zip", "test_frcnn.zip")
             old_id = idb['frcnn'].split('/')[1].split('.')[0]
             image_id = old_id
             while len(image_id)<8:

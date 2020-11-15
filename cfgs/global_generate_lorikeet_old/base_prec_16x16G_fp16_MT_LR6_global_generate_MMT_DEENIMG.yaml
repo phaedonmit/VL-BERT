@@ -15,7 +15,7 @@ SCALES:
 DATASET:
   DATASET: multi30k
   APPEND_INDEX: false
-  DATASET_PATH: '/data/ozan/datasets/mmbert/multi30k_en_de'
+  DATASET_PATH: './data/flickr30k'
   ROOT_PATH: './'
   TRAIN_IMAGE_SET: 'train'
   VAL_IMAGE_SET: 'val'
@@ -26,8 +26,8 @@ DATASET:
   IGNORE_DB_CACHE: false
   MASK_SIZE: 14
   SEQ_LEN: 150
-  TASK_NAME: '[TO_DE]'  
-  LANG: 'second' 
+  TASK_NAME: '[TO_EN]'  
+  LANG: 'first'  
 
 NETWORK:
   PARTIAL_PRETRAIN: "/data/faidon/VL-BERT/checkpoints/output/pretrain/pretrain_global/PREGLOBAL002_LR6_with_turkish/train_train/vl-bert_base_res101_pretrain_multitask-0019.model"

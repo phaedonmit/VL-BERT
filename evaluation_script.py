@@ -1,6 +1,6 @@
 import subprocess
 
-model = "/data/faidon/VL-BERT/checkpoints/output/pretrain/vl-bert/base_prec_16x16G_fp16_LR6_fine_tune_global_durga_ALL_lorikeet/train_train/vl-bert_base_res101_pretrain_multitask-0002.model"
+model = "/data/faidon/VL-BERT/checkpoints/output/pretrain/vl-bert/base_prec_16x16G_fp16_LR6_fine_tune_global_lorikeet_single_phase/train_train/vl-bert_base_res101_pretrain_multitask-0002.model"
 
 cfgs = [
         "/experiments/faidon/test/VL-BERT/cfgs/global_generate/base_prec_16x16G_fp16_MT_LR6_global_generate_image_only_DEIMG.yaml",
@@ -22,7 +22,7 @@ cfgs = [
 splits = [
         "test2015",
         "test2015",
-        "test_2016_fr",
+        # "test_2016_fr",
         "test_tu",
         "test2015",
         "test2015",
@@ -38,7 +38,7 @@ splits = [
 cfgs = [
         "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_image_only_DEIMG.yaml",
         "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_image_only_ENIMG.yaml", 
-        "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_image_only_FRIMG.yaml",
+        # "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_image_only_FRIMG.yaml",
         "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_image_only_TUIMG.yaml",
         "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_MMT_DEENIMG.yaml",
         "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_MMT_ENDEIMG.yaml",
@@ -57,7 +57,7 @@ cfgs = [
 lang = [
         'second', 
         "first", 
-        "second", 
+        # "second", 
         "second", 
         "first", 
         "second", 
@@ -72,14 +72,14 @@ lang = [
         ]
 
 
-cfgs = [
-        "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_image_only_TUIMG.yaml", 
+# cfgs = [
+#         "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_image_only_TUIMG.yaml", 
 
 
-        ]
-splits = ['test_tu']
+#         ]
+# splits = ['test_tu']
 
-lang = ['second']
+# lang = ['second']
 # cfgs = [
 #         "/experiments/faidon/test/VL-BERT/cfgs/global_generate/base_prec_16x16G_fp16_MT_LR6_global_generate_image_only_FRIMG.yaml",
 
@@ -98,9 +98,10 @@ for i in range(len(cfgs)):
                                 "--cfg", cfgs[i],
                                 "--ckpt", model,
                                 "--gpus", "0",
-                                "--result-path", "/data/faidon/VL-BERT/checkpoints/generated",
+                                "--result-path", "/data/faidon/VL-BERT/checkpoints/generated/single_phase_epoch2/",
                                 "--result-name", name,
-                                "--split", splits[i]                           
+                                # "--split", splits[i]                           
+                                "--split", 'test2015'                           
                                 ])
     print("The exit code was: %d" % list_files.returncode)
 

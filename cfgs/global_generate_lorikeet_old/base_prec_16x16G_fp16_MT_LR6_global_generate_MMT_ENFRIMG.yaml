@@ -15,18 +15,18 @@ SCALES:
 DATASET:
   DATASET: multi30k
   APPEND_INDEX: false
-  DATASET_PATH: '/data/ozan/datasets/mmbert/multi30k_en_de'
+  DATASET_PATH: './data/flickr30k'
   ROOT_PATH: './'
-  TRAIN_IMAGE_SET: 'train'
-  VAL_IMAGE_SET: 'val'
-  TEST_IMAGE_SET: 'val'
+  TRAIN_IMAGE_SET: 'train_fr'
+  VAL_IMAGE_SET: 'val_fr'
+  TEST_IMAGE_SET: 'val_fr'
   ADD_IMAGE_AS_A_BOX: true
   ZIP_MODE: false
   CACHE_MODE: false
   IGNORE_DB_CACHE: false
   MASK_SIZE: 14
   SEQ_LEN: 150
-  TASK_NAME: '[TO_DE]'  
+  TASK_NAME: '[TO_FR]'  
   LANG: 'second' 
 
 NETWORK:
