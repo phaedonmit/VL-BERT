@@ -21,7 +21,7 @@ DATASET:
   VAL_IMAGE_SET: 'val'
   TEST_IMAGE_SET: 'val'
   ADD_IMAGE_AS_A_BOX: true
-  ZIP_MODE: false
+  ZIP_MODE: true
   CACHE_MODE: false
   IGNORE_DB_CACHE: false
   MASK_SIZE: 14

@@ -141,7 +141,11 @@ class Multi30kDatasetImageOnly(Dataset):
                     self.database[db_pos]['caption_en'] = self.database[db_pos]['caption_en'] + ['[STOP]']
                     db_pos += 1
         else:
-            self.database = self.simple_database
+            # ignore multiple in turkish (2xcaption), english/german(5xcaption)
+            if self.task_name=='[TO_TU]'
+                self.database = self.simple_database[::2]
+            else:
+                self.database = self.simple_database[::5]
 
         if self.aspect_grouping:
             assert False, "not support aspect grouping currently!"
