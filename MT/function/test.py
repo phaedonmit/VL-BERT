@@ -75,9 +75,9 @@ def test_net(args, config, ckpt_path=None, save_path=None, save_name=None):
     for nbatch, batch in zip(trange(len(test_loader)), test_loader):
         bs = test_loader.batch_sampler.batch_size if test_loader.batch_sampler is not None else test_loader.batch_size
         # image_ids.extend([test_database[id]['image_index'] for id in range(cur_id, min(cur_id + bs, len(test_database)))])
-        if 'flickr8k' not in config.DATASET.DATASET_PATH:
-            captions_en.extend([test_database[id]['caption_en'] for id in range(cur_id, min(cur_id + bs, len(test_database)))])
-        captions_de.extend([test_database[id]['caption_de'] for id in range(cur_id, min(cur_id + bs, len(test_database)))])
+        # if 'flickr8k' not in config.DATASET.DATASET_PATH:
+        #     captions_en.extend([test_database[id]['caption_en'] for id in range(cur_id, min(cur_id + bs, len(test_database)))])
+        # captions_de.extend([test_database[id]['caption_de'] for id in range(cur_id, min(cur_id + bs, len(test_database)))])
         batch = to_cuda(batch)
         output = model(*batch)
         generated_sentences.extend((output[0]['generated_sentences']))
@@ -90,16 +90,18 @@ def test_net(args, config, ckpt_path=None, save_path=None, save_name=None):
    
     # ************
     # Step 3: Store all logit results in file for later evalution    
-    if 'flickr8k' not in config.DATASET.DATASET_PATH:   
-        result = [{'generated_sentence': c_id, 'caption_en': caption_en, 'caption_de': caption_de} 
-                    for c_id, caption_en, caption_de in zip(generated_sentences, captions_en, captions_de)]
-    else:
-        result = [{'generated_sentence': c_id, 'caption_de': caption_de} 
-                    for c_id,  caption_de in zip(generated_sentences, captions_de)]
+    # if 'flickr8k' not in config.DATASET.DATASET_PATH:   
+    #     result = [{'generated_sentence': c_id, 'caption_en': caption_en, 'caption_de': caption_de} 
+    #                 for c_id, caption_en, caption_de in zip(generated_sentences, captions_en, captions_de)]
+    # else:
+    #     result = [{'generated_sentence': c_id, 'caption_de': caption_de} 
+    #                 for c_id,  caption_de in zip(generated_sentences, captions_de)]
     cfg_name = os.path.splitext(os.path.basename(args.cfg))[0]
-    result_json_path = os.path.join(save_path, '{}.json'.format(cfg_name if save_name is None else save_name
+    result_json_path = os.path.join(save_path, '{}.txt'.format(cfg_name if save_name is None else save_name
                                                                         ))
     with open(result_json_path, 'w') as f:
-        json.dump(result, f)
+        for item in generated_sentences:
+            f.write('%s\n' % item)
+        # json.dump(result, f)
     print('result json saved to {}.'.format(result_json_path))
     return result_json_path
