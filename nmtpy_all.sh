@@ -1,4 +1,4 @@
-root_path="/data/faidon/VL-BERT/checkpoints/generate/single_phase_epoch2/"
+root_path="/data/faidon/VL-BERT/checkpoints/generated/single_phase_epoch2/"
 ground_path="/data/faidon/VL-BERT/data/ground_truth/"
 
 echo "***************"
