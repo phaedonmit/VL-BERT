@@ -21,7 +21,7 @@ source_files = [
         "/data/ozan/datasets/mmbert/flickr30k_de/test_frcnn.json",
         "/data/ozan/datasets/mmbert/flickr30k_en/test_frcnn.json",
         "/data/ozan/datasets/mmbert/flickr8k_tr/test_frcnn.json",
-        "/data/ozan/datasets/mmbert/flickr30k_de/test_frcnn.json",
+        "/data/ozan/datasets/mmbert/multi30k_en_de/test_frcnn.json",
         "/data/ozan/datasets/mmbert/multi30k_en_de/test_frcnn.json",
         "/data/ozan/datasets/mmbert/multi30k_en_fr/test_frcnn.json",
         "/data/ozan/datasets/mmbert/multi30k_en_fr/test_frcnn.json",
