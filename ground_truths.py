@@ -57,6 +57,10 @@ for filename, source_file, caption in zip(filenames,source_files, captions):
     
 
     database = list(jsonlines.open(source_file))
+    if filename=="TUIMG":
+        database = database[::2]
+    elif filename=="DEIMG" or filename=="ENIMG":
+        database = database[::5]
 
     with open(result_path, 'w') as f:
         for line in database:
