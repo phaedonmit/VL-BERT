@@ -170,3 +170,5 @@ data/WMT14/*
 !MLT/data/datasets
 !MT/data
 !MT/data/datasets
+
+tokenized_files/
