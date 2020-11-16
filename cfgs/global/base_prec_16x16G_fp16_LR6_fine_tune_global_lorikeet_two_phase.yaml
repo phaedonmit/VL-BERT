@@ -276,19 +276,19 @@ TRAIN:
   SHUFFLE: true
   FLIP_PROB: 0.5
   BATCH_IMAGES: 
-  - 5
-  - 5
-  - 5
-  - 5
-  - 5
-  - 5
-  - 5
-  - 5
-  - 5
-  - 5
-  - 5 
-  - 5
-  - 5
+  - 3
+  - 3
+  - 3
+  - 3
+  - 3
+  - 3
+  - 3
+  - 3
+  - 3
+  - 3
+  - 3 
+  - 3
+  - 3
   ASPECT_GROUPING: false
   RESUME: false
   AUTO_RESUME: true
@@ -314,35 +314,35 @@ VAL:
   SHUFFLE: false
   FLIP_PROB: 0
   BATCH_IMAGES: 
-  - 5
-  - 5
-  - 5
-  - 5
-  - 5
-  - 5
-  - 5
-  - 5
-  - 5
-  - 5
-  - 5
-  - 5
-  - 5   
+  - 3
+  - 3
+  - 3
+  - 3
+  - 3
+  - 3
+  - 3
+  - 3
+  - 3
+  - 3
+  - 3
+  - 3
+  - 3   
 
 TEST:
   SHUFFLE: false
   FLIP_PROB: 0
   TEST_EPOCH: 0
   BATCH_IMAGES: 
-  - 5
-  - 5
-  - 5
-  - 5
-  - 5
-  - 5
-  - 5
-  - 5
-  - 5
-  - 5
-  - 5 
-  - 5
-  - 5
+  - 3
+  - 3
+  - 3
+  - 3
+  - 3
+  - 3
+  - 3
+  - 3
+  - 3
+  - 3
+  - 3 
+  - 3
+  - 3
