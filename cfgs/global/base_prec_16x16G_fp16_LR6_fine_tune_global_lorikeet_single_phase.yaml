@@ -41,6 +41,7 @@ DATASET:
   CACHE_MODE: false
   IGNORE_DB_CACHE: false
   MASK_SIZE: 14
+  SEQ_LEN: 128  
   TASK_NAME: '[TO_DE]'  
   LANG: 'second'
 
@@ -86,6 +87,7 @@ DATASET:
   CACHE_MODE: false
   IGNORE_DB_CACHE: false
   MASK_SIZE: 14  
+  SEQ_LEN: 128  
   TASK_NAME: '[TO_EN]'
   LANG: 'first' 
 
@@ -131,6 +133,7 @@ DATASET:
   CACHE_MODE: false
   IGNORE_DB_CACHE: false
   MASK_SIZE: 14
+  SEQ_LEN: 128  
   TASK_NAME: '[TO_FR]'  
   LANG: 'second'
 
@@ -145,7 +148,7 @@ DATASET:
   ZIP_MODE: true
   CACHE_MODE: false
   IGNORE_DB_CACHE: false
-  MASK_SIZE: 14  
+  MASK_SIZE: 14    
   TASK_NAME: '[TO_EN]'
   LANG: 'first'  
 
@@ -161,6 +164,7 @@ DATASET:
   CACHE_MODE: false
   IGNORE_DB_CACHE: false
   MASK_SIZE: 14
+  SEQ_LEN: 128  
   TASK_NAME: '[TO_EN]'  
   LANG: 'first'
 
@@ -176,6 +180,7 @@ DATASET:
   CACHE_MODE: false
   IGNORE_DB_CACHE: false
   MASK_SIZE: 14
+  SEQ_LEN: 128  
   TASK_NAME: '[TO_TU]'  
   LANG: 'second'
 
@@ -191,6 +196,7 @@ DATASET:
   CACHE_MODE: false
   IGNORE_DB_CACHE: false
   MASK_SIZE: 14
+  SEQ_LEN: 128  
   TASK_NAME: '[TO_EN]'  
   LANG: 'first'
 
