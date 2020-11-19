@@ -1,7 +1,12 @@
 import subprocess
+import sys
 
-model = "/data/faidon/VL-BERT/checkpoints/output/pretrain/vl-bert/base_prec_16x16G_fp16_LR6_fine_tune_global_lorikeet_single_phase/train_train/vl-bert_base_res101_pretrain_multitask-0003.model"
+
+# model = "/data/faidon/VL-BERT/checkpoints/output/pretrain/vl-bert/base_prec_16x16G_fp16_LR6_fine_tune_global_lorikeet_single_phase/train_train/vl-bert_base_res101_pretrain_multitask-0003.model"
 #model = "/data/faidon/VL-BERT/checkpoints/output/pretrain/vl-bert/base_prec_16x16G_fp16_LR6_fine_tune_global_lorikeet_two_phase/train_train/vl-bert_base_res101_pretrain_multitask-0003.model"
+model = sys.argv[1]
+location = sys.argv[2]
+# location = "/data/faidon/VL-BERT/checkpoints/generated/single_phase_epoch03/"
 
 cfgs = [
         "/experiments/faidon/test/VL-BERT/cfgs/global_generate/base_prec_16x16G_fp16_MT_LR6_global_generate_image_only_DEIMG.yaml",
@@ -99,7 +104,7 @@ for i in range(len(cfgs)):
                                 "--cfg", cfgs[i],
                                 "--ckpt", model,
                                 "--gpus", "0",
-                                "--result-path", "/data/faidon/VL-BERT/checkpoints/generated/single_phase_epoch03/",
+                                "--result-path", location,
                                 "--result-name", name,
                                 # "--split", splits[i]                           
                                 "--split", 'test2015'                           
