@@ -1,7 +1,7 @@
 echo 'Start evaluation...'
 
-root_path="/data/faidon/VL-BERT/checkpoints/generated/single_phase_epoch03/"
-#root_path="/data/faidon/VL-BERT/checkpoints/generated/two_phase_epoch03/"
+#root_path="/data/faidon/VL-BERT/checkpoints/generated/single_phase_epoch04/"
+root_path="/data/faidon/VL-BERT/checkpoints/generated/two_phase_epoch04/"
 ground_path="/data/faidon/VL-BERT/data/ground_truth/"
 
 echo "***************"
