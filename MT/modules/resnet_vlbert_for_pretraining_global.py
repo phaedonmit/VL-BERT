@@ -30,8 +30,10 @@ class ResNetVLBERTForPretrainingGlobal(Module):
         self.aux_text_visual_embedding = nn.Embedding(1, config.NETWORK.VLBERT.hidden_size)
         self.image_feature_bn_eval = config.NETWORK.IMAGE_FROZEN_BN
         self.tokenizer = BertTokenizer.from_pretrained(config.NETWORK.BERT_MODEL_NAME)
-        self.num_datasets = len(config.DATASET)
-
+        try:
+            self.num_datasets = len(config.TRAIN.BATCH_IMAGES)
+        except:
+            self.num_datasets = 1
         # Can specify pre-trained model or use the downloaded pretrained model specific in .yaml file
         language_pretrained_model_path = None        
         if config.NETWORK.BERT_PRETRAINED != '':
