@@ -150,7 +150,7 @@ class ResNetVLBERTForPretrainingGlobalGenerate(Module):
         generated = []
         stop = [False]*text.shape[0]
         curr_len = 0
-        max_len = 48
+        max_len = 150
         while not all(stop) and curr_len<=max_len:
             relationship_logits, mlm_logits, mvrc_logits = self.vlbert(text_input_ids,
                                                                     text_token_type_ids,
