@@ -7,3 +7,5 @@ new_path="/data/faidon/VL-BERT/checkpoints/generated/$DIRECTORY/results_clean.al
 sed '/*/d' < $root_path > $new_path
 sed -i 's/|//g' $new_path
 sed -i '/[A-Z]/d' $new_path
+sed -i 's/ \+/ /g' $new_path
+cat $new_path
