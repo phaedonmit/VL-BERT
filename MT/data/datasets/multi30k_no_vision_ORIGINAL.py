@@ -17,7 +17,6 @@ from common.utils.create_logger import makedirsExist
 
 from copy import deepcopy
 
-
 class Multi30kDatasetNoVision(Dataset):
     def __init__(self, ann_file, image_set, root_path, data_path, seq_len=64,
                  with_precomputed_visual_feat=False, mask_raw_pixels=True,
@@ -87,15 +86,15 @@ class Multi30kDatasetNoVision(Dataset):
             makedirsExist(self.cache_dir)
         self.tokenizer = tokenizer if tokenizer is not None \
             else BertTokenizer.from_pretrained(
-                'bert-base-uncased' if pretrained_model_name is None else pretrained_model_name,
-                cache_dir=self.cache_dir, do_lower_case=False)
+            'bert-base-uncased' if pretrained_model_name is None else pretrained_model_name,
+            cache_dir=self.cache_dir, do_lower_case=False)
 
         self.zipreader = ZipReader()
-
+        
         # FM: define task name to add prefix
         self.task_name = task_name
         self.lang = lang
-
+        
         # FM: Customise for multi30k dataset
         self.simple_database = list(jsonlines.open(self.ann_file))
         # if not self.zip_mode:
@@ -103,33 +102,29 @@ class Multi30kDatasetNoVision(Dataset):
         #         self.simple_database[i]['frcnn'] = idb['frcnn'].replace('.zip@', '')\
         #             .replace('.0', '').replace('.1', '').replace('.2', '').replace('.3', '')
         #         self.simple_database[i]['image'] = idb['image'].replace('.zip@', '')
-
+        
         if not self.test_mode:
             self.database = []
             db_pos = 0
             # create [MASK] every time
             for entry in self.simple_database:
-                if self.lang == "second":
-                    caption_tokens_de = self.tokenizer.tokenize(
-                        entry['caption_de'])
+                if self.lang=="second":
+                    caption_tokens_de = self.tokenizer.tokenize(entry['caption_de'])
                     # repeat each entry multiple times - MASK the last word in each case
                     for pos, item in enumerate(caption_tokens_de):
                         self.database.append(deepcopy(entry))
-                        self.database[db_pos]['caption_de'] = deepcopy(
-                            caption_tokens_de[:pos+1])
+                        self.database[db_pos]['caption_de'] = deepcopy(caption_tokens_de[:pos+1])
                         db_pos += 1
                     # add one last entry with last token [STOP]
                     self.database.append(deepcopy(self.database[db_pos-1]))
                     self.database[db_pos]['caption_de'] = self.database[db_pos]['caption_de'] + ['[STOP]']
                     db_pos += 1
                 else:
-                    caption_tokens_en = self.tokenizer.tokenize(
-                        entry['caption_en'])
+                    caption_tokens_en = self.tokenizer.tokenize(entry['caption_en'])
                     # repeat each entry multiple times - MASK the last word in each case
                     for pos, item in enumerate(caption_tokens_en):
                         self.database.append(deepcopy(entry))
-                        self.database[db_pos]['caption_en'] = deepcopy(
-                            caption_tokens_en[:pos+1])
+                        self.database[db_pos]['caption_en'] = deepcopy(caption_tokens_en[:pos+1])
                         db_pos += 1
                     # add one last entry with last token [STOP]
                     self.database.append(deepcopy(self.database[db_pos-1]))
@@ -163,68 +158,58 @@ class Multi30kDatasetNoVision(Dataset):
             rand_index = random.randrange(0, len(self.database))
             while rand_index == index:
                 rand_index = random.randrange(0, len(self.database))
-            caption_en = self.database[rand_index]['caption_en']
-            caption_de = self.database[rand_index]['caption_de']
+            caption_en =self.database[rand_index]['caption_en']
+            caption_de =self.database[rand_index]['caption_de']
 
         # Task #2: Masked Language Modeling - Adapted for two languages
 
         if self.with_mlm_task:
             if not self.test_mode:
-                if self.lang == "second":
+                if self.lang=="second":
                     # FM: removing joining of caption - split into two languages
                     caption_tokens_en = self.tokenizer.tokenize(caption_en)
                     mlm_labels_en = [-1] * len(caption_tokens_en)
                     # FM edit: Mask always the last token
-                    caption_tokens_de = caption_de
+                    caption_tokens_de = caption_de               
                     mlm_labels_de = [-1] * (len(caption_tokens_de)-1)
                     try:
-                        mlm_labels_de.append(
-                            self.tokenizer.vocab[caption_tokens_de[-1]])
+                        mlm_labels_de.append(self.tokenizer.vocab[caption_tokens_de[-1]])
                     except KeyError:
                         # For unknown words (should not occur with BPE vocab)
                         mlm_labels_de.append(self.tokenizer.vocab["[UNK]"])
-                        logging.warning(
-                            "Cannot find sub_token '{}' in vocab. Using [UNK] insetad".format(sub_token))
+                        logging.warning("Cannot find sub_token '{}' in vocab. Using [UNK] insetad".format(sub_token))  
                     caption_tokens_de[-1] = '[MASK]'
                 else:
                     # FM: removing joining of caption - split into two languages
                     caption_tokens_de = self.tokenizer.tokenize(caption_de)
                     mlm_labels_de = [-1] * len(caption_tokens_de)
                     # FM edit: Mask always the last token
-                    caption_tokens_en = caption_en
+                    caption_tokens_en = caption_en               
                     mlm_labels_en = [-1] * (len(caption_tokens_en)-1)
                     try:
-                        mlm_labels_en.append(
-                            self.tokenizer.vocab[caption_tokens_en[-1]])
+                        mlm_labels_en.append(self.tokenizer.vocab[caption_tokens_en[-1]])
                     except KeyError:
                         # For unknown words (should not occur with BPE vocab)
                         mlm_labels_en.append(self.tokenizer.vocab["[UNK]"])
-                        logging.warning(
-                            "Cannot find sub_token '{}' in vocab. Using [UNK] insetad".format(sub_token))
-                    caption_tokens_en[-1] = '[MASK]'
+                        logging.warning("Cannot find sub_token '{}' in vocab. Using [UNK] insetad".format(sub_token))  
+                    caption_tokens_en[-1] = '[MASK]'                    
             else:
-                if self.lang == "second":
+                if self.lang=="second":
                     # FM TODO: fix inference
                     caption_tokens_en = self.tokenizer.tokenize(caption_en)
-                    # Limit size of input sequence:
-                    if len(caption_tokens_en) > 70:
-                        caption_tokens_en = caption_tokens_en[:70]
                     mlm_labels_en = [-1] * len(caption_tokens_en)
                     # FM edit: add [MASK] to start guessing caption
                     caption_tokens_de = self.tokenizer.tokenize(caption_de)
-                    # FM edit: add label from vocabulary
+                    # FM edit: add label from vocabulary                
                     mlm_labels_de = [103] + [-1]
                     caption_tokens_de = ['[MASK]'] + ['[PAD]']
                 else:
                     # FM TODO: fix inference
                     caption_tokens_de = self.tokenizer.tokenize(caption_de)
-                    # Limit size of input sequence:
-                    if len(caption_tokens_de) > 70:
-                        caption_tokens_de = caption_tokens_de[:70]
                     mlm_labels_de = [-1] * len(caption_tokens_de)
                     # FM edit: add [MASK] to start guessing caption
                     caption_tokens_en = self.tokenizer.tokenize(caption_en)
-                    # FM edit: add label from vocabulary
+                    # FM edit: add label from vocabulary                
                     mlm_labels_en = [103] + [-1]
                     caption_tokens_en = ['[MASK]'] + ['[PAD]']
         else:
@@ -232,22 +217,19 @@ class Multi30kDatasetNoVision(Dataset):
             caption_tokens_de = self.tokenizer.tokenize(caption_de)
             mlm_labels_en = [-1] * len(caption_tokens_en)
             mlm_labels_de = [-1] * len(caption_tokens_de)
-
-        if self.lang == "second":
-            text_tokens = [self.task_name] + ['[CLS]'] + \
-                caption_tokens_en + ['[SEP]'] + caption_tokens_de + ['[SEP]']
-            mlm_labels = [-1] + [-1] + mlm_labels_en + \
-                [-1] + mlm_labels_de + [-1]
-        else:
-            text_tokens = [self.task_name] + ['[CLS]'] + \
-                caption_tokens_de + ['[SEP]'] + caption_tokens_en + ['[SEP]']
-            mlm_labels = [-1] + [-1] + mlm_labels_de + \
-                [-1] + mlm_labels_en + [-1]
-
+        
+        if self.lang=="second":
+            text_tokens = [self.task_name] + ['[CLS]'] + caption_tokens_en + ['[SEP]'] + caption_tokens_de + ['[SEP]']
+            mlm_labels = [-1] + [-1] + mlm_labels_en + [-1] + mlm_labels_de + [-1]
+        else:    
+            text_tokens = [self.task_name] + ['[CLS]'] + caption_tokens_de + ['[SEP]'] + caption_tokens_en + ['[SEP]']
+            mlm_labels = [-1] + [-1] + mlm_labels_de + [-1] + mlm_labels_en + [-1]
+           
+ 
         text = self.tokenizer.convert_tokens_to_ids(text_tokens)
 
         # truncate seq to max len
-        if len(text) > self.seq_len:
+        if len(text)  > self.seq_len:
             text_len_keep = len(text)
             while (text_len_keep) > self.seq_len and (text_len_keep > 0):
                 text_len_keep -= 1
@@ -319,22 +301,21 @@ class Multi30kDatasetNoVision(Dataset):
                 #     for sub_token in sub_tokens:
                 #         output_tokens.append(sub_token)
 
-                    # append current token to output (we will predict these later)
+                        # append current token to output (we will predict these later)
                 for sub_token in sub_tokens:
                     try:
                         output_label.append(self.tokenizer.vocab[sub_token])
                     except KeyError:
                         # For unknown words (should not occur with BPE vocab)
                         output_label.append(self.tokenizer.vocab["[UNK]"])
-                        logging.warning(
-                            "Cannot find sub_token '{}' in vocab. Using [UNK] insetad".format(sub_token))
+                        logging.warning("Cannot find sub_token '{}' in vocab. Using [UNK] insetad".format(sub_token))
             else:
                 for sub_token in sub_tokens:
                     # no masking token (will be ignored by loss function later)
                     output_tokens.append(sub_token)
                     output_label.append(-1)
 
-        # if no word masked, random choose a word to mask
+        ## if no word masked, random choose a word to mask
         # if all([l_ == -1 for l_ in output_label]):
         #    choosed = random.randrange(0, len(output_label))
         #    output_label[choosed] = self.tokenizer.vocab[tokens[choosed]]
@@ -413,3 +394,4 @@ class Multi30kDatasetNoVision(Dataset):
         else:
             with open(path, 'r') as f:
                 return json.load(f)
+
