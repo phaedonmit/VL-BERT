@@ -135,6 +135,10 @@ class Multi30kDatasetNoVision(Dataset):
                     self.database.append(deepcopy(self.database[db_pos-1]))
                     self.database[db_pos]['caption_en'] = self.database[db_pos]['caption_en'] + ['[STOP]']
                     db_pos += 1
+                print('***********************')
+                print('The dataset length is: ', len(self.database))
+                print('Task: ', self.task_name)
+                print('Lang: ', self.lang)
         else:
             self.database = self.simple_database
 

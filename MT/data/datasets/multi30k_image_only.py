@@ -17,6 +17,7 @@ from common.utils.create_logger import makedirsExist
 
 from copy import deepcopy
 
+
 class Multi30kDatasetImageOnly(Dataset):
     def __init__(self, ann_file, image_set, root_path, data_path, seq_len=64,
                  with_precomputed_visual_feat=False, mask_raw_pixels=True,
@@ -51,8 +52,8 @@ class Multi30kDatasetImageOnly(Dataset):
 
         annot = {'train': 'train_frcnn.json',
                  'val': 'val_frcnn.json',
-                 'test2015': 'test_frcnn.json', 
-                 'test2018': 'test_frcnn2018.json', 
+                 'test2015': 'test_frcnn.json',
+                 'test2018': 'test_frcnn2018.json',
                  'test2018MLT': 'test_MLT_2018_renamed_frcnn.json',
                  'train_fr': 'train_fr_frcnn.json',
                  'val_fr': 'val_fr_frcnn.json',
@@ -88,65 +89,76 @@ class Multi30kDatasetImageOnly(Dataset):
             makedirsExist(self.cache_dir)
         self.tokenizer = tokenizer if tokenizer is not None \
             else BertTokenizer.from_pretrained(
-            'bert-base-uncased' if pretrained_model_name is None else pretrained_model_name,
-            cache_dir=self.cache_dir, do_lower_case=False)
+                'bert-base-uncased' if pretrained_model_name is None else pretrained_model_name,
+                cache_dir=self.cache_dir, do_lower_case=False)
 
         self.zipreader = ZipReader()
-        
+
         # FM: define task name to add prefix
         self.task_name = task_name
         self.lang = lang
-        
+
         # FM: Customise for multi30k dataset
         self.simple_database = list(jsonlines.open(self.ann_file))
         if not self.zip_mode:
             for i, idb in enumerate(self.simple_database):
                 self.simple_database[i]['frcnn'] = idb['frcnn'].replace('.zip@', '')\
                     .replace('.0', '').replace('.1', '').replace('.2', '').replace('.3', '')
-                self.simple_database[i]['image'] = idb['image'].replace('.zip@', '')
+                self.simple_database[i]['image'] = idb['image'].replace(
+                    '.zip@', '')
 
         # FM: TODO correct this
         for i, idb in enumerate(self.simple_database):
             # correct address:
-            idb['frcnn'] = idb['frcnn'].replace("test_2016_flickr_frcnn.zip", "test_frcnn.zip")
+            idb['frcnn'] = idb['frcnn'].replace(
+                "test_2016_flickr_frcnn.zip", "test_frcnn.zip")
             old_id = idb['frcnn'].split('/')[1].split('.')[0]
             image_id = old_id
-            while len(image_id)<8:
+            while len(image_id) < 8:
                 image_id = '0'+image_id
-            self.simple_database[i]['frcnn'] = idb['frcnn'].replace(old_id, image_id)
+            self.simple_database[i]['frcnn'] = idb['frcnn'].replace(
+                old_id, image_id)
 
         if not self.test_mode:
             self.database = []
             db_pos = 0
             # create [MASK] every time
             for entry in self.simple_database:
-                if self.lang=="second":
-                    caption_tokens_de = self.tokenizer.tokenize(entry['caption_de'])
+                if self.lang == "second":
+                    caption_tokens_de = self.tokenizer.tokenize(
+                        entry['caption_de'])
                     # repeat each entry multiple times - MASK the last word in each case
                     for pos, item in enumerate(caption_tokens_de):
                         self.database.append(deepcopy(entry))
-                        self.database[db_pos]['caption_de'] = deepcopy(caption_tokens_de[:pos+1])
+                        self.database[db_pos]['caption_de'] = deepcopy(
+                            caption_tokens_de[:pos+1])
                         db_pos += 1
                     # add one last entry with last token [STOP]
                     self.database.append(deepcopy(self.database[db_pos-1]))
                     self.database[db_pos]['caption_de'] = self.database[db_pos]['caption_de'] + ['[STOP]']
                     db_pos += 1
                 else:
-                    caption_tokens_en = self.tokenizer.tokenize(entry['caption_en'])
+                    caption_tokens_en = self.tokenizer.tokenize(
+                        entry['caption_en'])
                     # repeat each entry multiple times - MASK the last word in each case
                     for pos, item in enumerate(caption_tokens_en):
                         self.database.append(deepcopy(entry))
-                        self.database[db_pos]['caption_en'] = deepcopy(caption_tokens_en[:pos+1])
+                        self.database[db_pos]['caption_en'] = deepcopy(
+                            caption_tokens_en[:pos+1])
                         db_pos += 1
                     # add one last entry with last token [STOP]
                     self.database.append(deepcopy(self.database[db_pos-1]))
                     self.database[db_pos]['caption_en'] = self.database[db_pos]['caption_en'] + ['[STOP]']
                     db_pos += 1
+                print('***********************')
+                print('The dataset length is: ', len(self.database))
+                print('Task: ', self.task_name)
+                print('Lang: ', self.lang)
         else:
             # ignore multiple in turkish (2xcaption), english/german(5xcaption)
-            if self.task_name=='[TO_TU]':
+            if self.task_name == '[TO_TU]':
                 self.database = self.simple_database[::2]
-            elif self.task_name=='[TO_FR]':
+            elif self.task_name == '[TO_FR]':
                 self.database = self.simple_database
             else:
                 self.database = self.simple_database[::5]
@@ -167,7 +179,8 @@ class Multi30kDatasetImageOnly(Dataset):
 
         # image data
         # IN ALL CASES: boxes and cls scores are available for each image
-        frcnn_data = self._load_json(os.path.join(self.data_path, idb['frcnn']))
+        frcnn_data = self._load_json(
+            os.path.join(self.data_path, idb['frcnn']))
         boxes = np.frombuffer(self.b64_decode(frcnn_data['boxes']),
                               dtype=np.float32).reshape((frcnn_data['num_boxes'], -1))
         boxes_cls_scores = np.frombuffer(self.b64_decode(frcnn_data['classes']),
@@ -188,10 +201,12 @@ class Multi30kDatasetImageOnly(Dataset):
             boxes_features = torch.as_tensor(boxes_features)
         else:
             try:
-                image = self._load_image(os.path.join(self.data_path, idb['image']))
+                image = self._load_image(
+                    os.path.join(self.data_path, idb['image']))
                 w0, h0 = image.size
             except:
-                print("Failed to load image {}, use zero image!".format(idb['image']))
+                print("Failed to load image {}, use zero image!".format(
+                    idb['image']))
                 image = None
                 w0, h0 = frcnn_data['image_w'], frcnn_data['image_h']
 
@@ -201,12 +216,14 @@ class Multi30kDatasetImageOnly(Dataset):
             boxes = torch.cat((image_box, boxes), dim=0)
             if self.with_precomputed_visual_feat:
                 image_box_feat = boxes_features.mean(dim=0, keepdim=True)
-                boxes_features = torch.cat((image_box_feat, boxes_features), dim=0)
+                boxes_features = torch.cat(
+                    (image_box_feat, boxes_features), dim=0)
 
         # transform
         im_info = torch.tensor([w0, h0, 1.0, 1.0, index])
         if self.transform is not None:
-            image, boxes, _, im_info = self.transform(image, boxes, None, im_info)
+            image, boxes, _, im_info = self.transform(
+                image, boxes, None, im_info)
 
         if image is None and (not self.with_precomputed_visual_feat):
             w = int(im_info[0].item())
@@ -233,72 +250,78 @@ class Multi30kDatasetImageOnly(Dataset):
             while rand_index == index:
                 rand_index = random.randrange(0, len(self.database))
             if self.lang == "second":
-                caption_de =self.database[rand_index]['caption_de']
+                caption_de = self.database[rand_index]['caption_de']
             else:
-                caption_en =self.database[rand_index]['caption_en']
-            
+                caption_en = self.database[rand_index]['caption_en']
 
         # Task #2: Masked Language Modeling - Adapted for two languages
 
         if self.with_mlm_task:
             if not self.test_mode:
-                if self.lang=="second":
+                if self.lang == "second":
                     # FM edit: Mask always the last token
-                    caption_tokens_de = caption_de               
+                    caption_tokens_de = caption_de
                     mlm_labels_de = [-1] * (len(caption_tokens_de)-1)
                     try:
-                        mlm_labels_de.append(self.tokenizer.vocab[caption_tokens_de[-1]])
+                        mlm_labels_de.append(
+                            self.tokenizer.vocab[caption_tokens_de[-1]])
                     except KeyError:
                         # For unknown words (should not occur with BPE vocab)
                         mlm_labels_de.append(self.tokenizer.vocab["[UNK]"])
-                        logging.warning("Cannot find sub_token '{}' in vocab. Using [UNK] insetad".format(sub_token))  
+                        logging.warning(
+                            "Cannot find sub_token '{}' in vocab. Using [UNK] insetad".format(sub_token))
                     caption_tokens_de[-1] = '[MASK]'
                 else:
                     # FM edit: Mask always the last token
-                    caption_tokens_en = caption_en               
+                    caption_tokens_en = caption_en
                     mlm_labels_en = [-1] * (len(caption_tokens_en)-1)
                     try:
-                        mlm_labels_en.append(self.tokenizer.vocab[caption_tokens_en[-1]])
+                        mlm_labels_en.append(
+                            self.tokenizer.vocab[caption_tokens_en[-1]])
                     except KeyError:
                         # For unknown words (should not occur with BPE vocab)
                         mlm_labels_en.append(self.tokenizer.vocab["[UNK]"])
-                        logging.warning("Cannot find sub_token '{}' in vocab. Using [UNK] insetad".format(sub_token))  
-                    caption_tokens_en[-1] = '[MASK]'                    
+                        logging.warning(
+                            "Cannot find sub_token '{}' in vocab. Using [UNK] insetad".format(sub_token))
+                    caption_tokens_en[-1] = '[MASK]'
             else:
-                if self.lang=="second":
+                if self.lang == "second":
                     # FM edit: add [MASK] to start guessing caption
                     caption_tokens_de = self.tokenizer.tokenize(caption_de)
-                    # FM edit: add label from vocabulary                
+                    # FM edit: add label from vocabulary
                     mlm_labels_de = [103] + [-1]
                     caption_tokens_de = ['[MASK]'] + ['[PAD]']
                 else:
                     # FM edit: add [MASK] to start guessing caption
                     caption_tokens_en = self.tokenizer.tokenize(caption_en)
-                    # FM edit: add label from vocabulary                
+                    # FM edit: add label from vocabulary
                     mlm_labels_en = [103] + [-1]
                     caption_tokens_en = ['[MASK]'] + ['[PAD]']
         else:
-            if self.lang=="second":
+            if self.lang == "second":
                 caption_tokens_de = self.tokenizer.tokenize(caption_de)
                 mlm_labels_de = [-1] * len(caption_tokens_de)
             else:
                 caption_tokens_en = self.tokenizer.tokenize(caption_en)
                 mlm_labels_en = [-1] * len(caption_tokens_en)
-        
-        if self.lang=="second":
-            text_tokens = [self.task_name] + ['[CLS]'] + ['[SEP]'] + caption_tokens_de + ['[SEP]']
+
+        if self.lang == "second":
+            text_tokens = [self.task_name] + ['[CLS]'] + \
+                ['[SEP]'] + caption_tokens_de + ['[SEP]']
             mlm_labels = [-1] + [-1] + [-1] + mlm_labels_de + [-1]
-        else:    
-            text_tokens = [self.task_name] + ['[CLS]'] + ['[SEP]'] + caption_tokens_en + ['[SEP]']
+        else:
+            text_tokens = [self.task_name] + ['[CLS]'] + \
+                ['[SEP]'] + caption_tokens_en + ['[SEP]']
             mlm_labels = [-1] + [-1] + [-1] + mlm_labels_en + [-1]
-        
 
         # Task #3: Masked Visual Region Classification
         if self.with_mvrc_task:
             if self.add_image_as_a_box:
-                mvrc_ops, mvrc_labels = self.random_mask_region(boxes_cls_scores)
+                mvrc_ops, mvrc_labels = self.random_mask_region(
+                    boxes_cls_scores)
                 mvrc_ops = [0] + mvrc_ops
-                mvrc_labels = [np.zeros_like(boxes_cls_scores[0])] + mvrc_labels
+                mvrc_labels = [np.zeros_like(
+                    boxes_cls_scores[0])] + mvrc_labels
                 num_real_boxes = boxes.shape[0] - 1
                 num_masked_boxes = 0
                 if self.with_precomputed_visual_feat:
@@ -307,13 +330,17 @@ class Multi30kDatasetImageOnly(Dataset):
                         if mvrc_op == 1:
                             num_masked_boxes += 1
                             boxes_features[0] -= box_feat
-                    boxes_features[0] /= (num_real_boxes - num_masked_boxes + 1e-5)
+                    boxes_features[0] /= (num_real_boxes -
+                                          num_masked_boxes + 1e-5)
             else:
-                mvrc_ops, mvrc_labels = self.random_mask_region(boxes_cls_scores)
+                mvrc_ops, mvrc_labels = self.random_mask_region(
+                    boxes_cls_scores)
             assert len(mvrc_ops) == boxes.shape[0], \
-                "Error: mvrc_ops have length {}, expected {}!".format(len(mvrc_ops), boxes.shape[0])
+                "Error: mvrc_ops have length {}, expected {}!".format(
+                    len(mvrc_ops), boxes.shape[0])
             assert len(mvrc_labels) == boxes.shape[0], \
-                "Error: mvrc_labels have length {}, expected {}!".format(len(mvrc_labels), boxes.shape[0])
+                "Error: mvrc_labels have length {}, expected {}!".format(
+                    len(mvrc_labels), boxes.shape[0])
         else:
             mvrc_ops = [0] * boxes.shape[0]
             mvrc_labels = [np.zeros_like(boxes_cls_scores[0])] * boxes.shape[0]
@@ -324,7 +351,7 @@ class Multi30kDatasetImageOnly(Dataset):
                 if mvrc_op == 1:
                     x1, y1, x2, y2 = box
                     image[:, int(y1):(int(y2)+1), int(x1):(int(x2)+1)] = 0
-        
+
         # store labels for masked regions
         mvrc_labels = np.stack(mvrc_labels, axis=0)
 
@@ -416,21 +443,22 @@ class Multi30kDatasetImageOnly(Dataset):
                 #     for sub_token in sub_tokens:
                 #         output_tokens.append(sub_token)
 
-                        # append current token to output (we will predict these later)
+                    # append current token to output (we will predict these later)
                 for sub_token in sub_tokens:
                     try:
                         output_label.append(self.tokenizer.vocab[sub_token])
                     except KeyError:
                         # For unknown words (should not occur with BPE vocab)
                         output_label.append(self.tokenizer.vocab["[UNK]"])
-                        logging.warning("Cannot find sub_token '{}' in vocab. Using [UNK] insetad".format(sub_token))
+                        logging.warning(
+                            "Cannot find sub_token '{}' in vocab. Using [UNK] insetad".format(sub_token))
             else:
                 for sub_token in sub_tokens:
                     # no masking token (will be ignored by loss function later)
                     output_tokens.append(sub_token)
                     output_label.append(-1)
 
-        ## if no word masked, random choose a word to mask
+        # if no word masked, random choose a word to mask
         # if all([l_ == -1 for l_ in output_label]):
         #    choosed = random.randrange(0, len(output_label))
         #    output_label[choosed] = self.tokenizer.vocab[tokens[choosed]]
@@ -509,4 +537,3 @@ class Multi30kDatasetImageOnly(Dataset):
         else:
             with open(path, 'r') as f:
                 return json.load(f)
-
