@@ -17,13 +17,13 @@ images = []
 frcnns = []
 
 tokenizer = BertTokenizer.from_pretrained('./model/pretrained_model/bert-base-multilingual-cased', do_lower_case=False)
-with open("tokenized_files/english_iwslt_ende_train_tokenized.txt", "w") as text_file:
-    path = '/data/ozan/datasets/mmbert/iwslt14_en_de/train_frcnn.json'
+with open("tokenized_files/german_iwslt_ende_test_tokenized.txt", "w") as text_file:
+    path = '/data/ozan/datasets/mmbert/iwslt14_en_de/test_frcnn.json'
         # for cnt, line in enumerate(fp):
         #     print(cnt)
     data = list(jsonlines.open(path))
     for num, item in enumerate(data):
                     #text_file.write('**********************************************\n')
                     #text_file.write(sentence['raw']+'\n')
-        text_file.write(' '.join(tokenizer.tokenize(item['caption_en']))+'\n')
+        text_file.write(' '.join(tokenizer.tokenize(item['caption_de']))+'\n')
 
