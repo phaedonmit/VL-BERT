@@ -211,8 +211,8 @@ class Multi30kDatasetNoVision(Dataset):
                     # FM TODO: fix inference
                     caption_tokens_en = self.tokenizer.tokenize(caption_en)
                     # Limit size of input sequence:
-                    if len(caption_tokens_en) > 70:
-                        caption_tokens_en = caption_tokens_en[:70]
+                    # if len(caption_tokens_en) > 70:
+                    #     caption_tokens_en = caption_tokens_en[:70]
                     mlm_labels_en = [-1] * len(caption_tokens_en)
                     # FM edit: add [MASK] to start guessing caption
                     caption_tokens_de = self.tokenizer.tokenize(caption_de)
@@ -223,8 +223,8 @@ class Multi30kDatasetNoVision(Dataset):
                     # FM TODO: fix inference
                     caption_tokens_de = self.tokenizer.tokenize(caption_de)
                     # Limit size of input sequence:
-                    if len(caption_tokens_de) > 70:
-                        caption_tokens_de = caption_tokens_de[:70]
+                    # if len(caption_tokens_de) > 70:
+                    #     caption_tokens_de = caption_tokens_de[:70]
                     mlm_labels_de = [-1] * len(caption_tokens_de)
                     # FM edit: add [MASK] to start guessing caption
                     caption_tokens_en = self.tokenizer.tokenize(caption_en)
