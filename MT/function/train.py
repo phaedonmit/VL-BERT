@@ -72,7 +72,7 @@ def train_net(args, config):
         master_address = os.environ['MASTER_ADDR']
         master_port = int(os.environ['MASTER_PORT'] or 23456)
         master_port = int(9994)
-        master_port = int(9999)
+        master_port = int(9991)
         world_size = int(os.environ['WORLD_SIZE'] or 1)
         rank = int(os.environ['RANK'] or 0)
         if args.slurm:
@@ -84,18 +84,21 @@ def train_net(args, config):
                 world_size=world_size,
                 rank=rank,
                 group_name='mtorch')
-        print(f'native distributed, size: {world_size}, rank: {rank}, local rank: {local_rank}')
+        print(
+            f'native distributed, size: {world_size}, rank: {rank}, local rank: {local_rank}')
         torch.cuda.set_device(local_rank)
         config.GPUS = str(local_rank)
         model = model.cuda()
         if not config.TRAIN.FP16:
-            model = DDP(model, find_unused_parameters=True, device_ids=[local_rank], output_device=local_rank)
+            model = DDP(model, find_unused_parameters=True, device_ids=[
+                        local_rank], output_device=local_rank)
 
         if rank == 0:
             summary_parameters(model.module if isinstance(model, torch.nn.parallel.DistributedDataParallel) else model,
                                logger)
             shutil.copy(args.cfg, final_output_path)
-            shutil.copy(inspect.getfile(eval(config.MODULE)), final_output_path)
+            shutil.copy(inspect.getfile(
+                eval(config.MODULE)), final_output_path)
 
         writer = None
         if args.log_dir is not None:
@@ -116,7 +119,8 @@ def train_net(args, config):
                                            distributed=True,
                                            num_replicas=world_size,
                                            rank=rank)
-            train_loader = MultiTaskDataLoader([loader for loader, _ in train_loaders_and_samplers])
+            train_loader = MultiTaskDataLoader(
+                [loader for loader, _ in train_loaders_and_samplers])
             val_loader = MultiTaskDataLoader(val_loaders)
             train_sampler = train_loaders_and_samplers[0][1]
         else:
@@ -160,7 +164,8 @@ def train_net(args, config):
                               weight_decay=config.TRAIN.WD,
                               correct_bias=True)
         else:
-            raise ValueError('Not support optimizer {}!'.format(config.TRAIN.OPTIMIZER))
+            raise ValueError('Not support optimizer {}!'.format(
+                config.TRAIN.OPTIMIZER))
         total_gpus = world_size
 
     else:
@@ -174,23 +179,28 @@ def train_net(args, config):
                                                          "Please use amp.parallel.DistributedDataParallel instead."
         total_gpus = num_gpus
         rank = None
-        writer = SummaryWriter(log_dir=args.log_dir) if args.log_dir is not None else None
+        writer = SummaryWriter(
+            log_dir=args.log_dir) if args.log_dir is not None else None
 
         # model
         if num_gpus > 1:
-            model = torch.nn.DataParallel(model, device_ids=[int(d) for d in config.GPUS.split(',')]).cuda()
-        else:          
+            model = torch.nn.DataParallel(
+                model, device_ids=[int(d) for d in config.GPUS.split(',')]).cuda()
+        else:
             torch.cuda.set_device(int(config.GPUS))
             model.cuda()
 
         # loader
         if isinstance(config.DATASET, list):
-            train_loaders = make_dataloaders(config, mode='train', distributed=False)
-            val_loaders = make_dataloaders(config, mode='val', distributed=False)
+            train_loaders = make_dataloaders(
+                config, mode='train', distributed=False)
+            val_loaders = make_dataloaders(
+                config, mode='val', distributed=False)
             train_loader = MultiTaskDataLoader(train_loaders)
             val_loader = MultiTaskDataLoader(val_loaders)
         else:
-            train_loader = make_dataloader(config, mode='train', distributed=False)
+            train_loader = make_dataloader(
+                config, mode='train', distributed=False)
             val_loader = make_dataloader(config, mode='val', distributed=False)
         train_sampler = None
 
@@ -222,12 +232,15 @@ def train_net(args, config):
                               weight_decay=config.TRAIN.WD,
                               correct_bias=True)
         else:
-            raise ValueError('Not support optimizer {}!'.format(config.TRAIN.OPTIMIZER))
+            raise ValueError('Not support optimizer {}!'.format(
+                config.TRAIN.OPTIMIZER))
 
     # partial load pretrain state dict
     if config.NETWORK.PARTIAL_PRETRAIN != "":
-        pretrain_state_dict = torch.load(config.NETWORK.PARTIAL_PRETRAIN, map_location=lambda storage, loc: storage)['state_dict']
-        prefix_change = [prefix_change.split('->') for prefix_change in config.NETWORK.PARTIAL_PRETRAIN_PREFIX_CHANGES]
+        pretrain_state_dict = torch.load(
+            config.NETWORK.PARTIAL_PRETRAIN, map_location=lambda storage, loc: storage)['state_dict']
+        prefix_change = [prefix_change.split(
+            '->') for prefix_change in config.NETWORK.PARTIAL_PRETRAIN_PREFIX_CHANGES]
         if len(prefix_change) > 0:
             pretrain_state_dict_parsed = {}
             for k, v in pretrain_state_dict.items():
@@ -242,10 +255,12 @@ def train_net(args, config):
                     pretrain_state_dict_parsed[k] = v
             pretrain_state_dict = pretrain_state_dict_parsed
         # FM edit: introduce alternative initialisations
-        if config.NETWORK.INITIALISATION=='hybrid':
-            smart_hybrid_partial_load_model_state_dict(model, pretrain_state_dict)
-        elif config.NETWORK.INITIALISATION=='skip':
-            smart_skip_partial_load_model_state_dict(model, pretrain_state_dict)
+        if config.NETWORK.INITIALISATION == 'hybrid':
+            smart_hybrid_partial_load_model_state_dict(
+                model, pretrain_state_dict)
+        elif config.NETWORK.INITIALISATION == 'skip':
+            smart_skip_partial_load_model_state_dict(
+                model, pretrain_state_dict)
         else:
             smart_partial_load_model_state_dict(model, pretrain_state_dict)
 
@@ -255,34 +270,49 @@ def train_net(args, config):
     train_metrics_list = []
     val_metrics_list = []
     if config.NETWORK.WITH_REL_LOSS:
-        train_metrics_list.append(pretrain_metrics.RelationshipAccuracy(**metric_kwargs))
-        val_metrics_list.append(pretrain_metrics.RelationshipAccuracy(**metric_kwargs))
+        train_metrics_list.append(
+            pretrain_metrics.RelationshipAccuracy(**metric_kwargs))
+        val_metrics_list.append(
+            pretrain_metrics.RelationshipAccuracy(**metric_kwargs))
     if config.NETWORK.WITH_MLM_LOSS:
         if config.MODULE == 'ResNetVLBERTForPretrainingMultitask':
-            train_metrics_list.append(pretrain_metrics.MLMAccuracyDataset1(**metric_kwargs))
-            train_metrics_list.append(pretrain_metrics.MLMAccuracyDataset2(**metric_kwargs))
-            train_metrics_list.append(pretrain_metrics.MLMAccuracyDataset3(**metric_kwargs))
-            val_metrics_list.append(pretrain_metrics.MLMAccuracyDataset1(**metric_kwargs))
-            val_metrics_list.append(pretrain_metrics.MLMAccuracyDataset2(**metric_kwargs))
-            val_metrics_list.append(pretrain_metrics.MLMAccuracyDataset3(**metric_kwargs))
-        elif config.MODULE=='ResNetVLBERTForPretrainingGlobal':
+            train_metrics_list.append(
+                pretrain_metrics.MLMAccuracyDataset1(**metric_kwargs))
+            train_metrics_list.append(
+                pretrain_metrics.MLMAccuracyDataset2(**metric_kwargs))
+            train_metrics_list.append(
+                pretrain_metrics.MLMAccuracyDataset3(**metric_kwargs))
+            val_metrics_list.append(
+                pretrain_metrics.MLMAccuracyDataset1(**metric_kwargs))
+            val_metrics_list.append(
+                pretrain_metrics.MLMAccuracyDataset2(**metric_kwargs))
+            val_metrics_list.append(
+                pretrain_metrics.MLMAccuracyDataset3(**metric_kwargs))
+        elif config.MODULE == 'ResNetVLBERTForPretrainingGlobal':
             num_metric = 1
             try:
                 num_metric = len(config.TRAIN.BATCH_IMAGES)
             except:
                 num_metric = 1
-            for i in range(num_metric):                                
-                train_metrics_list.append(pretrain_metrics.MLMAccuracyGlobal(**metric_kwargs, eval_name=str(i)))
-                val_metrics_list.append(pretrain_metrics.MLMAccuracyGlobal(**metric_kwargs, eval_name=str(i)))            
+            for i in range(num_metric):
+                train_metrics_list.append(pretrain_metrics.MLMAccuracyGlobal(
+                    **metric_kwargs, eval_name=str(i)))
+                val_metrics_list.append(pretrain_metrics.MLMAccuracyGlobal(
+                    **metric_kwargs, eval_name=str(i)))
         else:
-            train_metrics_list.append(pretrain_metrics.MLMAccuracy(**metric_kwargs))
-            val_metrics_list.append(pretrain_metrics.MLMAccuracy(**metric_kwargs))
+            train_metrics_list.append(
+                pretrain_metrics.MLMAccuracy(**metric_kwargs))
+            val_metrics_list.append(
+                pretrain_metrics.MLMAccuracy(**metric_kwargs))
     if config.NETWORK.WITH_MVRC_LOSS:
-        train_metrics_list.append(pretrain_metrics.MVRCAccuracy(**metric_kwargs))
+        train_metrics_list.append(
+            pretrain_metrics.MVRCAccuracy(**metric_kwargs))
         val_metrics_list.append(pretrain_metrics.MVRCAccuracy(**metric_kwargs))
     for output_name, display_name in config.TRAIN.LOSS_LOGGERS:
-        train_metrics_list.append(pretrain_metrics.LossLogger(output_name, display_name=display_name, **metric_kwargs))
-        val_metrics_list.append(pretrain_metrics.LossLogger(output_name, display_name=display_name, **metric_kwargs))
+        train_metrics_list.append(pretrain_metrics.LossLogger(
+            output_name, display_name=display_name, **metric_kwargs))
+        val_metrics_list.append(pretrain_metrics.LossLogger(
+            output_name, display_name=display_name, **metric_kwargs))
 
     train_metrics = CompositeEvalMetric()
     val_metrics = CompositeEvalMetric()
@@ -294,7 +324,8 @@ def train_net(args, config):
     # epoch end callbacks
     epoch_end_callbacks = []
     if (rank is None) or (rank == 0):
-        epoch_end_callbacks = [Checkpoint(model_prefix, config.CHECKPOINT_FREQUENT)]
+        epoch_end_callbacks = [Checkpoint(
+            model_prefix, config.CHECKPOINT_FREQUENT)]
     host_metric_name = 'MLMAcc' if not config.MODULE == 'ResNetVLBERTForPretrainingMultitask' else 'MLMAccWVC'
     validation_monitor = ValidationMonitor(do_validation, val_loader, val_metrics,
                                            host_metric_name=host_metric_name)
@@ -305,7 +336,8 @@ def train_net(args, config):
 
     # resume/auto-resume
     if rank is None or rank == 0:
-        smart_resume(model, optimizer, validation_monitor, config, model_prefix, logger)
+        smart_resume(model, optimizer, validation_monitor,
+                     config, model_prefix, logger)
     if args.dist:
         begin_epoch = torch.tensor(config.TRAIN.BEGIN_EPOCH).cuda()
         distributed.broadcast(begin_epoch, src=0)
@@ -335,17 +367,20 @@ def train_net(args, config):
     elif config.TRAIN.LR_SCHEDULE == 'triangle':
         lr_scheduler = WarmupLinearSchedule(optimizer,
                                             config.TRAIN.WARMUP_STEPS if config.TRAIN.WARMUP else 0,
-                                            t_total=int(config.TRAIN.END_EPOCH * len(train_loader) / config.TRAIN.GRAD_ACCUMULATE_STEPS),
-                                            last_epoch=int(config.TRAIN.BEGIN_EPOCH * len(train_loader) / config.TRAIN.GRAD_ACCUMULATE_STEPS)  - 1)
+                                            t_total=int(
+                                                config.TRAIN.END_EPOCH * len(train_loader) / config.TRAIN.GRAD_ACCUMULATE_STEPS),
+                                            last_epoch=int(config.TRAIN.BEGIN_EPOCH * len(train_loader) / config.TRAIN.GRAD_ACCUMULATE_STEPS) - 1)
     elif config.TRAIN.LR_SCHEDULE == 'step':
-        lr_iters = [int(epoch * len(train_loader) / config.TRAIN.GRAD_ACCUMULATE_STEPS) for epoch in config.TRAIN.LR_STEP]
+        lr_iters = [int(epoch * len(train_loader) / config.TRAIN.GRAD_ACCUMULATE_STEPS)
+                    for epoch in config.TRAIN.LR_STEP]
         lr_scheduler = WarmupMultiStepLR(optimizer, milestones=lr_iters, gamma=config.TRAIN.LR_FACTOR,
                                          warmup_factor=config.TRAIN.WARMUP_FACTOR,
                                          warmup_iters=config.TRAIN.WARMUP_STEPS if config.TRAIN.WARMUP else 0,
                                          warmup_method=config.TRAIN.WARMUP_METHOD,
-                                         last_epoch=int(config.TRAIN.BEGIN_EPOCH * len(train_loader) / config.TRAIN.GRAD_ACCUMULATE_STEPS)  - 1)
+                                         last_epoch=int(config.TRAIN.BEGIN_EPOCH * len(train_loader) / config.TRAIN.GRAD_ACCUMULATE_STEPS) - 1)
     else:
-        raise ValueError("Not support lr schedule: {}.".format(config.TRAIN.LR_SCHEDULE))
+        raise ValueError("Not support lr schedule: {}.".format(
+            config.TRAIN.LR_SCHEDULE))
 
     # broadcast parameter and optimizer state from rank 0 before training start
     if args.dist:
