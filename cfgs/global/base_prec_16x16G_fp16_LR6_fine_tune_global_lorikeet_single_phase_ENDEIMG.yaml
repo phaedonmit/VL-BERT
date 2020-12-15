@@ -102,7 +102,7 @@ TRAIN:
   WARMUP_METHOD: "linear"
   WARMUP_FACTOR: 0.0
   WARMUP_STEPS: 16000
-  FP16: true
+  FP16: false
   FP16_LOSS_SCALE: 128.0
   LOSS_LOGGERS:
     - "mlm_loss_wvc,MLMLossWVC"
