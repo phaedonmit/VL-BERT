@@ -54,6 +54,8 @@ class ResNetVLBERTForPretrainingGlobalGenerateNoVision(Module):
             with_mvrc_head=config.NETWORK.WITH_MVRC_LOSS,
         )
 
+        self.model_path = config.OUTPUT_PATH
+
         # init weights
         self.init_weight()
 
@@ -138,8 +140,12 @@ class ResNetVLBERTForPretrainingGlobalGenerateNoVision(Module):
         generated = []
         stop = [False]*text.shape[0]
         curr_len = 0
-        # max_len = 150
-        max_len = 300
+        # TODO: different sequence limit for long model. Need to replace this with single limit
+        if "LONG" in self.model_path:
+            max_len = 300
+        else:
+            max_len = 150
+
         while not all(stop) and curr_len <= max_len:
             relationship_logits, mlm_logits, mvrc_logits = self.vlbert(text_input_ids,
                                                                        text_token_type_ids,
