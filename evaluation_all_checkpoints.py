@@ -6,12 +6,13 @@ import os
 #model = "/data/faidon/VL-BERT/checkpoints/output/pretrain/vl-bert/base_prec_16x16G_fp16_LR6_fine_tune_global_lorikeet_two_phase/train_train/vl-bert_base_res101_pretrain_multitask-0003.model"
 # location = "/data/faidon/VL-BERT/checkpoints/generated/single_phase_epoch03/"
 
-model = sys.argv[1]
+config_name = sys.argv[1]
 location = sys.argv[2]
-model = "single_phase"
+config_name = "single_phase"
 
 
-model_dir = "/data/faidon/VL-BERT/checkpoints/output/pretrain/vl-bert/base_prec_16x16G_fp16_LR6_fine_tune_global_lorikeet_"+model+"/train_train/"
+model_dir = "/data/faidon/VL-BERT/checkpoints/output/pretrain/vl-bert/base_prec_16x16G_fp16_LR6_fine_tune_global_lorikeet_" + \
+    config_name+"/train_train/"
 location_dir = "/data/faidon/VL-BERT/checkpoints/generated/"
 
 cfgs = [
@@ -44,7 +45,7 @@ for file in os.listdir(model_dir):
     if file.endswith(".model"):
         model = os.path.join(model_dir, file)
         epoch = file.split('.')[0][-2:]
-        location = file + '_epoch' + epoch
+        location = config_name + '_epoch' + epoch
         print("Model path: ", model)
         print("Location path: ", location)
 
