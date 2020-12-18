@@ -3,6 +3,8 @@ DIRECTORY=$1
 root_path="/data/faidon/VL-BERT/checkpoints/generated/$DIRECTORY/"
 ground_path="/data/faidon/VL-BERT/data/ground_truth"
 
+# nmtpy-coco-metrics -l de "/data/faidon/VL-BERT/checkpoints/generated/single_phase_ENDEIMG_epoch18/ENDEIMG.txt" -r "/data/faidon/VL-BERT/data/ground_truth/ENDEIMG.txt.tok"
+
 echo "***************"
 echo "1. DEIMG"
 nmtpy-coco-metrics -l de "${root_path}DEIMG.txt" -r ${ground_path}/DEIMG_*.txt.tok
