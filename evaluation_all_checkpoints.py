@@ -42,7 +42,12 @@ cfgs = [
 
 for file in os.listdir(model_dir):
     if file.endswith(".model"):
-        print(os.path.join(model_dir, file))
+        model = os.path.join(model_dir, file)
+        epoch = file.split('.')[-2:]
+        location = file + '_epoch' + epoch
+        print("Model path: ", model)
+        print("Location path: ", location)
+
 exit()
 
 for i in range(len(cfgs)):
