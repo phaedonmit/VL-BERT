@@ -67,8 +67,9 @@ cfgs = [
     "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_multi30k_ENFRmulti30k.yaml",
     "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_multi30k_FRENmulti30k.yaml",
     "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_multi30k_DEFRmulti30k.yaml",
-    "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_multi30k_FRDEmulti30k.yaml"
-
+    "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_multi30k_FRDEmulti30k.yaml",
+    "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_no_vision_DEFRWMT.yaml",
+    "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_no_vision_FRDEWMT.yaml"
 ]
 
 

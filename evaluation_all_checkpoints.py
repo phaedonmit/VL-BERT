@@ -38,37 +38,31 @@ cfgs = [
     "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_multi30k_ENFRmulti30k.yaml",
     "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_multi30k_FRENmulti30k.yaml",
     "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_multi30k_DEFRmulti30k.yaml",
-    "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_multi30k_FRDEmulti30k.yaml"
+    "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_multi30k_FRDEmulti30k.yaml",
+    "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_no_vision_DEFRWMT.yaml",
+    "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_no_vision_FRDEWMT.yaml"
 ]
 
 for file in os.listdir(model_dir):
     if file.endswith(".model"):
         model = os.path.join(model_dir, file)
         epoch = file.split('.')[0][-2:]
-        location = config_name + '_epoch' + epoch
+        location = location_dir + config_name + '_epoch' + epoch
         print("Model path: ", model)
         print("Location path: ", location)
 
-exit()
+        for i in range(len(cfgs)):
+            name = cfgs[i].split("/")[-1].split('.')[0].split("_")[-1]
 
-for i in range(len(cfgs)):
-    name = cfgs[i].split("/")[-1].split('.')[0].split("_")[-1]
-
-    print('***************')
-    print(name)
-    list_files = subprocess.run(["python", "MT/test.py",
-                                 "--cfg", cfgs[i],
-                                 "--ckpt", model,
-                                 "--gpus", "0",
-                                 "--result-path", location,
-                                 "--result-name", name,
-                                 # "--split", splits[i]
-                                 "--split", 'test2015'
-                                 ])
-    print("The exit code was: %d" % list_files.returncode)
-
-#     list_files = subprocess.run(["python", "MT/evaluate_translation.py", name,
-#                                 "/experiments/faidon/test/VL-BERT/checkpoints/generated/"+name+".json",
-#                                 lang[i]
-#                                 ])
-#     print("The exit code was: %d" % list_files.returncode)
+            print('***************')
+            print(name)
+            list_files = subprocess.run(["python", "MT/test.py",
+                                         "--cfg", cfgs[i],
+                                         "--ckpt", model,
+                                         "--gpus", "0",
+                                         "--result-path", location,
+                                         "--result-name", name+'_val',
+                                         # "--split", splits[i]
+                                         "--split", 'val'
+                                         ])
+            print("The exit code was: %d" % list_files.returncode)
