@@ -23,13 +23,16 @@ def smart_resume(model, optimizer, validation_monitor, config, model_prefix, log
     if config.TRAIN.RESUME:
         print(('continue training from ', config.TRAIN.BEGIN_EPOCH))
         # load model
-        model_filename = '{}-{:04d}.model'.format(model_prefix, config.TRAIN.BEGIN_EPOCH - 1)
-        check_point = torch.load(model_filename, map_location=lambda storage, loc: storage)
+        model_filename = '{}-{:04d}.model'.format(
+            model_prefix, config.TRAIN.BEGIN_EPOCH - 1)
+        check_point = torch.load(
+            model_filename, map_location=lambda storage, loc: storage)
         # model.load_state_dict(check_point['state_dict'])
         smart_load_model_state_dict(model, check_point['state_dict'])
         optimizer.load_state_dict(check_point['optimizer'])
         if 'validation_monitor' in check_point:
-            validation_monitor.load_state_dict(check_point['validation_monitor'])
+            validation_monitor.load_state_dict(
+                check_point['validation_monitor'])
             print(
                 'Best Val {}: {}, Epoch: {}'.format(validation_monitor.host_metric_name,
                                                     validation_monitor.best_val,
@@ -40,20 +43,25 @@ def smart_resume(model, optimizer, validation_monitor, config, model_prefix, log
             model_filename = '{}-{:04d}.model'.format(model_prefix, epoch - 1)
             if os.path.exists(model_filename):
                 config.TRAIN.BEGIN_EPOCH = epoch
-                check_point = torch.load(model_filename, map_location=lambda storage, loc: storage)
+                check_point = torch.load(
+                    model_filename, map_location=lambda storage, loc: storage)
                 # model.load_state_dict(check_point['state_dict'])
                 smart_load_model_state_dict(model, check_point['state_dict'])
                 optimizer.load_state_dict(check_point['optimizer'])
                 if 'validation_monitor' in check_point:
-                    validation_monitor.load_state_dict(check_point['validation_monitor'])
+                    validation_monitor.load_state_dict(
+                        check_point['validation_monitor'])
                     print(
                         'Best Val {}: {}, Epoch: {}'.format(validation_monitor.host_metric_name,
                                                             validation_monitor.best_val,
                                                             validation_monitor.best_epoch)
                     )
-                logger.info("Auto continue training from {0}".format(model_filename))
+                logger.info(
+                    "Auto continue training from {0}".format(model_filename))
                 print("Auto continue training from {0}".format(model_filename))
                 break
+        # TODO: remove - just for testing
+        print('inside auto-resume --------------***********************')
 
 
 def smart_partial_load_model_state_dict(model, state_dict):
@@ -73,9 +81,11 @@ def smart_partial_load_model_state_dict(model, state_dict):
             non_match_keys.append(k)
             # raise ValueError('failed to match key of state dict smartly!')
 
-    non_pretrain_keys = [k for k in model.state_dict().keys() if k not in pretrained_keys]
+    non_pretrain_keys = [
+        k for k in model.state_dict().keys() if k not in pretrained_keys]
 
-    print("[Partial Load] partial load state dict of keys: {}".format(parsed_state_dict.keys()))
+    print("[Partial Load] partial load state dict of keys: {}".format(
+        parsed_state_dict.keys()))
     print("[Partial Load] non matched keys: {}".format(non_match_keys))
     print("[Partial Load] non pretrain keys: {}".format(non_pretrain_keys))
     new_state_dict = model.state_dict()
@@ -83,14 +93,14 @@ def smart_partial_load_model_state_dict(model, state_dict):
     model.load_state_dict(new_state_dict)
 
 
-#FM: initialise with VL-BERT. Skip word embeddings, where vocabulary is changed to multilingual 
+# FM: initialise with VL-BERT. Skip word embeddings, where vocabulary is changed to multilingual
 def smart_skip_partial_load_model_state_dict(model, state_dict):
     parsed_state_dict = {}
     non_match_keys = []
     pretrained_keys = []
     for k, v in state_dict.items():
         # FM: for partica
-        if k in ['module.vlbert.mlm_head.predictions.decoder.weight', 'module.vlbert.mlm_head.predictions.bias', 'module.vlbert.word_embeddings.weight' ]:
+        if k in ['module.vlbert.mlm_head.predictions.decoder.weight', 'module.vlbert.mlm_head.predictions.bias', 'module.vlbert.word_embeddings.weight']:
             print('---------- skip :', k)
             continue
         if k not in model.state_dict():
@@ -105,9 +115,11 @@ def smart_skip_partial_load_model_state_dict(model, state_dict):
             non_match_keys.append(k)
             # raise ValueError('failed to match key of state dict smartly!')
 
-    non_pretrain_keys = [k for k in model.state_dict().keys() if k not in pretrained_keys]
+    non_pretrain_keys = [
+        k for k in model.state_dict().keys() if k not in pretrained_keys]
 
-    print("[Partial Load] partial load state dict of keys: {}".format(parsed_state_dict.keys()))
+    print("[Partial Load] partial load state dict of keys: {}".format(
+        parsed_state_dict.keys()))
     print("[Partial Load] non matched keys: {}".format(non_match_keys))
     print("[Partial Load] non pretrain keys: {}".format(non_pretrain_keys))
     new_state_dict = model.state_dict()
@@ -127,7 +139,7 @@ def smart_hybrid_partial_load_model_state_dict(model, state_dict):
                 k = k[len('module.'):]
             else:
                 k = 'module.' + k
-        if k in model.state_dict() and (("vlbert.mvrc_head" in k) or ("image_feature_extractor" in k) 
+        if k in model.state_dict() and (("vlbert.mvrc_head" in k) or ("image_feature_extractor" in k)
                                         or ("vlbert.visual_ln" in k) or ("end_embedding" in k)
                                         or ("token_type_embeddings" in k) or ("position_embeddings" in k)
                                         or ("aux_text_visual_embedding" in k) or ("object_mask_word_embedding" in k)
@@ -138,12 +150,13 @@ def smart_hybrid_partial_load_model_state_dict(model, state_dict):
             non_match_keys.append(k)
             # raise ValueError('failed to match key of state dict smartly!')
 
-    non_pretrain_keys = [k for k in model.state_dict().keys() if k not in pretrained_keys]
+    non_pretrain_keys = [
+        k for k in model.state_dict().keys() if k not in pretrained_keys]
 
-    print("[Partial Load] partial load state dict of keys: {}".format(parsed_state_dict.keys()))
+    print("[Partial Load] partial load state dict of keys: {}".format(
+        parsed_state_dict.keys()))
     print("[Partial Load] non matched keys: {}".format(non_match_keys))
     print("[Partial Load] non pretrain keys: {}".format(non_pretrain_keys))
     new_state_dict = model.state_dict()
     new_state_dict.update(parsed_state_dict)
     model.load_state_dict(new_state_dict)
-
