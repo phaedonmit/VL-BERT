@@ -164,6 +164,7 @@ def train_net(args, config):
                               eps=1e-6,
                               weight_decay=config.TRAIN.WD,
                               correct_bias=True)
+            new_optimizer = optimizer.deepcopy()
         else:
             raise ValueError('Not support optimizer {}!'.format(
                 config.TRAIN.OPTIMIZER))
