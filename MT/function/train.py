@@ -156,7 +156,6 @@ def train_net(args, config):
             optimizer = optim.Adam(optimizer_grouped_parameters,
                                    lr=config.TRAIN.LR * batch_size,
                                    weight_decay=config.TRAIN.WD)
-            new_optimizer = optimizer.deepcopy()
         elif config.TRAIN.OPTIMIZER == 'AdamW':
             optimizer = AdamW(optimizer_grouped_parameters,
                               lr=config.TRAIN.LR * batch_size,
@@ -164,12 +163,6 @@ def train_net(args, config):
                               eps=1e-6,
                               weight_decay=config.TRAIN.WD,
                               correct_bias=True)
-            new_optimizer = AdamW(optimizer_grouped_parameters,
-                                  lr=config.TRAIN.LR * batch_size,
-                                  betas=(0.9, 0.999),
-                                  eps=1e-6,
-                                  weight_decay=config.TRAIN.WD,
-                                  correct_bias=True)
         else:
             raise ValueError('Not support optimizer {}!'.format(
                 config.TRAIN.OPTIMIZER))
@@ -374,7 +367,7 @@ def train_net(args, config):
     elif config.TRAIN.LR_SCHEDULE == 'triangle':
         # FM edit: i am using here the new optimizer so that i can tweek the LR when i resume a model (not the best solution)
         # but this fix was so that  i can extend the number of epochs.
-        lr_scheduler = WarmupLinearSchedule(new_optimizer,
+        lr_scheduler = WarmupLinearSchedule(optimizer,
                                             config.TRAIN.WARMUP_STEPS if config.TRAIN.WARMUP else 0,
                                             t_total=int(
                                                 config.TRAIN.END_EPOCH * len(train_loader) / config.TRAIN.GRAD_ACCUMULATE_STEPS),

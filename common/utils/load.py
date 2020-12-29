@@ -47,7 +47,8 @@ def smart_resume(model, optimizer, validation_monitor, config, model_prefix, log
                     model_filename, map_location=lambda storage, loc: storage)
                 # model.load_state_dict(check_point['state_dict'])
                 smart_load_model_state_dict(model, check_point['state_dict'])
-                optimizer.load_state_dict(check_point['optimizer'])
+                # FM edit TODO: UNCOMMENT THIS! Only used for testing.
+                # optimizer.load_state_dict(check_point['optimizer'])
                 if 'validation_monitor' in check_point:
                     validation_monitor.load_state_dict(
                         check_point['validation_monitor'])
