@@ -164,7 +164,12 @@ def train_net(args, config):
                               eps=1e-6,
                               weight_decay=config.TRAIN.WD,
                               correct_bias=True)
-            new_optimizer = optimizer.deepcopy()
+            new_optimizer = AdamW(optimizer_grouped_parameters,
+                                  lr=config.TRAIN.LR * batch_size,
+                                  betas=(0.9, 0.999),
+                                  eps=1e-6,
+                                  weight_decay=config.TRAIN.WD,
+                                  correct_bias=True)
         else:
             raise ValueError('Not support optimizer {}!'.format(
                 config.TRAIN.OPTIMIZER))
