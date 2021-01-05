@@ -294,7 +294,7 @@ TRAIN:
   END_EPOCH: 60
   OPTIMIZER: "AdamW"
   CLIP_GRAD_NORM: 10
-  LR: 1.0e-6
+  LR: 5.0e-7
   LR_SCHEDULE: "triangle"
   WD: 0.0001
   WARMUP: true
