@@ -1,6 +1,6 @@
 echo 'Start evaluation...'
 DIRECTORY=$1
-root_path=/data/faidon/VL-BERT/checkpoints/generated/$DIRECTORY/
+root_path=/data/faidon/VL-BERT/$DIRECTORY/
 ground_path="/data/faidon/VL-BERT/data/ground_truth/val"
 
 # nmtpy-coco-metrics -l de "/data/faidon/VL-BERT/checkpoints/generated/single_phase_ENDEIMG_epoch18/ENDEIMG.txt" -r "/data/faidon/VL-BERT/data/ground_truth/ENDEIMG.txt.tok"
