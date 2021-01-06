@@ -8,6 +8,7 @@ for d in checkpoints/generated/single_phase_epoch[0-1][0-9]/ ; do
     sed -i 's/|//g' $new_path
     sed -i '/[A-Z]/d' $new_path
     sed -i 's/ \+/ /g' $new_path
+    echo $d
     cat $new_path
 done
 
