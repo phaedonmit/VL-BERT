@@ -8,7 +8,7 @@ import os
 
 config_name = sys.argv[1]
 location = sys.argv[2]
-config_name = "single_phase"
+config_name = "single_phase_LONG"
 
 
 model_dir = "/data/faidon/VL-BERT/checkpoints/output/pretrain/vl-bert/base_prec_16x16G_fp16_LR6_fine_tune_global_lorikeet_" + \
