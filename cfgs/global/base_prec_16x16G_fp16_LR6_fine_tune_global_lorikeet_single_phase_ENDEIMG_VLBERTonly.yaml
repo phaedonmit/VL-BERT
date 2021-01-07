@@ -63,7 +63,6 @@ NETWORK:
   WITH_REL_LOSS: false
   WITH_MLM_LOSS: true
   WITH_MVRC_LOSS: false
-  from_scratch: true
 
   VLBERT:
     with_pooler: false
@@ -84,6 +83,7 @@ NETWORK:
     visual_scale_object_init: 0.0
     visual_ln: true
     pos_embedding_frozen: false
+    from_scratch: true
 
 TRAIN:
   SHUFFLE: true
