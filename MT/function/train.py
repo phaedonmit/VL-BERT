@@ -72,7 +72,7 @@ def train_net(args, config):
         master_address = os.environ['MASTER_ADDR']
         master_port = int(os.environ['MASTER_PORT'] or 23456)
         master_port = int(9994)
-        master_port = int(10006)
+        master_port = int(10007)
         world_size = int(os.environ['WORLD_SIZE'] or 1)
         rank = int(os.environ['RANK'] or 0)
         if args.slurm:
