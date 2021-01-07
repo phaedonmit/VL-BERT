@@ -53,7 +53,7 @@ NETWORK:
   IMAGE_FINAL_DIM: 768
   IMAGE_SEMANTIC: false
   OUTPUT_CONV5: false
-  BERT_MODEL_NAME: ""
+  BERT_MODEL_NAME: "./model/pretrained_model/bert-base-multilingual-cased"
   BERT_PRETRAINED: ""
   BERT_PRETRAINED_EPOCH: 0
   BERT_FROZEN: false
@@ -63,6 +63,7 @@ NETWORK:
   WITH_REL_LOSS: false
   WITH_MLM_LOSS: true
   WITH_MVRC_LOSS: false
+  from_scratch: true
 
   VLBERT:
     with_pooler: false
