@@ -7,8 +7,8 @@ import os
 # location = "/data/faidon/VL-BERT/checkpoints/generated/single_phase_epoch03/"
 
 config_name = sys.argv[1]
-location = sys.argv[2]
-config_name = "single_phase_ENDEIMG"
+# location = sys.argv[2]
+# config_name = "single_phase_ENDEIMG"
 # config_name = "single_phase_ENDEIMG_MBERTonly"
 # config_name = "single_phase_ENDEIMG_scratch"
 # config_name = "single_phase_ENDEIMG_VLBERTonly"
