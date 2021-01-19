@@ -1,6 +1,7 @@
 import subprocess
 import sys
 import os
+import re
 
 # model = "/data/faidon/VL-BERT/checkpoints/output/pretrain/vl-bert/base_prec_16x16G_fp16_LR6_fine_tune_global_lorikeet_single_phase/train_train/vl-bert_base_res101_pretrain_multitask-0003.model"
 #model = "/data/faidon/VL-BERT/checkpoints/output/pretrain/vl-bert/base_prec_16x16G_fp16_LR6_fine_tune_global_lorikeet_two_phase/train_train/vl-bert_base_res101_pretrain_multitask-0003.model"
@@ -46,15 +47,15 @@ cfgs = [
     "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_no_vision_FRDEWMT.yaml"
 ]
 
-cfgs = [
-    "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_MMT_ENDEIMG.yaml"
-]
-cfgs = [
-    "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_image_only_DEIMG.yaml"
-]
+# cfgs = [
+#     "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_MMT_ENDEIMG.yaml"
+# ]
+# cfgs = [
+#     "/data/faidon/VL-BERT/cfgs/global_generate_lorikeet/base_prec_16x16G_fp16_MT_LR6_global_generate_image_only_DEIMG.yaml"
+# ]
 
 for file in os.listdir(model_dir):
-    if file.endswith(".model"):
+    if re.search('1[3-7].model', file):
         model = os.path.join(model_dir, file)
         epoch = file.split('.')[0][-2:]
         location = location_dir + config_name + '_epoch' + epoch
