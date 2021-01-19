@@ -52,6 +52,7 @@ class Multi30kDataset(Dataset):
 
         annot = {'train': 'train_frcnn.json',
                  'val': 'val_frcnn.json',
+                 'valshuffled': 'val_frcnn_shuffled.json',
                  'test2015': 'test_frcnn.json',
                  'test2015shuffled': 'test_frcnn_shuffled.json',
                  'test2018': 'test_frcnn2018.json',
