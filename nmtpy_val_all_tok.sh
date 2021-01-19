@@ -8,9 +8,9 @@ ground_path="/data/faidon/VL-BERT/data/ground_truth/val"
 #     echo "$d"
 # done
 
-# echo "***************"
-# echo "1. DEIMG"
-# nmtpy-coco-metrics -l de "${root_path}DEIMG_val.txt" -r ${ground_path}/DEIMG_*.txt.tok
+echo "***************"
+echo "1. DEIMG"
+nmtpy-coco-metrics -l de "${root_path}DEIMG_val.txt" -r ${ground_path}/DEIMG_*.txt.tok
 # echo "***************"
 # echo "2. ENIMG"
 # nmtpy-coco-metrics -l en "${root_path}ENIMG_val.txt" -r ${ground_path}/ENIMG_*.txt.tok
@@ -20,9 +20,9 @@ ground_path="/data/faidon/VL-BERT/data/ground_truth/val"
 # echo "***************"
 # echo "4. DEENIMG"
 # nmtpy-coco-metrics -l en "${root_path}DEENIMG_val.txt" -r "${ground_path}/DEENIMG.txt.tok"
-echo "***************"
-echo "5. ENDEIMG"
-nmtpy-coco-metrics -l de "${root_path}ENDEIMG_val.txt" -r "${ground_path}/ENDEIMG.txt.tok"
+# echo "***************"
+# echo "5. ENDEIMG"
+# nmtpy-coco-metrics -l de "${root_path}ENDEIMG_val.txt" -r "${ground_path}/ENDEIMG.txt.tok"
 # echo "***************"
 # echo "6. ENFRIMG"
 # nmtpy-coco-metrics -l fr "${root_path}ENFRIMG_val.txt" -r "${ground_path}/ENFRIMG.txt.tok"
