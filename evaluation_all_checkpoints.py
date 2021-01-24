@@ -55,7 +55,7 @@ cfgs = [
 # ]
 
 for file in os.listdir(model_dir):
-    if re.search('1[3-7].model', file):
+    if re.search('1[8-9].model', file):
         model = os.path.join(model_dir, file)
         epoch = file.split('.')[0][-2:]
         location = location_dir + config_name + '_epoch' + epoch
