@@ -153,6 +153,10 @@ class ResNetVLBERTForPretrainingGlobalGenerateNoVision(Module):
                                                                        text_mask,
                                                                        object_vl_embeddings,
                                                                        box_mask)
+            # Ignore special tokens
+            mlm_logits[:, :, 0] = -10000000
+            mlm_logits[:, :, 2:100] = -10000000
+            mlm_logits[:, :, 101:104] = -10000000
             answers = torch.topk(mlm_logits[mlm_labels == 103], k=1,  dim=1)
 
             # Get size of each tensor
