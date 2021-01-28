@@ -114,8 +114,8 @@ class Multi30kDatasetImageOnly(Dataset):
                 "test_2016_flickr_frcnn.zip", "test_frcnn.zip")
             old_id = idb['frcnn'].split('/')[1].split('.')[0]
             image_id = old_id
-            while len(image_id) < 8:
-                image_id = '0'+image_id
+            # while len(image_id) < 8:
+            #     image_id = '0'+image_id
             self.simple_database[i]['frcnn'] = idb['frcnn'].replace(
                 old_id, image_id)
 
