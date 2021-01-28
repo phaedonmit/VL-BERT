@@ -18,7 +18,7 @@ from common.utils.create_logger import makedirsExist
 from copy import deepcopy
 
 
-class Multi30kDatasetImageOnly(Dataset):
+class Multi30kDatasetImageOnlyCOCO(Dataset):
     def __init__(self, ann_file, image_set, root_path, data_path, seq_len=64,
                  with_precomputed_visual_feat=False, mask_raw_pixels=True,
                  with_rel_task=True, with_mlm_task=True, with_mvrc_task=True,
@@ -44,7 +44,7 @@ class Multi30kDatasetImageOnly(Dataset):
         :param aspect_grouping: whether to group images via their aspect
         :param kwargs:
         """
-        super(Multi30kDatasetImageOnly, self).__init__()
+        super(Multi30kDatasetImageOnlyCOCO, self).__init__()
 
         assert not cache_mode, 'currently not support cache mode!'
         # FM edit: commented out to allow testin
@@ -185,9 +185,6 @@ class Multi30kDatasetImageOnly(Dataset):
                               dtype=np.float32).reshape((frcnn_data['num_boxes'], -1))
         boxes_cls_scores = np.frombuffer(self.b64_decode(frcnn_data['classes']),
                                          dtype=np.float32).reshape((frcnn_data['num_boxes'], -1))
-        print('**************')
-        print('boxes shape: ', boxes.shape)
-        print('cls scores shape: ', boxes_cls_scores.shape)
         boxes_max_conf = boxes_cls_scores.max(axis=1)
         inds = np.argsort(boxes_max_conf)[::-1]
         boxes = boxes[inds]

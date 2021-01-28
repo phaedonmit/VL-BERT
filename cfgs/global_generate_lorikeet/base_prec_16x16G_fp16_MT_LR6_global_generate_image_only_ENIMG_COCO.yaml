@@ -13,7 +13,7 @@ SCALES:
   - 1000
 
 DATASET:
-  DATASET: multi30k_image_only
+  DATASET: multi30k_image_only_COCO
   APPEND_INDEX: false
   DATASET_PATH: "/data/ozan/datasets/mmbert/coco_en"
   ROOT_PATH: "./"

@@ -8,15 +8,16 @@ import pprint
 from copy import deepcopy
 
 # FM: Added mutli30k to available datasets
-DATASET_CATALOGS = { 
-                    'multi30k': Multi30kDataset,
-                    'multi30k_image_only': Multi30kDatasetImageOnly,
-                    'multi30k_image_only5x': Multi30kDatasetImageOnly5x,
-                    'multi30k_decoder': Multi30kDatasetDecoder,
-                    'multi30k_no_vision': Multi30kDatasetNoVision,
-                    'multi30k_taskB': Multi30kTaskBDataset,
-                    'parallel_text': ParallelTextDataset
-                    }
+DATASET_CATALOGS = {
+    'multi30k': Multi30kDataset,
+    'multi30k_image_only': Multi30kDatasetImageOnly,
+    'multi30k_image_only_COCO': Multi30kDatasetImageOnlyCOCO,
+    'multi30k_image_only5x': Multi30kDatasetImageOnly5x,
+    'multi30k_decoder': Multi30kDatasetDecoder,
+    'multi30k_no_vision': Multi30kDatasetNoVision,
+    'multi30k_taskB': Multi30kTaskBDataset,
+    'parallel_text': ParallelTextDataset
+}
 
 
 def build_dataset(dataset_name, *args, **kwargs):
@@ -90,18 +91,23 @@ def make_dataloader(cfg, dataset=None, mode='train', distributed=False, num_repl
                                 root_path=cfg.DATASET.ROOT_PATH, data_path=cfg.DATASET.DATASET_PATH,
                                 test_mode=(mode == 'test'), transform=transform,
                                 zip_mode=cfg.DATASET.ZIP_MODE, cache_mode=cfg.DATASET.CACHE_MODE,
-                                cache_db=True if (rank is None or rank == 0) else False,
+                                cache_db=True if (
+                                    rank is None or rank == 0) else False,
                                 ignore_db_cache=cfg.DATASET.IGNORE_DB_CACHE,
                                 add_image_as_a_box=cfg.DATASET.ADD_IMAGE_AS_A_BOX,
                                 aspect_grouping=aspect_grouping,
-                                mask_size=(cfg.DATASET.MASK_SIZE, cfg.DATASET.MASK_SIZE),
+                                mask_size=(cfg.DATASET.MASK_SIZE,
+                                           cfg.DATASET.MASK_SIZE),
                                 pretrained_model_name=cfg.NETWORK.BERT_MODEL_NAME,
                                 task_name=cfg.DATASET.TASK_NAME,
                                 lang=cfg.DATASET.LANG)
 
-    sampler = make_data_sampler(dataset, shuffle, distributed, num_replicas, rank)
-    batch_sampler = make_batch_data_sampler(dataset, sampler, aspect_grouping, batch_size)
-    collator = BatchCollator(dataset=dataset, append_ind=cfg.DATASET.APPEND_INDEX)
+    sampler = make_data_sampler(
+        dataset, shuffle, distributed, num_replicas, rank)
+    batch_sampler = make_batch_data_sampler(
+        dataset, sampler, aspect_grouping, batch_size)
+    collator = BatchCollator(
+        dataset=dataset, append_ind=cfg.DATASET.APPEND_INDEX)
 
     dataloader = torch.utils.data.DataLoader(dataset=dataset,
                                              batch_sampler=batch_sampler,
@@ -134,4 +140,3 @@ def make_dataloaders(cfg, mode='train', distributed=False, num_replicas=None, ra
         )
 
     return outputs
-
