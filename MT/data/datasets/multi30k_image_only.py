@@ -185,9 +185,9 @@ class Multi30kDatasetImageOnly(Dataset):
                               dtype=np.float32).reshape((frcnn_data['num_boxes'], -1))
         boxes_cls_scores = np.frombuffer(self.b64_decode(frcnn_data['classes']),
                                          dtype=np.float32).reshape((frcnn_data['num_boxes'], -1))
-        print('**************')
-        print('boxes shape: ', boxes.shape)
-        print('cls scores shape: ', boxes_cls_scores.shape)
+        # print('**************')
+        # print('boxes shape: ', boxes.shape)
+        # print('cls scores shape: ', boxes_cls_scores.shape)
         boxes_max_conf = boxes_cls_scores.max(axis=1)
         inds = np.argsort(boxes_max_conf)[::-1]
         boxes = boxes[inds]

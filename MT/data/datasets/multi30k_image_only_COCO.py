@@ -183,8 +183,9 @@ class Multi30kDatasetImageOnlyCOCO(Dataset):
             os.path.join(self.data_path, idb['frcnn']))
         boxes = np.frombuffer(self.b64_decode(frcnn_data['boxes']),
                               dtype=np.float32).reshape((frcnn_data['num_boxes'], -1))
-        boxes_cls_scores = np.frombuffer(self.b64_decode(frcnn_data['classes']),
-                                         dtype=np.float32).reshape((frcnn_data['num_boxes'], -1))
+        boxes_cls_scores = np.ones((boxes.shape[0], 1601))
+        # boxes_cls_scores = np.frombuffer(self.b64_decode(frcnn_data['classes']),
+        #                                  dtype=np.float32).reshape((frcnn_data['num_boxes'], -1))
         boxes_max_conf = boxes_cls_scores.max(axis=1)
         inds = np.argsort(boxes_max_conf)[::-1]
         boxes = boxes[inds]
