@@ -196,8 +196,6 @@ class ResNetVLBERTForPretrainingGlobalGenerate(Module):
             text_input_ids_new[torch.arange(text_input_ids.shape[0]), indeces+1] = (
                 self.tokenizer.convert_tokens_to_ids(['[MASK]'])[0])
             text_input_ids_new[torch.arange(text_input_ids.shape[0]), indeces+2] = (
-                self.tokenizer.convert_tokens_to_ids(['[PAD]'])[0])
-            text_input_ids_new[torch.arange(text_input_ids.shape[0]), indeces+3] = (
                 self.tokenizer.convert_tokens_to_ids(['[SEP]'])[0])
             text_input_ids = text_input_ids_new
 

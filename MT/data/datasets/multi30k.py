@@ -289,8 +289,8 @@ class Multi30kDataset(Dataset):
                     # FM edit: add [MASK] to start guessing caption
                     caption_tokens_de = self.tokenizer.tokenize(caption_de)
                     # FM edit: add label from vocabulary
-                    mlm_labels_de = [103] + [-1]
-                    caption_tokens_de = ['[MASK]'] + ['[PAD]']
+                    mlm_labels_de = [103]
+                    caption_tokens_de = ['[MASK]']
                 else:
                     # FM TODO: fix inference
                     caption_tokens_de = self.tokenizer.tokenize(caption_de)
@@ -298,8 +298,8 @@ class Multi30kDataset(Dataset):
                     # FM edit: add [MASK] to start guessing caption
                     caption_tokens_en = self.tokenizer.tokenize(caption_en)
                     # FM edit: add label from vocabulary
-                    mlm_labels_en = [103] + [-1]
-                    caption_tokens_en = ['[MASK]'] + ['[PAD]']
+                    mlm_labels_en = [103]
+                    caption_tokens_en = ['[MASK]']
         else:
             caption_tokens_en = self.tokenizer.tokenize(caption_en)
             caption_tokens_de = self.tokenizer.tokenize(caption_de)
