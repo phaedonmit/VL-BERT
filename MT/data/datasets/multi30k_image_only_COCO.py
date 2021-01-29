@@ -156,12 +156,12 @@ class Multi30kDatasetImageOnlyCOCO(Dataset):
             print('Lang: ', self.lang)
         else:
             # ignore multiple in turkish (2xcaption), english/german(5xcaption)
-            if self.task_name == '[TO_TU]':
-                self.database = self.simple_database[::2]
-            elif self.task_name == '[TO_FR]':
-                self.database = self.simple_database
-            else:
-                self.database = self.simple_database[::5]
+            # if self.task_name == '[TO_TU]':
+            #     self.database = self.simple_database[::2]
+            # elif self.task_name == '[TO_FR]':
+            #     self.database = self.simple_database
+            # else:
+            self.database = self.simple_database[::5]
 
         if self.aspect_grouping:
             assert False, "not support aspect grouping currently!"
