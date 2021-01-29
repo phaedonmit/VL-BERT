@@ -291,7 +291,6 @@ class Multi30kDataset(Dataset):
                     # FM edit: add label from vocabulary
                     mlm_labels_de = [103]
                     caption_tokens_de = ['[MASK]']
-                    print('in here *****************')
                 else:
                     # FM TODO: fix inference
                     caption_tokens_de = self.tokenizer.tokenize(caption_de)
